@@ -115,14 +115,14 @@
             <button class="close-btn" onclick="closeSyncModal()">×</button>
             <h3>☁️ 云端存档设置</h3>
             <p style="font-size: 13px; color: #7f8c8d; line-height: 1.5; margin-bottom: 15px;">
-                利用 <b>JSONBin.io</b> 免费接口实现一键上传/下载。只需在手机和电脑填入相同的凭证，即可丢掉本地文件互传的烦恼。
+                利用 <b>JSONBin.io</b> 免费接口实现一键上传/下载。只需在手机和电脑填入相同的凭证即可无缝同步。
             </p>
             <div style="margin-bottom: 10px;">
                 <label style="font-size: 12px; font-weight: bold; color: #34495e;">Bin ID:</label>
                 <input type="text" id="bin-id" placeholder="例如: 65e8a..." style="width: 100%;">
             </div>
             <div style="margin-bottom: 15px;">
-                <label style="font-size: 12px; font-weight: bold; color: #34495e;">API Key (X-Access-Key):</label>
+                <label style="font-size: 12px; font-weight: bold; color: #34495e;">API Key (Master Key):</label>
                 <input type="password" id="api-key" placeholder="例如: $2a$10$..." style="width: 100%;">
             </div>
             <div style="display: flex; justify-content: space-between; gap: 10px;">
@@ -309,7 +309,7 @@
         return Math.max(...wordLogs.map(l => l.round));
     }
 
-    // ----- 🌟 新增：JSONBin 云端存储接口逻辑 -----
+    // ----- 🌟 修复：云端存储接口逻辑 (修改为 X-Master-Key) -----
     function openSyncModal() {
         document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || '';
         document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || '';
@@ -337,7 +337,8 @@
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Access-Key': apiKey
+                    'X-Master-Key': apiKey, // 🌟 修复点1：对接 Master Key
+                    'X-Bin-Versioning': 'false' // 🌟 修复点2：关闭历史版本防止空间占满
                 },
                 body: JSON.stringify(logs)
             });
@@ -372,7 +373,7 @@
             let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 method: 'GET',
                 headers: {
-                    'X-Access-Key': apiKey
+                    'X-Master-Key': apiKey // 🌟 修复点3：对接 Master Key
                 }
             });
 
