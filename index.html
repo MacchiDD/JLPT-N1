@@ -121,7 +121,7 @@
                 <input type="text" id="bin-id" placeholder="例如: 65e8a..." style="width: 100%;">
             </div>
             <div style="margin-bottom: 15px;">
-                <label style="font-size: 12px; font-weight: bold; color: #34495e;">API Key (Master Key 或 Access Key):</label>
+                <label style="font-size: 12px; font-weight: bold; color: #34495e;">API Key (Master Key):</label>
                 <input type="password" id="api-key" placeholder="例如: $2a$10$..." style="width: 100%;">
             </div>
             <div style="display: flex; justify-content: space-between; gap: 10px;">
@@ -308,7 +308,7 @@
         return Math.max(...wordLogs.map(l => l.round));
     }
 
-    // ----- 🌟 终极修复版：去除了所有限制性 Header，加入探针级错误提示 -----
+    // ----- 🌟 修复：防止 JSONBin 拒绝空数组的伪装机制 -----
     function openSyncModal() {
         document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || '';
         document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || '';
@@ -328,6 +328,9 @@
         localStorage.setItem('cloud_api_key', apiKey);
 
         let logs = getLogs();
+        // 🌟 修复关键点：如果本地进度是空的，我们发送一个隐形的占位符骗过服务器
+        let dataToUpload = logs.length > 0 ? logs : [{"is_empty_placeholder": true}];
+
         let btn = document.getElementById('btn-upload');
         btn.innerText = "上传中...";
         
@@ -338,14 +341,13 @@
                     'Content-Type': 'application/json',
                     'X-Master-Key': apiKey
                 },
-                body: JSON.stringify(logs)
+                body: JSON.stringify(dataToUpload)
             });
 
             if (response.ok) {
                 alert("☁️ 进度已成功上传覆盖至云端！");
                 closeSyncModal();
             } else {
-                // 🌟 探针代码：把服务器具体的错误原因直接弹出来！
                 let errData = await response.json();
                 let errorMsg = errData.message || JSON.stringify(errData);
                 alert(`❌ 上传失败！\n\nHTTP 状态码: ${response.status}\n服务器报错说明: ${errorMsg}\n\n请截图这段报错发给我！`);
@@ -382,6 +384,10 @@
                 let json = await response.json();
                 let data = json.record;
                 if (Array.isArray(data)) {
+                    // 🌟 修复关键点：如果在云端发现了我们自己做的隐形占位符，说明这是个空存档，直接清理掉
+                    if (data.length === 1 && data[0].is_empty_placeholder === true) {
+                        data = [];
+                    }
                     localStorage.setItem('vocab_logs', JSON.stringify(data));
                     cleanUpDuplicateLogs();
                     alert("🎉 云端进度下载成功，当前设备已同步至最新进度！");
@@ -390,7 +396,6 @@
                     alert("❌ 云端数据格式异常，无法解析。");
                 }
             } else {
-                // 🌟 探针代码
                 let errData = await response.json();
                 let errorMsg = errData.message || JSON.stringify(errData);
                 alert(`❌ 下载失败！\n\nHTTP 状态码: ${response.status}\n服务器报错说明: ${errorMsg}\n\n请截图这段报错发给我！`);
@@ -402,7 +407,7 @@
         }
     }
 
-    // ----- 其余功能保持不变 -----
+    // ----- 文件管理功能 -----
     function exportData() {
         let logs = localStorage.getItem('vocab_logs') || '[]';
         if (logs === '[]') return alert("当前没有任何学习记录可以导出。");
