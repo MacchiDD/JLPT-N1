@@ -6,12 +6,9 @@
     <title>N1 词汇间隔重复系统</title>
     <style>
         body { font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; padding: 20px 10px; color: #2c3e50; min-height: 100vh; margin: 0; box-sizing: border-box; }
-        
         #app { background: rgba(255, 255, 255, 0.95); width: 100%; max-width: 620px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; backdrop-filter: blur(10px); box-sizing: border-box; position: relative; }
-        
         h1 { font-size: 22px; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; margin-top: 0; }
         .hidden { display: none !important; }
-        
         .btn { padding: 10px 15px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .btn-primary { background-color: #3498db; color: white; }
         .btn-success { background-color: #2ecc71; color: white; }
@@ -20,11 +17,9 @@
         .btn-warning { background-color: #f39c12; color: white; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); opacity: 0.95; }
         .btn:active { transform: translateY(0); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        
-        input[type="number"], input[type="date"], select { padding: 10px 12px; width: 140px; border: 1px solid #dcdde1; border-radius: 6px; font-size: 14px; margin: 10px 0; outline: none; transition: 0.3s; background: #fdfdfd; box-sizing: border-box; }
-        input[type="number"]:focus, input[type="date"]:focus, select:focus { border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
+        input[type="number"], input[type="date"], input[type="text"], input[type="password"], select { padding: 10px 12px; width: 140px; border: 1px solid #dcdde1; border-radius: 6px; font-size: 14px; margin: 10px 0; outline: none; transition: 0.3s; background: #fdfdfd; box-sizing: border-box; }
+        input[type="number"]:focus, input[type="date"]:focus, input[type="text"]:focus, input[type="password"]:focus, select:focus { border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
         select { width: 100%; }
-        
         .word-card { margin: 20px 0; padding: 20px; border: none; border-top: 6px solid #3498db; border-radius: 12px; background: #ffffff; box-shadow: 0 8px 25px rgba(0,0,0,0.06); min-height: 140px; display: flex; flex-direction: column; justify-content: center; word-wrap: break-word; }
         .word-title { font-size: 32px; font-weight: bold; margin-bottom: 15px; color: #2980b9; text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
         .word-kanji { font-size: 16px; color: #8e44ad; margin-bottom: 8px; font-weight: bold; }
@@ -33,39 +28,31 @@
         .word-example { margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f2f6; text-align: left; background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #3498db; }
         .ex-jp { font-size: 15px; color: #2c3e50; margin: 0 0 8px 0; line-height: 1.6; }
         .ex-cn { font-size: 13px; color: #7f8c8d; margin: 0; line-height: 1.6; }
-        
         .stat-box { text-align: left; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #ecf0f1; font-size: 14px; }
         .settings-box { background: #fff5e6; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 5px solid #f39c12; font-size: 14px; }
         .range-selector { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; border: 1px solid #ecf0f1; }
         .range-selector input { width: 60px; padding: 6px; font-size: 13px; }
-        
         #action-buttons { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
         #action-buttons .btn { width: 48%; padding: 12px 0; font-size: 15px; }
-        
         .table-container { max-height: 380px; overflow-y: auto; margin-top: 15px; border: 1px solid #ecf0f1; border-radius: 8px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; background: white; }
         th { background-color: #2c3e50; color: white; padding: 10px; position: sticky; top: 0; z-index: 10; font-weight: 500; }
         td { padding: 10px; border-bottom: 1px solid #f1f2f6; }
         tr:hover { background-color: #f8f9fa; }
-        
         .filter-bar { margin: 15px 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; }
         .data-management { margin-top: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; flex-direction: column; align-items: center; }
         .data-buttons-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 5px; }
-        
         input[type="checkbox"] { transform: scale(1.3); cursor: pointer; accent-color: #3498db; }
-        
         .history-block { display: inline-block; width: 14px; height: 14px; margin: 0 3px; border-radius: 3px; opacity: 0.9; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: 0.2s; }
         .block-known { background-color: #2ecc71; }
         .block-forgotten { background-color: #e74c3c; }
         #word-history-blocks { margin-bottom: 15px; min-height: 14px; }
         .keyboard-hint { color: #bdc3c7; font-size: 12px; margin-top: 15px; }
-        
         hr { border: 0; border-top: 1px solid #ecf0f1; margin: 20px 0; }
 
-        /* 🌟 新增：同步弹窗样式 */
+        /* 同步弹窗样式更新 */
         #sync-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .sync-box { background: white; width: 90%; max-width: 500px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: left; position: relative; }
-        .sync-box textarea { width: 100%; height: 120px; padding: 10px; border-radius: 6px; border: 1px solid #ccc; margin-top: 10px; font-family: monospace; font-size: 12px; resize: none; box-sizing: border-box; }
+        .sync-box { background: white; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: left; position: relative; }
         .sync-box h3 { margin-top: 0; color: #2980b9; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .close-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 20px; color: #95a5a6; border: none; background: none; }
     </style>
@@ -112,10 +99,10 @@
         <div>
             <p style="color: #95a5a6; font-size: 12px; margin-bottom: 5px;">💾 跨设备同步与本地备份</p>
             <div class="data-management">
-                <button class="btn btn-primary" style="width: 100%; font-size: 14px;" onclick="openSyncModal()">📲 跨设备文本同步 (推荐)</button>
+                <button class="btn btn-primary" style="width: 100%; font-size: 14px; background-color: #8e44ad;" onclick="openSyncModal()">☁️ API 云端存档同步 (JSONBin)</button>
                 <div class="data-buttons-row">
-                    <button class="btn btn-secondary" onclick="exportData()">⬇️ 导出文件</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆️ 导入文件</button>
+                    <button class="btn btn-secondary" onclick="exportData()">⬇️ 导出本地文件</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆️ 导入本地文件</button>
                     <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
                     <button class="btn btn-danger" onclick="clearData()">🗑️ 清空记录</button>
                 </div>
@@ -126,15 +113,23 @@
     <div id="sync-modal" class="hidden">
         <div class="sync-box">
             <button class="close-btn" onclick="closeSyncModal()">×</button>
-            <h3>📲 跨设备同步</h3>
-            <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 5px;">
-                <strong>从电脑到手机：</strong>点击“生成”，复制下方所有文本，发给微信文件传输助手，然后在手机网页里粘贴进来点击“导入覆盖”。
+            <h3>☁️ 云端存档设置</h3>
+            <p style="font-size: 13px; color: #7f8c8d; line-height: 1.5; margin-bottom: 15px;">
+                利用 <b>JSONBin.io</b> 免费接口实现一键上传/下载。只需在手机和电脑填入相同的凭证，即可丢掉本地文件互传的烦恼。
             </p>
-            <textarea id="sync-data-area" placeholder="在这里粘贴来自另一台设备的数据..."></textarea>
-            <div style="display: flex; justify-content: space-between; margin-top: 15px;">
-                <button class="btn btn-warning" style="flex: 1;" onclick="generateSyncText()">生成并复制全部进度</button>
-                <button class="btn btn-success" style="flex: 1;" onclick="importSyncText()">校验并导入覆盖</button>
+            <div style="margin-bottom: 10px;">
+                <label style="font-size: 12px; font-weight: bold; color: #34495e;">Bin ID:</label>
+                <input type="text" id="bin-id" placeholder="例如: 65e8a..." style="width: 100%;">
             </div>
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 12px; font-weight: bold; color: #34495e;">API Key (X-Access-Key):</label>
+                <input type="password" id="api-key" placeholder="例如: $2a$10$..." style="width: 100%;">
+            </div>
+            <div style="display: flex; justify-content: space-between; gap: 10px;">
+                <button class="btn btn-warning" id="btn-upload" style="flex: 1;" onclick="uploadToCloud()">⬆️ 覆盖云端存档</button>
+                <button class="btn btn-success" id="btn-download" style="flex: 1;" onclick="downloadFromCloud()">⬇️ 下载至本设备</button>
+            </div>
+            <p style="font-size: 11px; color: #bdc3c7; margin-top: 15px; text-align: center;">凭证仅保存在当前浏览器的 LocalStorage 中，请妥善保管。</p>
         </div>
     </div>
 
@@ -286,7 +281,6 @@
             });
             
             localStorage.setItem('vocab_logs', JSON.stringify(cleanedLogs));
-            console.log("✅ 数据清洗完成！");
         }
     }
     cleanUpDuplicateLogs();
@@ -315,9 +309,10 @@
         return Math.max(...wordLogs.map(l => l.round));
     }
 
-    // ----- 🌟 新增：文本无缝同步功能相关函数 -----
+    // ----- 🌟 新增：JSONBin 云端存储接口逻辑 -----
     function openSyncModal() {
-        document.getElementById('sync-data-area').value = '';
+        document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || '';
+        document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || '';
         document.getElementById('sync-modal').classList.remove('hidden');
     }
 
@@ -325,38 +320,80 @@
         document.getElementById('sync-modal').classList.add('hidden');
     }
 
-    function generateSyncText() {
-        let logs = localStorage.getItem('vocab_logs') || '[]';
-        if (logs === '[]') return alert("当前没有任何学习记录可以导出。");
-        let textArea = document.getElementById('sync-data-area');
-        // 将 JSON 转为紧凑的字符串格式
-        textArea.value = logs;
-        textArea.select();
+    async function uploadToCloud() {
+        let binId = document.getElementById('bin-id').value.trim();
+        let apiKey = document.getElementById('api-key').value.trim();
+        if (!binId || !apiKey) return alert("⚠️ 请先填写 Bin ID 和 API Key！");
+
+        localStorage.setItem('cloud_bin_id', binId);
+        localStorage.setItem('cloud_api_key', apiKey);
+
+        let logs = getLogs();
+        let btn = document.getElementById('btn-upload');
+        btn.innerText = "上传中...";
+        
         try {
-            document.execCommand('copy');
-            alert("✅ 数据已生成并复制到剪贴板！\n\n现在你可以把这段代码粘贴发给微信或QQ，然后在另一台设备上复制这段代码粘贴回来。");
-        } catch (err) {
-            alert("⚠️ 自动复制失败，请手动全选上方框内的所有文字进行复制。");
+            let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Access-Key': apiKey
+                },
+                body: JSON.stringify(logs)
+            });
+
+            if (response.ok) {
+                alert("☁️ 进度已成功上传覆盖至云端！");
+                closeSyncModal();
+            } else {
+                alert("❌ 上传失败，请检查 Bin ID 或 API Key 是否填写正确。");
+            }
+        } catch (error) {
+            alert("❌ 网络连接失败，请检查你的网络设置。");
+        } finally {
+            btn.innerText = "⬆️ 覆盖云端存档";
         }
     }
 
-    function importSyncText() {
-        let text = document.getElementById('sync-data-area').value.trim();
-        if (!text) return alert("请先在上方输入框内粘贴来自另一台设备的数据！");
+    async function downloadFromCloud() {
+        let binId = document.getElementById('bin-id').value.trim();
+        let apiKey = document.getElementById('api-key').value.trim();
+        if (!binId || !apiKey) return alert("⚠️ 请先填写 Bin ID 和 API Key！");
+
+        localStorage.setItem('cloud_bin_id', binId);
+        localStorage.setItem('cloud_api_key', apiKey);
+
+        if (!confirm("⚠️ 确定要从云端下载并完全覆盖当前设备的所有进度吗？此操作不可逆！")) return;
+
+        let btn = document.getElementById('btn-download');
+        btn.innerText = "下载中...";
+
         try {
-            let data = JSON.parse(text);
-            if (Array.isArray(data)) {
-                if (confirm("⚠️ 即将覆盖当前设备上的所有学习进度，确认导入吗？")) {
+            let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                method: 'GET',
+                headers: {
+                    'X-Access-Key': apiKey
+                }
+            });
+
+            if (response.ok) {
+                let json = await response.json();
+                let data = json.record;
+                if (Array.isArray(data)) {
                     localStorage.setItem('vocab_logs', JSON.stringify(data));
                     cleanUpDuplicateLogs();
-                    alert("🎉 跨设备数据同步成功！你的进度已完美恢复。");
+                    alert("🎉 云端进度下载成功，当前设备已同步至最新进度！");
                     closeSyncModal();
+                } else {
+                    alert("❌ 云端数据格式异常，无法解析。");
                 }
             } else {
-                alert("❌ 数据格式不正确，请确保粘贴的是完整的代码。");
+                alert("❌ 下载失败，请检查 Bin ID 或 API Key 是否填写正确。");
             }
-        } catch (err) {
-            alert("❌ 解析数据失败，粘贴的内容可能有遗漏或多余字符。");
+        } catch (error) {
+            alert("❌ 网络连接失败，请检查你的网络设置。");
+        } finally {
+            btn.innerText = "⬇️ 下载至本设备";
         }
     }
 
@@ -640,7 +677,6 @@
         let studyView = document.getElementById('study-view');
         if (studyView.classList.contains('hidden')) return;
         
-        // 阻止在弹窗打开时触发快捷键
         let syncModal = document.getElementById('sync-modal');
         if (!syncModal.classList.contains('hidden')) return;
 
