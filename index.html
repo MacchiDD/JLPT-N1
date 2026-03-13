@@ -50,7 +50,6 @@
         .keyboard-hint { color: #bdc3c7; font-size: 12px; margin-top: 15px; }
         hr { border: 0; border-top: 1px solid #ecf0f1; margin: 20px 0; }
 
-        /* 同步弹窗样式更新 */
         #sync-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .sync-box { background: white; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: left; position: relative; }
         .sync-box h3 { margin-top: 0; color: #2980b9; border-bottom: 2px solid #eee; padding-bottom: 10px; }
@@ -118,11 +117,11 @@
                 利用 <b>JSONBin.io</b> 免费接口实现一键上传/下载。只需在手机和电脑填入相同的凭证即可无缝同步。
             </p>
             <div style="margin-bottom: 10px;">
-                <label style="font-size: 12px; font-weight: bold; color: #34495e;">Bin ID:</label>
+                <label style="font-size: 12px; font-weight: bold; color: #34495e;">Bin ID (24位字母数字):</label>
                 <input type="text" id="bin-id" placeholder="例如: 65e8a..." style="width: 100%;">
             </div>
             <div style="margin-bottom: 15px;">
-                <label style="font-size: 12px; font-weight: bold; color: #34495e;">API Key (Master Key):</label>
+                <label style="font-size: 12px; font-weight: bold; color: #34495e;">API Key (Master Key 或 Access Key):</label>
                 <input type="password" id="api-key" placeholder="例如: $2a$10$..." style="width: 100%;">
             </div>
             <div style="display: flex; justify-content: space-between; gap: 10px;">
@@ -309,7 +308,7 @@
         return Math.max(...wordLogs.map(l => l.round));
     }
 
-    // ----- 🌟 修复：云端存储接口逻辑 (修改为 X-Master-Key) -----
+    // ----- 🌟 终极修复版：去除了所有限制性 Header，加入探针级错误提示 -----
     function openSyncModal() {
         document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || '';
         document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || '';
@@ -337,8 +336,7 @@
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Master-Key': apiKey, // 🌟 修复点1：对接 Master Key
-                    'X-Bin-Versioning': 'false' // 🌟 修复点2：关闭历史版本防止空间占满
+                    'X-Master-Key': apiKey
                 },
                 body: JSON.stringify(logs)
             });
@@ -347,7 +345,10 @@
                 alert("☁️ 进度已成功上传覆盖至云端！");
                 closeSyncModal();
             } else {
-                alert("❌ 上传失败，请检查 Bin ID 或 API Key 是否填写正确。");
+                // 🌟 探针代码：把服务器具体的错误原因直接弹出来！
+                let errData = await response.json();
+                let errorMsg = errData.message || JSON.stringify(errData);
+                alert(`❌ 上传失败！\n\nHTTP 状态码: ${response.status}\n服务器报错说明: ${errorMsg}\n\n请截图这段报错发给我！`);
             }
         } catch (error) {
             alert("❌ 网络连接失败，请检查你的网络设置。");
@@ -373,7 +374,7 @@
             let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 method: 'GET',
                 headers: {
-                    'X-Master-Key': apiKey // 🌟 修复点3：对接 Master Key
+                    'X-Master-Key': apiKey
                 }
             });
 
@@ -389,7 +390,10 @@
                     alert("❌ 云端数据格式异常，无法解析。");
                 }
             } else {
-                alert("❌ 下载失败，请检查 Bin ID 或 API Key 是否填写正确。");
+                // 🌟 探针代码
+                let errData = await response.json();
+                let errorMsg = errData.message || JSON.stringify(errData);
+                alert(`❌ 下载失败！\n\nHTTP 状态码: ${response.status}\n服务器报错说明: ${errorMsg}\n\n请截图这段报错发给我！`);
             }
         } catch (error) {
             alert("❌ 网络连接失败，请检查你的网络设置。");
@@ -398,7 +402,7 @@
         }
     }
 
-    // ----- 文件管理功能 -----
+    // ----- 其余功能保持不变 -----
     function exportData() {
         let logs = localStorage.getItem('vocab_logs') || '[]';
         if (logs === '[]') return alert("当前没有任何学习记录可以导出。");
