@@ -20,33 +20,38 @@
         input[type="number"], input[type="date"], input[type="text"], input[type="password"], select { padding: 10px 12px; width: 140px; border: 1px solid #dcdde1; border-radius: 6px; font-size: 14px; margin: 10px 0; outline: none; transition: 0.3s; background: #fdfdfd; box-sizing: border-box; }
         input[type="number"]:focus, input[type="date"]:focus, input[type="text"]:focus, input[type="password"]:focus, select:focus { border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
         select { width: 100%; }
+        
         .word-card { margin: 20px 0; padding: 20px; border: none; border-top: 6px solid #3498db; border-radius: 12px; background: #ffffff; box-shadow: 0 8px 25px rgba(0,0,0,0.06); min-height: 140px; display: flex; flex-direction: column; justify-content: center; word-wrap: break-word; }
-        .word-title { font-size: 32px; font-weight: bold; margin-bottom: 15px; color: #2980b9; text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
+        .word-title { font-size: 32px; font-weight: bold; color: #2980b9; text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
         .word-kanji { font-size: 16px; color: #8e44ad; margin-bottom: 8px; font-weight: bold; }
         .word-kana { font-size: 20px; color: #7f8c8d; margin-bottom: 15px; letter-spacing: 1px; }
         .word-meaning { font-size: 20px; font-weight: bold; color: #2c3e50; }
         .word-example { margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f2f6; text-align: left; background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #3498db; }
         .ex-jp { font-size: 15px; color: #2c3e50; margin: 0 0 8px 0; line-height: 1.6; }
         .ex-cn { font-size: 13px; color: #7f8c8d; margin: 0; line-height: 1.6; }
+        
         .stat-box { text-align: left; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #ecf0f1; font-size: 14px; }
         .settings-box { background: #fff5e6; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 5px solid #f39c12; font-size: 14px; }
         .range-selector { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; border: 1px solid #ecf0f1; }
         .range-selector input { width: 60px; padding: 6px; font-size: 13px; }
         #action-buttons { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
         #action-buttons .btn { width: 48%; padding: 12px 0; font-size: 15px; }
+        
         .table-container { max-height: 380px; overflow-y: auto; margin-top: 15px; border: 1px solid #ecf0f1; border-radius: 8px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; background: white; }
         th { background-color: #2c3e50; color: white; padding: 10px; position: sticky; top: 0; z-index: 10; font-weight: 500; }
         td { padding: 10px; border-bottom: 1px solid #f1f2f6; }
         tr:hover { background-color: #f8f9fa; }
+        
         .filter-bar { margin: 15px 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; }
         .data-management { margin-top: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; flex-direction: column; align-items: center; }
         .data-buttons-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 5px; }
         input[type="checkbox"] { transform: scale(1.3); cursor: pointer; accent-color: #3498db; }
+        
         .history-block { display: inline-block; width: 14px; height: 14px; margin: 0 3px; border-radius: 3px; opacity: 0.9; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: 0.2s; }
         .block-known { background-color: #2ecc71; }
         .block-forgotten { background-color: #e74c3c; }
-        #word-history-blocks { margin-bottom: 15px; min-height: 14px; }
+        #word-history-blocks { margin-bottom: 15px; margin-top: 10px; min-height: 14px; }
         .keyboard-hint { color: #bdc3c7; font-size: 12px; margin-top: 15px; }
         hr { border: 0; border-top: 1px solid #ecf0f1; margin: 20px 0; }
 
@@ -54,6 +59,11 @@
         .sync-box { background: white; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: left; position: relative; }
         .sync-box h3 { margin-top: 0; color: #2980b9; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .close-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 20px; color: #95a5a6; border: none; background: none; }
+        
+        /* 🌟 发音喇叭按钮样式 */
+        .speak-btn { cursor: pointer; transition: 0.2s; display: inline-block; margin-left: 12px; font-size: 26px; vertical-align: middle; user-select: none; filter: grayscale(100%) opacity(0.7); }
+        .speak-btn:hover { transform: scale(1.2); filter: grayscale(0%) opacity(1); }
+        .speak-btn:active { transform: scale(0.9); }
     </style>
     <script src="words.js"></script>
 </head>
@@ -121,7 +131,7 @@
                 <input type="text" id="bin-id" placeholder="例如: 65e8a..." style="width: 100%;">
             </div>
             <div style="margin-bottom: 15px;">
-                <label style="font-size: 12px; font-weight: bold; color: #34495e;">API Key (Master Key):</label>
+                <label style="font-size: 12px; font-weight: bold; color: #34495e;">API Key (Master Key 或 Access Key):</label>
                 <input type="password" id="api-key" placeholder="例如: $2a$10$..." style="width: 100%;">
             </div>
             <div style="display: flex; justify-content: space-between; gap: 10px;">
@@ -170,11 +180,19 @@
         </div>
         
         <div class="word-card">
-            <div id="card-prompt" class="word-title">提示区</div>
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <div id="card-prompt" class="word-title" style="margin-bottom: 0;">提示区</div>
+                <span id="prompt-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="点击朗读">🔊</span>
+            </div>
+            
             <div id="word-history-blocks"></div>
             
             <div id="answer-section" class="hidden">
-                <div id="card-answer-title" class="word-title" style="color: #e67e22; margin-bottom: 10px; font-size: 26px;"></div>
+                <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
+                    <div id="card-answer-title" class="word-title" style="color: #e67e22; margin-bottom: 0; font-size: 26px;"></div>
+                    <span id="answer-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="点击朗读">🔊</span>
+                </div>
+                
                 <div id="card-kanji" class="word-kanji"></div>
                 <div id="card-kana" class="word-kana">假名</div>
                 <div id="card-meaning" class="word-meaning">释义</div>
@@ -190,7 +208,7 @@
                 <button class="btn btn-danger" onclick="markWord('forgotten')">忘了 (重现)</button>
                 <button class="btn btn-success" onclick="markWord('known')">认识 (下一个)</button>
             </div>
-            <p class="keyboard-hint">⌨️ PC端快捷键：[空格]答案 | [←]忘了 | [→]认识</p>
+            <p class="keyboard-hint">⌨️ PC端快捷键：[空格]答案 | [←]忘了 | [→]认识 | [↑]发音</p>
         </div>
     </div>
 
@@ -247,6 +265,25 @@
 </div>
 
 <script>
+    // ----- 🌟 发音引擎核心功能 -----
+    function speakCurrentWord() {
+        let currentWord = queue[currentIndex];
+        // 检测浏览器是否支持语音播报
+        if (!currentWord || !('speechSynthesis' in window)) return;
+        
+        // 停止上一条可能还没播完的语音，防止声音重叠
+        window.speechSynthesis.cancel(); 
+        
+        // 无论哪种模式，始终朗读日语原词 (word)
+        let textToSpeak = currentWord.word;
+        
+        let utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.lang = 'ja-JP'; // 强制调用日语引擎
+        utterance.rate = 0.85;    // 降速到0.85，非常适合外语初学者听清长短音和促音
+        
+        window.speechSynthesis.speak(utterance);
+    }
+
     function getLogs() { return JSON.parse(localStorage.getItem('vocab_logs') || '[]'); }
 
     function cleanUpDuplicateLogs() {
@@ -308,7 +345,6 @@
         return Math.max(...wordLogs.map(l => l.round));
     }
 
-    // ----- 🌟 修复：防止 JSONBin 拒绝空数组的伪装机制 -----
     function openSyncModal() {
         document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || '';
         document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || '';
@@ -328,7 +364,6 @@
         localStorage.setItem('cloud_api_key', apiKey);
 
         let logs = getLogs();
-        // 🌟 修复关键点：如果本地进度是空的，我们发送一个隐形的占位符骗过服务器
         let dataToUpload = logs.length > 0 ? logs : [{"is_empty_placeholder": true}];
 
         let btn = document.getElementById('btn-upload');
@@ -384,7 +419,6 @@
                 let json = await response.json();
                 let data = json.record;
                 if (Array.isArray(data)) {
-                    // 🌟 修复关键点：如果在云端发现了我们自己做的隐形占位符，说明这是个空存档，直接清理掉
                     if (data.length === 1 && data[0].is_empty_placeholder === true) {
                         data = [];
                     }
@@ -407,7 +441,6 @@
         }
     }
 
-    // ----- 文件管理功能 -----
     function exportData() {
         let logs = localStorage.getItem('vocab_logs') || '[]';
         if (logs === '[]') return alert("当前没有任何学习记录可以导出。");
@@ -574,17 +607,31 @@
         let promptElem = document.getElementById('card-prompt');
         let answerTitleElem = document.getElementById('card-answer-title');
         let meaningElem = document.getElementById('card-meaning');
+        
+        let promptSpeak = document.getElementById('prompt-speak');
+        let answerSpeak = document.getElementById('answer-speak');
 
         if (currentStudyMode === 'jp2cn') {
             promptElem.innerText = currentWord.word;
             answerTitleElem.style.display = 'none'; 
             meaningElem.innerText = currentWord.meaning;
             meaningElem.style.display = 'block';
+            
+            // 🌟 看日文想中文：提示区显示喇叭，答案区隐藏
+            promptSpeak.classList.remove('hidden');
+            answerSpeak.classList.add('hidden');
+            
+            // 出现新词时尝试自动发音（移动端可能需要用户先点击过屏幕）
+            speakCurrentWord();
         } else {
             promptElem.innerText = currentWord.meaning;
             answerTitleElem.innerText = currentWord.word;
             answerTitleElem.style.display = 'block'; 
             meaningElem.style.display = 'none'; 
+            
+            // 🌟 看中文想日文：提示区不显示喇叭，等翻开答案才显示
+            promptSpeak.classList.add('hidden');
+            answerSpeak.classList.add('hidden'); 
         }
         
         let wordLogs = getLogs().filter(log => log.wordId === currentWord.id).sort((a, b) => a.round - b.round);
@@ -626,6 +673,12 @@
         document.getElementById('answer-section').classList.remove('hidden');
         document.getElementById('action-buttons').classList.remove('hidden');
         document.getElementById('btn-show-answer').classList.add('hidden');
+        
+        // 🌟 翻牌时必定触发一次读音
+        if (currentStudyMode === 'cn2jp') {
+            document.getElementById('answer-speak').classList.remove('hidden');
+        }
+        speakCurrentWord();
     }
 
     function markWord(status) {
@@ -706,6 +759,12 @@
                 event.preventDefault();
                 markWord('known');
             }
+        }
+        
+        // 🌟 新增：上方向键重读发音
+        if (event.code === 'ArrowUp' || event.key === '3') {
+            event.preventDefault();
+            speakCurrentWord();
         }
     });
 
