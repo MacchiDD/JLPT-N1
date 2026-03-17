@@ -2940,7 +2940,7 @@ const myWordBank = [
         example_jp: "このセーターは毛が直接肌に触れるとちくちくする。",
         example_cn: "这件毛衣的毛直接接触皮肤的话会有些刺痛。"
     },
-    { 
+{ 
         id: 300, 
         word: "かささぎ", 
         kanji: "鵲", 
@@ -3450,7 +3450,7 @@ const myWordBank = [
         example_jp: "男たちが土足のまま、部屋にどかどかと上がり込んできた。",
         example_cn: "男人们穿着鞋，吵吵嚷嚷地闯进了房间。"
     },
-    { 
+{ 
         id: 351, 
         word: "にぎわう", 
         kanji: "賑わう", 
@@ -3950,7 +3950,7 @@ const myWordBank = [
         example_jp: "お正月には、家族揃って近くのお宮に初詣に出かける。",
         example_cn: "新的一年，全家会一起去附近的神社进行初次参拜。"
     },
-    { 
+{ 
         id: 401, 
         word: "ねじ", 
         kanji: "螺子", 
@@ -4450,7 +4450,7 @@ const myWordBank = [
         example_jp: "それは初心者にありがちなミスだ。",
         example_cn: "那是初学者常犯的错误。"
     },
-    { 
+{ 
         id: 451, 
         word: "おふくろ", 
         kanji: "お袋", 
@@ -4950,7 +4950,7 @@ const myWordBank = [
         example_jp: "敵を欺くための謀を巡らす。",
         example_cn: "策划欺骗敌人的计谋。"
     },
-    { 
+{ 
         id: 501, 
         word: "おめおめ", 
         kanji: "おめおめ", 
@@ -5450,7 +5450,7 @@ const myWordBank = [
         example_jp: "道に迷い、おまけに雨まで降ってきた。",
         example_cn: "迷了路，而且还下起雨来了。"
     },
-    { 
+{ 
         id: 551, 
         word: "ごまかす", 
         kanji: "誤魔化す", 
@@ -5950,7 +5950,7 @@ const myWordBank = [
         example_jp: "あんな強い相手に勝てたのは、実力ではなく全くの紛れだ。",
         example_cn: "能战胜那么强的对手，不是靠实力，完全是出于侥幸。"
     },
-    { 
+{ 
         id: 601, 
         word: "じれったい", 
         kanji: "焦れったい", 
@@ -6450,7 +6450,7 @@ const myWordBank = [
         example_jp: "目標達成に向けて、弛みなく努力を続ける。",
         example_cn: "为了达成目标，毫不松懈地继续努力。"
     },
-    { 
+{ 
         id: 651, 
         word: "あんぐり", 
         kanji: "あんぐり", 
@@ -6950,7 +6950,7 @@ const myWordBank = [
         example_jp: "彼の行動には、どうも訝しい点がある。",
         example_cn: "他的行动总是让人觉得有些可疑之处。"
     },
-    { 
+{ 
         id: 701, 
         word: "さわさわ", 
         kanji: "さわさわ", 
@@ -7450,7 +7450,7 @@ const myWordBank = [
         example_jp: "彼の悲しい生い立ちを聞いて、遣る瀬無い気持ちになった。",
         example_cn: "听到他悲惨的身世，我感到一阵凄凉与无奈。"
     },
-    { 
+{ 
         id: 751, 
         word: "おつかい", 
         kanji: "お使い", 
@@ -7689,5 +7689,5 @@ const myWordBank = [
         meaning: "（书面/客套语）多少（同どのくらい）",
         example_jp: "ご心痛は如何ほどかと、お察しいたします。",
         example_cn: "我能体谅您内心有多么的悲痛（心痛有多少）。"
-    }，
+    }
 ];
