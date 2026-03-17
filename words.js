@@ -1,5 +1,5 @@
 // words.js 词库文件
-const myWordBank = [
+const hiraganaBank = [
     { 
         id: 1, 
         word: "みやびやか", 
@@ -7691,3 +7691,105 @@ const myWordBank = [
         example_cn: "我能体谅您内心有多么的悲痛（心痛有多少）。"
     }
 ];
+const kundokuBank = [
+    { 
+        id: 1, 
+        word: "かつ", 
+        kanji: "且つ", 
+        kana: "かつ", 
+        pos: "接续词 / 副词",
+        meaning: "并且，而且；同时",
+        example_jp: "彼は優秀な研究者であり、且つ良き指導者でもある。",
+        example_cn: "他是一名优秀的研究者，同时也是一位好导师。"
+    },
+    { 
+        id: 2, 
+        word: "なのる", 
+        kanji: "名乗る", 
+        kana: "なのる", 
+        pos: "自动词・五段",
+        meaning: "自报姓名，自称",
+        example_jp: "電話に出る時は、まず自分の名前を名乗るべきだ。",
+        example_cn: "接电话时，应该先报上自己的名字。"
+    },
+    { 
+        id: 3, 
+        word: "うちわ", 
+        kanji: "団扇", 
+        kana: "うちわ", 
+        pos: "名词",
+        meaning: "团扇，圆扇",
+        example_jp: "暑いので、団扇でパタパタとあおぐ。",
+        example_cn: "因为很热，用团扇啪嗒啪嗒地扇风。"
+    },
+    { 
+        id: 4, 
+        word: "おそれいる", 
+        kanji: "恐れ入る", 
+        kana: "おそれいる", 
+        pos: "自动词・五段",
+        meaning: "实在抱歉，不敢当；佩服，折服",
+        example_jp: "わざわざ遠方からお越しいただき、恐れ入ります。",
+        example_cn: "劳驾您特意从远方赶来，实在是不敢当（抱歉）。"
+    },
+    { 
+        id: 5, 
+        word: "ぬけだす", 
+        kanji: "抜け出す", 
+        kana: "ぬけだす", 
+        pos: "自动词・五段",
+        meaning: "偷偷溜走；摆脱（困境）；脱颖而出",
+        example_jp: "つまらない会議からこっそり抜け出した。",
+        example_cn: "从无聊的会议中偷偷溜走了。"
+    },
+    { 
+        id: 6, 
+        word: "おやごころ", 
+        kanji: "親心", 
+        kana: "おやごころ", 
+        pos: "名词",
+        meaning: "父母心，天下父母心",
+        example_jp: "いくつになっても子供の将来を心配するのは親心というものだ。",
+        example_cn: "无论孩子多大都会担心他们的未来，这就是天下父母心。"
+    },
+    { 
+        id: 7, 
+        word: "そうじて", 
+        kanji: "総じて", 
+        kana: "そうじて", 
+        pos: "副词",
+        meaning: "总的来说，一般来说",
+        example_jp: "今年の試験問題は、総じて去年よりも易しかった。",
+        example_cn: "今年的考试题总的来说比去年容易。"
+    },
+    { 
+        id: 8, 
+        word: "らくがき", 
+        kanji: "落書き", 
+        kana: "らくがき", 
+        pos: "名词 / 自动词・サ变",
+        meaning: "涂鸦，乱写乱画",
+        example_jp: "公共の壁に落書きをしてはいけない。",
+        example_cn: "不能在公共墙壁上乱涂乱画。"
+    },
+    { 
+        id: 9, 
+        word: "まどう", 
+        kanji: "惑う", 
+        kana: "まどう", 
+        pos: "自动词・五段",
+        meaning: "迷惑，困惑，不知所措",
+        example_jp: "どちらの道に進むべきか、心が激しく惑う。",
+        example_cn: "不知该走哪条路，内心十分困惑。"
+    },
+    { 
+        id: 10, 
+        word: "かり", 
+        kanji: "仮", 
+        kana: "かり", 
+        pos: "名词",
+        meaning: "临时，暂时，假设",
+        example_jp: "これはまだ仮の契約なので、後日正式な手続きが必要です。",
+        example_cn: "这还只是临时合同，日后需要办理正式手续。"
+    },
+    ];
