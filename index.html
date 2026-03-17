@@ -72,6 +72,14 @@
     <div id="menu-view">
         <h1 style="color: #34495e;">📚 N1 备考中控台</h1>
         
+        <div class="settings-box" style="border-left-color: #8e44ad; background: #fdfaef;">
+            <strong style="color: #8e44ad;">📖 选择当前词库：</strong>
+            <select id="dictionary-select" onchange="switchDictionary()" style="margin-top: 5px; margin-bottom: 5px; font-weight: bold; color: #8e44ad;">
+                <option value="hiragana">假名 + 拟声词题库</option>
+                <option value="kundoku">訓読词汇题库</option>
+            </select>
+        </div>
+
         <div class="settings-box">
             <strong style="color: #d35400;">⚙️ 出题方向：</strong>
             <select id="study-mode-select" style="margin-top: 5px; margin-bottom: 10px;">
@@ -102,18 +110,18 @@
         </div>
         <hr>
         <div>
-            <button class="btn btn-warning" style="width: 80%; padding: 12px; font-size: 15px;" onclick="openStatsCenter()">📊 进入数据中心 (自定义特训)</button>
+            <button class="btn btn-warning" style="width: 80%; padding: 12px; font-size: 15px;" onclick="openStatsCenter()">📊 进入当前词库数据中心</button>
         </div>
         <hr style="border-top: 1px dashed #bdc3c7;">
         <div>
-            <p style="color: #95a5a6; font-size: 12px; margin-bottom: 5px;">💾 跨设备同步与本地备份</p>
+            <p style="color: #95a5a6; font-size: 12px; margin-bottom: 5px;">💾 跨设备同步与本地备份 (包含所有词库)</p>
             <div class="data-management">
                 <button class="btn btn-primary" style="width: 100%; font-size: 14px; background-color: #8e44ad;" onclick="openSyncModal()">☁️ API 云端存档同步 (JSONBin)</button>
                 <div class="data-buttons-row">
                     <button class="btn btn-secondary" onclick="exportData()">⬇️ 导出本地文件</button>
                     <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆️ 导入本地文件</button>
                     <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
-                    <button class="btn btn-danger" onclick="clearData()">🗑️ 清空记录</button>
+                    <button class="btn btn-danger" onclick="clearData()">🗑️ 清空所有记录</button>
                 </div>
             </div>
         </div>
@@ -265,26 +273,41 @@
 </div>
 
 <script>
-    // ----- 🌟 发音引擎核心功能 -----
+    // ----- 🌟 多词库管理逻辑 -----
+    let activeBankName = 'hiragana';
+
+    function switchDictionary() {
+        activeBankName = document.getElementById('dictionary-select').value;
+        cleanUpDuplicateLogs(); // 切换时顺便清理一次对应库的日志
+    }
+
+    // 获取当前正在学习的数据源
+    function getCurrentBank() {
+        if (activeBankName === 'hiragana') return typeof hiraganaBank !== 'undefined' ? hiraganaBank : [];
+        if (activeBankName === 'kundoku') return typeof kundokuBank !== 'undefined' ? kundokuBank : [];
+        return [];
+    }
+
+    // 获取当前词库对应的 LocalStorage Key (保证两个库进度相互隔离)
+    function getLogKey() {
+        return activeBankName === 'hiragana' ? 'vocab_logs' : 'vocab_logs_kundoku';
+    }
+
+    // ----- 发音引擎核心功能 -----
     function speakCurrentWord() {
         let currentWord = queue[currentIndex];
-        // 检测浏览器是否支持语音播报
         if (!currentWord || !('speechSynthesis' in window)) return;
-        
-        // 停止上一条可能还没播完的语音，防止声音重叠
         window.speechSynthesis.cancel(); 
-        
-        // 无论哪种模式，始终朗读日语原词 (word)
-        let textToSpeak = currentWord.word;
-        
-        let utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.lang = 'ja-JP'; // 强制调用日语引擎
-        utterance.rate = 0.85;    // 降速到0.85，非常适合外语初学者听清长短音和促音
-        
+        let utterance = new SpeechSynthesisUtterance(currentWord.word);
+        utterance.lang = 'ja-JP'; 
+        utterance.rate = 0.85;    
         window.speechSynthesis.speak(utterance);
     }
 
-    function getLogs() { return JSON.parse(localStorage.getItem('vocab_logs') || '[]'); }
+    // ----- 日志存取逻辑 -----
+    function getLogs() { 
+        return JSON.parse(localStorage.getItem(getLogKey()) || '[]'); 
+    }
 
     function cleanUpDuplicateLogs() {
         let logs = getLogs();
@@ -316,9 +339,11 @@
                 log.round = roundTracker[log.wordId];
             });
             
-            localStorage.setItem('vocab_logs', JSON.stringify(cleanedLogs));
+            localStorage.setItem(getLogKey(), JSON.stringify(cleanedLogs));
         }
     }
+    
+    // 初始化时清理一次默认库
     cleanUpDuplicateLogs();
 
     function saveLog(wordId, round, firstImpression) {
@@ -330,11 +355,11 @@
         if (existingLogIndex !== -1) {
             if (firstImpression === 'forgotten') {
                 logs[existingLogIndex].status = 'forgotten';
-                localStorage.setItem('vocab_logs', JSON.stringify(logs));
+                localStorage.setItem(getLogKey(), JSON.stringify(logs));
             }
         } else {
             logs.push({ date: today, wordId: wordId, round: round, status: firstImpression });
-            localStorage.setItem('vocab_logs', JSON.stringify(logs));
+            localStorage.setItem(getLogKey(), JSON.stringify(logs));
         }
     }
 
@@ -345,6 +370,7 @@
         return Math.max(...wordLogs.map(l => l.round));
     }
 
+    // ----- ☁️ 云端/本地 数据管理 (同时处理两套词库) -----
     function openSyncModal() {
         document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || '';
         document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || '';
@@ -355,6 +381,25 @@
         document.getElementById('sync-modal').classList.add('hidden');
     }
 
+    function getCombinedLogs() {
+        return {
+            hiragana: JSON.parse(localStorage.getItem('vocab_logs') || '[]'),
+            kundoku: JSON.parse(localStorage.getItem('vocab_logs_kundoku') || '[]')
+        };
+    }
+
+    function restoreCombinedLogs(data) {
+        // 向下兼容：如果云端存的是老版本的数组格式，直接赋予假名库
+        if (Array.isArray(data)) {
+            localStorage.setItem('vocab_logs', JSON.stringify(data));
+        } else {
+            // 新格式对象，分别赋值
+            if (data.hiragana) localStorage.setItem('vocab_logs', JSON.stringify(data.hiragana));
+            if (data.kundoku) localStorage.setItem('vocab_logs_kundoku', JSON.stringify(data.kundoku));
+        }
+        cleanUpDuplicateLogs(); // 清理一下当前活跃库
+    }
+
     async function uploadToCloud() {
         let binId = document.getElementById('bin-id').value.trim();
         let apiKey = document.getElementById('api-key').value.trim();
@@ -363,9 +408,7 @@
         localStorage.setItem('cloud_bin_id', binId);
         localStorage.setItem('cloud_api_key', apiKey);
 
-        let logs = getLogs();
-        let dataToUpload = logs.length > 0 ? logs : [{"is_empty_placeholder": true}];
-
+        let dataToUpload = getCombinedLogs();
         let btn = document.getElementById('btn-upload');
         btn.innerText = "上传中...";
         
@@ -380,15 +423,14 @@
             });
 
             if (response.ok) {
-                alert("☁️ 进度已成功上传覆盖至云端！");
+                alert("☁️ 所有词库的进度已成功打包上传至云端！");
                 closeSyncModal();
             } else {
                 let errData = await response.json();
-                let errorMsg = errData.message || JSON.stringify(errData);
-                alert(`❌ 上传失败！\n\nHTTP 状态码: ${response.status}\n服务器报错说明: ${errorMsg}\n\n请截图这段报错发给我！`);
+                alert(`❌ 上传失败！报错说明: ${errData.message || '未知错误'}`);
             }
         } catch (error) {
-            alert("❌ 网络连接失败，请检查你的网络设置。");
+            alert("❌ 网络连接失败，请检查网络。");
         } finally {
             btn.innerText = "⬆️ 覆盖云端存档";
         }
@@ -402,7 +444,7 @@
         localStorage.setItem('cloud_bin_id', binId);
         localStorage.setItem('cloud_api_key', apiKey);
 
-        if (!confirm("⚠️ 确定要从云端下载并完全覆盖当前设备的所有进度吗？此操作不可逆！")) return;
+        if (!confirm("⚠️ 确定要从云端下载并覆盖所有词库的进度吗？此操作不可逆！")) return;
 
         let btn = document.getElementById('btn-download');
         btn.innerText = "下载中...";
@@ -410,51 +452,39 @@
         try {
             let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 method: 'GET',
-                headers: {
-                    'X-Master-Key': apiKey
-                }
+                headers: { 'X-Master-Key': apiKey }
             });
 
             if (response.ok) {
                 let json = await response.json();
-                let data = json.record;
-                if (Array.isArray(data)) {
-                    if (data.length === 1 && data[0].is_empty_placeholder === true) {
-                        data = [];
-                    }
-                    localStorage.setItem('vocab_logs', JSON.stringify(data));
-                    cleanUpDuplicateLogs();
-                    alert("🎉 云端进度下载成功，当前设备已同步至最新进度！");
-                    closeSyncModal();
-                } else {
-                    alert("❌ 云端数据格式异常，无法解析。");
-                }
+                restoreCombinedLogs(json.record);
+                alert("🎉 下载成功，所有词库数据已同步至最新！");
+                closeSyncModal();
             } else {
                 let errData = await response.json();
-                let errorMsg = errData.message || JSON.stringify(errData);
-                alert(`❌ 下载失败！\n\nHTTP 状态码: ${response.status}\n服务器报错说明: ${errorMsg}\n\n请截图这段报错发给我！`);
+                alert(`❌ 下载失败！报错说明: ${errData.message || '未知错误'}`);
             }
         } catch (error) {
-            alert("❌ 网络连接失败，请检查你的网络设置。");
+            alert("❌ 网络连接失败，请检查网络。");
         } finally {
             btn.innerText = "⬇️ 下载至本设备";
         }
     }
 
     function exportData() {
-        let logs = localStorage.getItem('vocab_logs') || '[]';
-        if (logs === '[]') return alert("当前没有任何学习记录可以导出。");
-        let blob = new Blob([logs], { type: "application/json" });
+        let payload = JSON.stringify(getCombinedLogs());
+        let blob = new Blob([payload], { type: "application/json" });
         let url = URL.createObjectURL(blob);
         let a = document.createElement('a');
         a.href = url;
         let today = new Date().toISOString().split('T')[0];
-        a.download = `N1_词汇备份_${today}.json`;
+        a.download = `N1_全词库备份_${today}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
+
     function importData(event) {
         let file = event.target.files[0];
         if (!file) return;
@@ -462,23 +492,23 @@
         reader.onload = function(e) {
             try {
                 let data = JSON.parse(e.target.result);
-                if (Array.isArray(data)) {
-                    localStorage.setItem('vocab_logs', JSON.stringify(data));
-                    cleanUpDuplicateLogs();
-                    alert("✅ 学习记录导入成功！");
-                    document.getElementById('import-file').value = ''; 
-                } else { alert("❌ 文件格式不正确，请选择由本软件导出的备份文件。"); }
+                restoreCombinedLogs(data);
+                alert("✅ 学习记录导入成功！");
+                document.getElementById('import-file').value = ''; 
             } catch (err) { alert("❌ 解析文件失败，文件可能已损坏。"); }
         };
         reader.readAsText(file);
     }
+
     function clearData() {
-        if (confirm("⚠️ 警告：这将会彻底清除你所有的学习和复习记录！\n\n你确定要清空吗？")) {
+        if (confirm("⚠️ 警告：这将会彻底清除【所有词库】的学习和复习记录！\n\n你确定要清空吗？")) {
             localStorage.removeItem('vocab_logs');
-            alert("🗑️ 所有学习记录已清空！");
+            localStorage.removeItem('vocab_logs_kundoku');
+            alert("🗑️ 所有记录已清空！");
         }
     }
 
+    // ----- 学习模式核心变量 -----
     let queue = [];
     let historyStack = [];
     let firstImpressions = {}; 
@@ -491,15 +521,16 @@
         let count = parseInt(document.getElementById('new-word-count').value);
         if (isNaN(count) || count <= 0) return alert('请输入有效的数量');
 
+        let bank = getCurrentBank();
+        if (bank.length === 0) return alert('当前词库为空，请检查数据文件。');
+
         let reviewCounts = {};
-        myWordBank.forEach(w => reviewCounts[w.id] = 0);
+        bank.forEach(w => reviewCounts[w.id] = 0);
         getLogs().forEach(log => {
-            if (reviewCounts[log.wordId] !== undefined) {
-                reviewCounts[log.wordId]++;
-            }
+            if (reviewCounts[log.wordId] !== undefined) reviewCounts[log.wordId]++;
         });
 
-        let extractedWords = [...myWordBank].sort((a, b) => {
+        let extractedWords = [...bank].sort((a, b) => {
             let weightA = reviewCounts[a.id] + Math.random();
             let weightB = reviewCounts[b.id] + Math.random();
             return weightA - weightB;
@@ -512,21 +543,20 @@
         let dateStr = document.getElementById('history-date').value;
         if (!dateStr) return alert('请先选择日期');
         let targetLogs = getLogs().filter(log => log.date === dateStr);
-        if (targetLogs.length === 0) return alert('这一天没有学习记录哦。');
+        if (targetLogs.length === 0) return alert('该词库在这一天没有学习记录哦。');
 
         let dailyMap = {};
         targetLogs.forEach(log => {
-            if (dailyMap[log.wordId] !== 'forgotten') {
-                dailyMap[log.wordId] = log.status; 
-            }
+            if (dailyMap[log.wordId] !== 'forgotten') dailyMap[log.wordId] = log.status; 
         });
 
+        let bank = getCurrentBank();
         let allIds = Object.keys(dailyMap).map(Number);
         let forgotIds = allIds.filter(id => dailyMap[id] === 'forgotten');
         let knownIds = allIds.filter(id => dailyMap[id] === 'known');
 
-        currentHistoryWords.all = allIds.map(id => myWordBank.find(w => w.id === id)).filter(w => w);
-        currentHistoryWords.forgotten = forgotIds.map(id => myWordBank.find(w => w.id === id)).filter(w => w);
+        currentHistoryWords.all = allIds.map(id => bank.find(w => w.id === id)).filter(w => w);
+        currentHistoryWords.forgotten = forgotIds.map(id => bank.find(w => w.id === id)).filter(w => w);
 
         document.getElementById('history-date-title').innerText = `${dateStr} 学习记录`;
         document.getElementById('hist-total').innerText = allIds.length;
@@ -536,7 +566,7 @@
         let tbody = document.getElementById('history-detail-table-body');
         tbody.innerHTML = '';
         allIds.forEach(id => {
-            let wordObj = myWordBank.find(w => w.id === id);
+            let wordObj = bank.find(w => w.id === id);
             if (wordObj) {
                 let isKnown = dailyMap[id] === 'known';
                 let tr = document.createElement('tr');
@@ -563,11 +593,12 @@
     }
 
     function startCustomStudy() {
+        let bank = getCurrentBank();
         let selectedIds = Array.from(document.querySelectorAll('.word-checkbox:checked')).map(cb => parseInt(cb.value));
         if (selectedIds.length === 0) return alert('请先在上方数据表中勾选要学习的词汇。');
         let selectAllCb = document.getElementById('select-all-cb');
         if (selectAllCb) selectAllCb.checked = false;
-        initSession(selectedIds.map(id => myWordBank.find(w => w.id === id)).filter(w => w));
+        initSession(selectedIds.map(id => bank.find(w => w.id === id)).filter(w => w));
     }
 
     function initSession(words) {
@@ -617,11 +648,8 @@
             meaningElem.innerText = currentWord.meaning;
             meaningElem.style.display = 'block';
             
-            // 🌟 看日文想中文：提示区显示喇叭，答案区隐藏
             promptSpeak.classList.remove('hidden');
             answerSpeak.classList.add('hidden');
-            
-            // 出现新词时尝试自动发音（移动端可能需要用户先点击过屏幕）
             speakCurrentWord();
         } else {
             promptElem.innerText = currentWord.meaning;
@@ -629,7 +657,6 @@
             answerTitleElem.style.display = 'block'; 
             meaningElem.style.display = 'none'; 
             
-            // 🌟 看中文想日文：提示区不显示喇叭，等翻开答案才显示
             promptSpeak.classList.add('hidden');
             answerSpeak.classList.add('hidden'); 
         }
@@ -674,7 +701,6 @@
         document.getElementById('action-buttons').classList.remove('hidden');
         document.getElementById('btn-show-answer').classList.add('hidden');
         
-        // 🌟 翻牌时必定触发一次读音
         if (currentStudyMode === 'cn2jp') {
             document.getElementById('answer-speak').classList.remove('hidden');
         }
@@ -761,7 +787,6 @@
             }
         }
         
-        // 🌟 新增：上方向键重读发音
         if (event.code === 'ArrowUp' || event.key === '3') {
             event.preventDefault();
             speakCurrentWord();
@@ -810,8 +835,10 @@
     }
 
     function renderStatsTable(sortType) {
+        let bank = getCurrentBank();
         let statsMap = {};
-        myWordBank.forEach(w => statsMap[w.id] = { id: w.id, word: w.word, meaning: w.meaning, totalReviews: 0, forgotCount: 0, lastStatus: '-' });
+        bank.forEach(w => statsMap[w.id] = { id: w.id, word: w.word, meaning: w.meaning, totalReviews: 0, forgotCount: 0, lastStatus: '-' });
+        
         getLogs().forEach(log => {
             if (statsMap[log.wordId]) {
                 statsMap[log.wordId].totalReviews++;
