@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>N1 词汇间隔重复系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+    
     <style>
         body { font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; padding: 20px 10px; color: #2c3e50; min-height: 100vh; margin: 0; box-sizing: border-box; }
         #app { background: rgba(255, 255, 255, 0.95); width: 100%; max-width: 620px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; backdrop-filter: blur(10px); box-sizing: border-box; position: relative; }
@@ -104,7 +108,7 @@
         <hr>
         <div>
             <p style="font-weight: bold; color: #34495e;">📅 历史记录日历复习：</p>
-            <input type="date" id="history-date">
+            <input type="text" id="history-date" style="text-align: center; cursor: pointer; background-color: #fff;">
             <br>
             <button class="btn btn-primary" onclick="viewHistoryDate()">🔍 查看这一天</button>
         </div>
@@ -278,17 +282,16 @@
 
     function switchDictionary() {
         activeBankName = document.getElementById('dictionary-select').value;
-        cleanUpDuplicateLogs(); // 切换时顺便清理一次对应库的日志
+        cleanUpDuplicateLogs(); 
+        updateHistoryCalendar(); // ⬇️ 新增
     }
 
-    // 获取当前正在学习的数据源
     function getCurrentBank() {
         if (activeBankName === 'hiragana') return typeof hiraganaBank !== 'undefined' ? hiraganaBank : [];
         if (activeBankName === 'kundoku') return typeof kundokuBank !== 'undefined' ? kundokuBank : [];
         return [];
     }
 
-    // 获取当前词库对应的 LocalStorage Key (保证两个库进度相互隔离)
     function getLogKey() {
         return activeBankName === 'hiragana' ? 'vocab_logs' : 'vocab_logs_kundoku';
     }
@@ -343,7 +346,6 @@
         }
     }
     
-    // 初始化时清理一次默认库
     cleanUpDuplicateLogs();
 
     function saveLog(wordId, round, firstImpression) {
@@ -370,7 +372,7 @@
         return Math.max(...wordLogs.map(l => l.round));
     }
 
-    // ----- ☁️ 云端/本地 数据管理 (同时处理两套词库) -----
+    // ----- ☁️ 云端/本地 数据管理 -----
     function openSyncModal() {
         document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || '';
         document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || '';
@@ -389,15 +391,14 @@
     }
 
     function restoreCombinedLogs(data) {
-        // 向下兼容：如果云端存的是老版本的数组格式，直接赋予假名库
         if (Array.isArray(data)) {
             localStorage.setItem('vocab_logs', JSON.stringify(data));
         } else {
-            // 新格式对象，分别赋值
             if (data.hiragana) localStorage.setItem('vocab_logs', JSON.stringify(data.hiragana));
             if (data.kundoku) localStorage.setItem('vocab_logs_kundoku', JSON.stringify(data.kundoku));
         }
-        cleanUpDuplicateLogs(); // 清理一下当前活跃库
+        cleanUpDuplicateLogs(); 
+        updateHistoryCalendar(); // ⬇️ 新增
     }
 
     async function uploadToCloud() {
@@ -504,7 +505,39 @@
         if (confirm("⚠️ 警告：这将会彻底清除【所有词库】的学习和复习记录！\n\n你确定要清空吗？")) {
             localStorage.removeItem('vocab_logs');
             localStorage.removeItem('vocab_logs_kundoku');
+            updateHistoryCalendar(); // ⬇️ 新增
             alert("🗑️ 所有记录已清空！");
+        }
+    }
+
+    // ----- 🌟 自定义日历引擎 (Flatpickr) -----
+    let historyCalendarInstance = null;
+
+    function updateHistoryCalendar() {
+        let logs = getLogs(); 
+        let activeDates = [...new Set(logs.map(log => log.date))];
+        
+        if (historyCalendarInstance) {
+            historyCalendarInstance.destroy();
+        }
+
+        let dateInput = document.getElementById('history-date');
+
+        historyCalendarInstance = flatpickr(dateInput, {
+            locale: "zh", 
+            dateFormat: "Y-m-d",
+            enable: activeDates.length > 0 ? activeDates : ["1970-01-01"], 
+            onChange: function(selectedDates, dateStr, instance) {
+                document.getElementById('history-date').value = dateStr;
+                viewHistoryDate(); // 🚀 直接触发跳转
+            }
+        });
+
+        if (activeDates.length > 0) {
+            activeDates.sort(); 
+            historyCalendarInstance.setDate(activeDates[activeDates.length - 1]);
+        } else {
+            historyCalendarInstance.clear();
         }
     }
 
@@ -758,6 +791,8 @@
         document.getElementById('stat-known-count').innerText = knownCount;
         document.getElementById('stat-forgot-count').innerText = forgotCount;
 
+        updateHistoryCalendar(); // ⬇️ 新增
+
         hideAllViews();
         document.getElementById('summary-view').classList.remove('hidden');
     }
@@ -898,9 +933,10 @@
     function backToMenu() {
         hideAllViews();
         document.getElementById('menu-view').classList.remove('hidden');
-        document.getElementById('history-date').value = new Date().toISOString().split('T')[0];
     }
 
+    // ⬇️ 初始化页面时挂载日历引擎
+    updateHistoryCalendar();
     backToMenu();
 </script>
 </body>
