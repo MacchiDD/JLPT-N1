@@ -2,8 +2,12 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>N1 词汇间隔重复系统</title>
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
@@ -69,7 +73,10 @@
         .speak-btn:hover { transform: scale(1.2); filter: grayscale(0%) opacity(1); }
         .speak-btn:active { transform: scale(0.9); }
     </style>
-    <script src="words.js"></script>
+    
+    <script>
+        document.write('<script src="words.js?t=' + new Date().getTime() + '"><\/script>');
+    </script>
 </head>
 <body>
 <div id="app">
@@ -283,7 +290,7 @@
     function switchDictionary() {
         activeBankName = document.getElementById('dictionary-select').value;
         cleanUpDuplicateLogs(); 
-        updateHistoryCalendar(); // ⬇️ 新增
+        updateHistoryCalendar(); 
     }
 
     function getCurrentBank() {
@@ -398,7 +405,7 @@
             if (data.kundoku) localStorage.setItem('vocab_logs_kundoku', JSON.stringify(data.kundoku));
         }
         cleanUpDuplicateLogs(); 
-        updateHistoryCalendar(); // ⬇️ 新增
+        updateHistoryCalendar();
     }
 
     async function uploadToCloud() {
@@ -505,7 +512,7 @@
         if (confirm("⚠️ 警告：这将会彻底清除【所有词库】的学习和复习记录！\n\n你确定要清空吗？")) {
             localStorage.removeItem('vocab_logs');
             localStorage.removeItem('vocab_logs_kundoku');
-            updateHistoryCalendar(); // ⬇️ 新增
+            updateHistoryCalendar(); 
             alert("🗑️ 所有记录已清空！");
         }
     }
@@ -529,7 +536,7 @@
             enable: activeDates.length > 0 ? activeDates : ["1970-01-01"], 
             onChange: function(selectedDates, dateStr, instance) {
                 document.getElementById('history-date').value = dateStr;
-                viewHistoryDate(); // 🚀 直接触发跳转
+                viewHistoryDate(); 
             }
         });
 
@@ -791,7 +798,7 @@
         document.getElementById('stat-known-count').innerText = knownCount;
         document.getElementById('stat-forgot-count').innerText = forgotCount;
 
-        updateHistoryCalendar(); // ⬇️ 新增
+        updateHistoryCalendar(); 
 
         hideAllViews();
         document.getElementById('summary-view').classList.remove('hidden');
@@ -935,7 +942,6 @@
         document.getElementById('menu-view').classList.remove('hidden');
     }
 
-    // ⬇️ 初始化页面时挂载日历引擎
     updateHistoryCalendar();
     backToMenu();
 </script>
