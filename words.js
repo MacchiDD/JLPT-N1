@@ -8191,7 +8191,7 @@ const kundokuBank = [
         meaning: "泪流满面，哭湿（衣襟等）",
         example_jp: "悲報を聞いて、一晩中涙に泣きぬれた。",
         example_cn: "听到噩耗，整夜泪流满面。"
-    },
+},
     { 
         id: 51, 
         word: "かたより", 
