@@ -8691,8 +8691,8 @@ const kundokuBank = [
         meaning: "扣除，减去，盈亏，相抵",
         example_jp: "給料から税金などを差し引きした額が振り込まれる。",
         example_cn: "从工资中扣除税金等之后的金额会被汇入账户。"
-    }，
-{ 
+    },
+    { 
         id: 101, 
         word: "こげちゃ", 
         kanji: "焦げ茶", 
@@ -9191,5 +9191,5 @@ const kundokuBank = [
         meaning: "泥沼，沼泽；（深陷其中无法自拔的）泥潭",
         example_jp: "最近、K-POPアイドルの沼にすっかりハマってしまった。",
         example_cn: "最近彻底掉进了 K-POP 偶像的泥潭里无法自拔（饭圈黑话）。"
-    }
+    },
     ];
