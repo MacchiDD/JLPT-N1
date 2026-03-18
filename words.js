@@ -9191,5 +9191,5 @@ const kundokuBank = [
         meaning: "泥沼，沼泽；（深陷其中无法自拔的）泥潭",
         example_jp: "最近、K-POPアイドルの沼にすっかりハマってしまった。",
         example_cn: "最近彻底掉进了 K-POP 偶像的泥潭里无法自拔（饭圈黑话）。"
-    },
+    }
     ];
