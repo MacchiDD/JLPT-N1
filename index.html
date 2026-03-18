@@ -281,15 +281,6 @@
         cleanUpDuplicateLogs(); // 切换时顺便清理一次对应库的日志
     }
     
-// 🌟 获取设备本地时区的标准日期 (YYYY-MM-DD)
-    function getLocalDateString() {
-        let d = new Date();
-        let year = d.getFullYear();
-        let month = String(d.getMonth() + 1).padStart(2, '0');
-        let day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-    
     // 获取当前正在学习的数据源
     function getCurrentBank() {
         if (activeBankName === 'hiragana') return typeof hiraganaBank !== 'undefined' ? hiraganaBank : [];
