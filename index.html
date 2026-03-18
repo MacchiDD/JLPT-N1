@@ -104,7 +104,7 @@
         <hr>
         <div>
             <p style="font-weight: bold; color: #34495e;">📅 历史记录日历复习：</p>
-            <input type="date" id="history-date">
+            <select id="history-date" style="padding: 10px; width: 100%; max-width: 250px; font-weight: bold; color: #2980b9; margin-bottom: 10px;"></select>
             <br>
             <button class="btn btn-primary" onclick="viewHistoryDate()">🔍 查看这一天</button>
         </div>
@@ -279,8 +279,51 @@
     function switchDictionary() {
         activeBankName = document.getElementById('dictionary-select').value;
         cleanUpDuplicateLogs(); // 切换时顺便清理一次对应库的日志
+        updateHistoryDateOptions(); // 🌟 切换词库时，动态刷新对应词库的日期列表
+    }
+    
+    // 🌟 获取设备本地时区的标准日期 (YYYY-MM-DD)
+    function getLocalDateString() {
+        let d = new Date();
+        let year = d.getFullYear();
+        let month = String(d.getMonth() + 1).padStart(2, '0');
+        let day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
+    // 🌟 动态生成有学习记录的日期下拉列表
+    function updateHistoryDateOptions() {
+        let logs = getLogs();
+        let selectElem = document.getElementById('history-date');
+        selectElem.innerHTML = ''; // 清空旧选项
+
+        // 提取所有不重复的日期
+        let uniqueDates = [...new Set(logs.map(log => log.date))];
+        
+        // 按日期从新到旧降序排列
+        uniqueDates.sort((a, b) => new Date(b) - new Date(a));
+
+        if (uniqueDates.length === 0) {
+            let option = document.createElement('option');
+            option.value = '';
+            option.innerText = '暂无学习记录';
+            selectElem.appendChild(option);
+            selectElem.disabled = true; // 如果没有记录，把下拉框禁用
+        } else {
+            selectElem.disabled = false;
+            uniqueDates.forEach(date => {
+                let option = document.createElement('option');
+                option.value = date;
+                
+                // 顺便统计这一天学了多少词
+                let count = new Set(logs.filter(log => log.date === date).map(l => l.wordId)).size;
+                option.innerText = `${date} (复习了 ${count} 词)`;
+                
+                selectElem.appendChild(option);
+            });
+        }
+    }
+    
     // 获取当前正在学习的数据源
     function getCurrentBank() {
         if (activeBankName === 'hiragana') return typeof hiraganaBank !== 'undefined' ? hiraganaBank : [];
@@ -348,7 +391,8 @@
 
     function saveLog(wordId, round, firstImpression) {
         let logs = getLogs();
-        let today = new Date().toISOString().split('T')[0]; 
+        // 🌟 已修复时区Bug：使用本地日期函数
+        let today = getLocalDateString(); 
         
         let existingLogIndex = logs.findIndex(l => l.date === today && l.wordId === wordId);
         
@@ -460,6 +504,7 @@
                 restoreCombinedLogs(json.record);
                 alert("🎉 下载成功，所有词库数据已同步至最新！");
                 closeSyncModal();
+                updateHistoryDateOptions(); // 更新日期列表
             } else {
                 let errData = await response.json();
                 alert(`❌ 下载失败！报错说明: ${errData.message || '未知错误'}`);
@@ -477,7 +522,8 @@
         let url = URL.createObjectURL(blob);
         let a = document.createElement('a');
         a.href = url;
-        let today = new Date().toISOString().split('T')[0];
+        // 🌟 已修复时区Bug：使用本地日期函数
+        let today = getLocalDateString();
         a.download = `N1_全词库备份_${today}.json`;
         document.body.appendChild(a);
         a.click();
@@ -495,6 +541,7 @@
                 restoreCombinedLogs(data);
                 alert("✅ 学习记录导入成功！");
                 document.getElementById('import-file').value = ''; 
+                updateHistoryDateOptions(); // 更新日期列表
             } catch (err) { alert("❌ 解析文件失败，文件可能已损坏。"); }
         };
         reader.readAsText(file);
@@ -505,6 +552,7 @@
             localStorage.removeItem('vocab_logs');
             localStorage.removeItem('vocab_logs_kundoku');
             alert("🗑️ 所有记录已清空！");
+            updateHistoryDateOptions(); // 清空后刷新下拉框
         }
     }
 
@@ -541,7 +589,7 @@
 
     function viewHistoryDate() {
         let dateStr = document.getElementById('history-date').value;
-        if (!dateStr) return alert('请先选择日期');
+        if (!dateStr) return alert('请先选择或进行一次学习记录');
         let targetLogs = getLogs().filter(log => log.date === dateStr);
         if (targetLogs.length === 0) return alert('该词库在这一天没有学习记录哦。');
 
@@ -898,9 +946,11 @@
     function backToMenu() {
         hideAllViews();
         document.getElementById('menu-view').classList.remove('hidden');
-        document.getElementById('history-date').value = new Date().toISOString().split('T')[0];
+        // 🌟 每次回主菜单，动态刷新有记录的日期
+        updateHistoryDateOptions(); 
     }
 
+    // 网页加载完毕后初始化
     backToMenu();
 </script>
 </body>
