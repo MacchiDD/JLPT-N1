@@ -42,8 +42,6 @@
         .settings-box { background: #fff5e6; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 5px solid #f39c12; font-size: 14px; }
         .range-selector { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; border: 1px solid #ecf0f1; }
         .range-selector input { width: 60px; padding: 6px; font-size: 13px; }
-        #action-buttons { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
-        #action-buttons .btn { width: 48%; padding: 12px 0; font-size: 15px; }
         
         .table-container { max-height: 380px; overflow-y: auto; margin-top: 15px; border: 1px solid #ecf0f1; border-radius: 8px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; background: white; }
@@ -60,7 +58,7 @@
         .block-known { background-color: #2ecc71; }
         .block-forgotten { background-color: #e74c3c; }
         #word-history-blocks { margin-bottom: 15px; margin-top: 10px; min-height: 14px; }
-        .keyboard-hint { color: #bdc3c7; font-size: 12px; margin-top: 15px; }
+        .keyboard-hint { color: #bdc3c7; font-size: 12px; margin-top: 15px; text-align: center; }
         hr { border: 0; border-top: 1px solid #ecf0f1; margin: 20px 0; }
 
         #sync-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
@@ -72,9 +70,63 @@
         .speak-btn { cursor: pointer; transition: 0.2s; display: inline-block; margin-left: 12px; font-size: 26px; vertical-align: middle; user-select: none; filter: grayscale(100%) opacity(0.7); }
         .speak-btn:hover { transform: scale(1.2); filter: grayscale(0%) opacity(1); }
         .speak-btn:active { transform: scale(0.9); }
+
+        /* 🌟 新增：底部固定操作栏及超大盲按按钮 */
+        #study-view { 
+            padding-bottom: 120px; /* 防止内容被底部固定的按钮遮挡 */
+        }
+
+        .bottom-action-bar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            /* 底部增加 env 安全区，防止和全面屏手势冲突 */
+            padding: 15px 20px calc(20px + env(safe-area-inset-bottom)); 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(10px); 
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.08); 
+            z-index: 1000; 
+            display: flex; 
+            justify-content: center; 
+            box-sizing: border-box; 
+        }
+        
+        .bottom-action-inner { 
+            width: 100%; 
+            max-width: 620px; 
+            display: flex; 
+            justify-content: center; 
+        }
+        
+        .btn-huge { 
+            height: 75px !important; 
+            font-size: 20px !important; 
+            border-radius: 16px !important; 
+            font-weight: bold; 
+            margin: 0 !important; 
+            width: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+
+        #action-buttons { 
+            width: 100%; 
+            display: flex; 
+            justify-content: space-between; 
+            gap: 15px; 
+            margin: 0; 
+        }
+        
+        #action-buttons .btn { 
+            width: 100%; 
+            padding: 0; 
+        } 
     </style>
     
     <script>
+        // 请确保在同一目录下存在 words.js 文件
         document.write('<script src="words.js?t=' + new Date().getTime() + '"><\/script>');
     </script>
 </head>
@@ -221,13 +273,17 @@
                 </div>
             </div>
         </div>
-        <div>
-            <button id="btn-show-answer" class="btn btn-primary" style="width: 80%; padding: 12px; font-size: 16px;" onclick="showAnswer()">显示答案</button>
-            <div id="action-buttons" class="hidden">
-                <button class="btn btn-danger" onclick="markWord('forgotten')">忘了 (重现)</button>
-                <button class="btn btn-success" onclick="markWord('known')">认识 (下一个)</button>
+
+        <p class="keyboard-hint" style="margin-bottom: 80px;">⌨️ PC端快捷键：[空格]答案 | [←]忘了 | [→]认识 | [↑]发音</p>
+
+        <div class="bottom-action-bar">
+            <div class="bottom-action-inner">
+                <button id="btn-show-answer" class="btn btn-primary btn-huge" onclick="showAnswer()">显示答案</button>
+                <div id="action-buttons" class="hidden">
+                    <button class="btn btn-danger btn-huge" onclick="markWord('forgotten')">忘了 (重现)</button>
+                    <button class="btn btn-success btn-huge" onclick="markWord('known')">认识 (下一个)</button>
+                </div>
             </div>
-            <p class="keyboard-hint">⌨️ PC端快捷键：[空格]答案 | [←]忘了 | [→]认识 | [↑]发音</p>
         </div>
     </div>
 
@@ -736,7 +792,20 @@
         document.getElementById('btn-show-answer').classList.remove('hidden');
     }
 
+    // 🌟 新增震动反馈触发函数
+    function triggerVibration(type) {
+        if ('vibrate' in navigator) {
+            if (type === 'heavy') {
+                navigator.vibrate(50); // 单次震动
+            } else if (type === 'light') {
+                navigator.vibrate([30, 50, 30]); // 连续两次轻震
+            }
+        }
+    }
+
     function showAnswer() {
+        triggerVibration('heavy'); // 🌟 点击显示答案时触发震动
+        
         document.getElementById('answer-section').classList.remove('hidden');
         document.getElementById('action-buttons').classList.remove('hidden');
         document.getElementById('btn-show-answer').classList.add('hidden');
@@ -748,6 +817,8 @@
     }
 
     function markWord(status) {
+        triggerVibration('light'); // 🌟 点击认识/忘了时触发震动
+        
         let currentWord = queue[currentIndex];
         let isFirstAppearance = queue.findIndex(w => w.id === currentWord.id) === currentIndex;
         
