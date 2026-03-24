@@ -66,72 +66,39 @@
         .sync-box h3 { margin-top: 0; color: #2980b9; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .close-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 20px; color: #95a5a6; border: none; background: none; }
         
-        /* 🌟 发音喇叭按钮样式 */
         .speak-btn { cursor: pointer; transition: 0.2s; display: inline-block; margin-left: 12px; font-size: 26px; vertical-align: middle; user-select: none; filter: grayscale(100%) opacity(0.7); }
         .speak-btn:hover { transform: scale(1.2); filter: grayscale(0%) opacity(1); }
         .speak-btn:active { transform: scale(0.9); }
 
-        /* 🌟 新增：底部固定操作栏及超大盲按按钮 */
-        #study-view { 
-            padding-bottom: 120px; /* 防止内容被底部固定的按钮遮挡 */
-        }
-
-        .bottom-action-bar { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%; 
-            /* 底部增加 env 安全区，防止和全面屏手势冲突 */
-            padding: 15px 20px calc(20px + env(safe-area-inset-bottom)); 
-            background: rgba(255, 255, 255, 0.95); 
-            backdrop-filter: blur(10px); 
-            box-shadow: 0 -5px 25px rgba(0,0,0,0.08); 
-            z-index: 1000; 
-            display: flex; 
-            justify-content: center; 
-            box-sizing: border-box; 
-        }
-        
-        .bottom-action-inner { 
-            width: 100%; 
-            max-width: 620px; 
-            display: flex; 
-            justify-content: center; 
-        }
-        
-        .btn-huge { 
-            height: 75px !important; 
-            font-size: 20px !important; 
-            border-radius: 16px !important; 
-            font-weight: bold; 
-            margin: 0 !important; 
-            width: 100%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-        }
-
-        #action-buttons { 
-            width: 100%; 
-            display: flex; 
-            justify-content: space-between; 
-            gap: 15px; 
-            margin: 0; 
-        }
-        
-        #action-buttons .btn { 
-            width: 100%; 
-            padding: 0; 
-        } 
+        /* 盲按兼容底部固定栏 */
+        #study-view { padding-bottom: 120px; }
+        .bottom-action-bar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px calc(20px + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 -5px 25px rgba(0,0,0,0.08); z-index: 1000; display: flex; justify-content: center; box-sizing: border-box; }
+        .bottom-action-inner { width: 100%; max-width: 620px; display: flex; justify-content: center; }
+        .btn-huge { height: 75px !important; font-size: 20px !important; border-radius: 16px !important; font-weight: bold; margin: 0 !important; width: 100%; display: flex; justify-content: center; align-items: center; }
+        #action-buttons { width: 100%; display: flex; justify-content: space-between; gap: 15px; margin: 0; }
+        #action-buttons .btn { width: 100%; padding: 0; } 
     </style>
     
     <script>
-        // 请确保在同一目录下存在 words.js 文件
         document.write('<script src="words.js?t=' + new Date().getTime() + '"><\/script>');
     </script>
 </head>
 <body>
 <div id="app">
+    
+    <div id="mandatory-view" class="hidden" style="text-align: center; padding: 40px 10px;">
+        <h1 style="color: #e74c3c; font-size: 28px; border:none;">🚨 强制复习拦截</h1>
+        <p style="color: #34495e; margin: 20px 0; line-height: 1.6; font-size: 15px;">
+            系统根据遗忘曲线检测到，<br>当前词库你有 <strong id="mand-due-count" style="color: #e74c3c; font-size: 22px;">0</strong> 个词汇亟待巩固。
+        </p>
+        <div style="background: #fdf5f5; padding: 15px; border-radius: 10px; border-left: 5px solid #e74c3c; text-align: left; font-size: 13px; color: #7f8c8d;">
+            💡 规则：为了保证长期记忆，你必须先完成今天的首批强制复习指标才能进入主页学习新词。如果逾期积压过多，你可以在主页选择“提前还债”。
+        </div>
+        <button class="btn btn-danger btn-huge" style="margin-top: 30px;" onclick="startMandatorySession()">
+            开始复习 (本次需清 <span id="mand-target-count">0</span> 个)
+        </button>
+    </div>
+
     <div id="menu-view">
         <h1 style="color: #34495e;">📚 N1 备考中控台</h1>
         
@@ -143,30 +110,49 @@
             </select>
         </div>
 
+        <div class="settings-box" style="border-left-color: #2ecc71; background: #f0fdf4;">
+            <strong style="color: #27ae60;">🧠 遗忘曲线引擎 (SRS)</strong>
+            <p style="font-size: 11px; color: #7f8c8d; margin: 5px 0 10px 0;">算法机制：单日内仅记录首次判定。连续答对指数延后，答错立即坠入次日重修。</p>
+            
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 13px; font-weight: bold; color: #2c3e50;">强制启动指标 (个/天)：</span>
+                <input type="number" id="srs-mandatory-limit" value="10" min="1" max="500" style="width: 70px; padding: 6px; margin:0;" onchange="saveSRSConfig()">
+            </div>
+            
+            <hr style="border-top: 1px dashed #a3e4d7; margin: 12px 0;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; font-weight: bold; color: #e74c3c;">逾期记忆债务：<span id="srs-debt-count" style="font-size: 18px;">0</span></span>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <input type="number" id="srs-debt-repay-count" value="30" min="1" style="width: 60px; padding: 6px; margin:0;">
+                    <button class="btn btn-success" style="padding: 8px 10px; margin: 0; font-size: 12px;" onclick="startDebtRepayment()">主动还债</button>
+                </div>
+            </div>
+        </div>
+
         <div class="settings-box">
-            <strong style="color: #d35400;">⚙️ 出题方向：</strong>
+            <strong style="color: #d35400;">⚙️ 基础设定：</strong>
             <select id="study-mode-select" style="margin-top: 5px; margin-bottom: 10px;">
                 <option value="jp2cn">🇯🇵 日文 → 🇨🇳 中文 (默认)</option>
                 <option value="cn2jp">🇨🇳 中文 → 🇯🇵 日文 (挑战)</option>
             </select>
             <br>
-            <strong style="color: #d35400;">🔄 出场顺序 (全局生效)：</strong>
+            <strong style="color: #d35400;">🔄 出场顺序：</strong>
             <select id="study-order-select" style="margin-top: 5px;">
-                <option value="shuffle">🔀 打乱顺序 (防止位置记忆)</option>
-                <option value="ordered">⬇️ 按 ID 顺序 (循序渐进)</option>
+                <option value="shuffle">🔀 打乱顺序 (防位置记忆)</option>
+                <option value="ordered">⬇️ 按 ID 顺序</option>
             </select>
         </div>
 
         <div style="margin-top: 15px;">
-            <p style="font-weight: bold; color: #34495e;">🎯 随机抽取词汇进行学习：</p>
-            <p style="font-size: 12px; color: #7f8c8d; margin-top: -10px;">(优先抽取复习次数少的词)</p>
+            <p style="font-weight: bold; color: #34495e;">🎯 抽签学习 (自动避开今日到期词)：</p>
             <input type="number" id="new-word-count" value="10" min="1" max="100"> 个
             <br>
-            <button class="btn btn-primary" onclick="startNewLearning()">🚀 开始智能抽背</button>
+            <button class="btn btn-primary" onclick="startNewLearning()">🚀 开始普通抽背</button>
         </div>
         <hr>
         <div>
-            <p style="font-weight: bold; color: #34495e;">📅 历史记录日历复习：</p>
+            <p style="font-weight: bold; color: #34495e;">📅 历史流水账查阅：</p>
             <input type="text" id="history-date" style="text-align: center; cursor: pointer; background-color: #fff;">
             <br>
             <button class="btn btn-primary" onclick="viewHistoryDate()">🔍 查看这一天</button>
@@ -177,14 +163,14 @@
         </div>
         <hr style="border-top: 1px dashed #bdc3c7;">
         <div>
-            <p style="color: #95a5a6; font-size: 12px; margin-bottom: 5px;">💾 跨设备同步与本地备份 (包含所有词库)</p>
+            <p style="color: #95a5a6; font-size: 12px; margin-bottom: 5px;">💾 跨设备同步与本地备份 (包含所有词库和曲线数据)</p>
             <div class="data-management">
                 <button class="btn btn-primary" style="width: 100%; font-size: 14px; background-color: #8e44ad;" onclick="openSyncModal()">☁️ API 云端存档同步 (JSONBin)</button>
                 <div class="data-buttons-row">
-                    <button class="btn btn-secondary" onclick="exportData()">⬇️ 导出本地文件</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆️ 导入本地文件</button>
+                    <button class="btn btn-secondary" onclick="exportData()">⬇️ 导出本地</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆️ 导入本地</button>
                     <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
-                    <button class="btn btn-danger" onclick="clearData()">🗑️ 清空所有记录</button>
+                    <button class="btn btn-danger" onclick="clearData()">🗑️ 清空记录</button>
                 </div>
             </div>
         </div>
@@ -194,22 +180,19 @@
         <div class="sync-box">
             <button class="close-btn" onclick="closeSyncModal()">×</button>
             <h3>☁️ 云端存档设置</h3>
-            <p style="font-size: 13px; color: #7f8c8d; line-height: 1.5; margin-bottom: 15px;">
-                利用 <b>JSONBin.io</b> 免费接口实现一键上传/下载。只需在手机和电脑填入相同的凭证即可无缝同步。
-            </p>
+            <p style="font-size: 13px; color: #7f8c8d; line-height: 1.5; margin-bottom: 15px;">利用 <b>JSONBin.io</b> 同步历史和遗忘曲线状态。</p>
             <div style="margin-bottom: 10px;">
-                <label style="font-size: 12px; font-weight: bold; color: #34495e;">Bin ID (24位字母数字):</label>
-                <input type="text" id="bin-id" placeholder="例如: 65e8a..." style="width: 100%;">
+                <label style="font-size: 12px; font-weight: bold; color: #34495e;">Bin ID:</label>
+                <input type="text" id="bin-id" style="width: 100%;">
             </div>
             <div style="margin-bottom: 15px;">
-                <label style="font-size: 12px; font-weight: bold; color: #34495e;">API Key (Master Key 或 Access Key):</label>
-                <input type="password" id="api-key" placeholder="例如: $2a$10$..." style="width: 100%;">
+                <label style="font-size: 12px; font-weight: bold; color: #34495e;">API Key:</label>
+                <input type="password" id="api-key" style="width: 100%;">
             </div>
-            <div style="display: flex; justify-content: space-between; gap: 10px;">
-                <button class="btn btn-warning" id="btn-upload" style="flex: 1;" onclick="uploadToCloud()">⬆️ 覆盖云端存档</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-warning" id="btn-upload" style="flex: 1;" onclick="uploadToCloud()">⬆️ 覆盖云端</button>
                 <button class="btn btn-success" id="btn-download" style="flex: 1;" onclick="downloadFromCloud()">⬇️ 下载至本设备</button>
             </div>
-            <p style="font-size: 11px; color: #bdc3c7; margin-top: 15px; text-align: center;">凭证仅保存在当前浏览器的 LocalStorage 中，请妥善保管。</p>
         </div>
     </div>
 
@@ -222,20 +205,12 @@
         </div>
         <div style="margin: 15px 0;">
             <button class="btn btn-primary" onclick="startHistoryReview('all')">复习这一天全部</button>
-            <button class="btn btn-danger" onclick="startHistoryReview('forgotten')">仅复习【忘了】的词</button>
+            <button class="btn btn-danger" onclick="startHistoryReview('forgotten')">仅复习【忘了】</button>
         </div>
         <div class="table-container">
             <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>词汇</th>
-                        <th>释义</th>
-                        <th>状态</th>
-                    </tr>
-                </thead>
-                <tbody id="history-detail-table-body">
-                </tbody>
+                <thead><tr><th>ID</th><th>词汇</th><th>释义</th><th>状态</th></tr></thead>
+                <tbody id="history-detail-table-body"></tbody>
             </table>
         </div>
         <button class="btn btn-secondary" style="margin-top: 20px;" onclick="backToMenu()">返回主菜单</button>
@@ -245,7 +220,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <div>
                 <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 13px; background: #bdc3c7; color: #2c3e50;" onclick="goBack()">🔙 上一个</button>
-                <button class="btn btn-warning" style="padding: 6px 10px; font-size: 13px; background: #f39c12; margin-left: 5px;" onclick="exitStudyEarly()">🏠 结束</button>
+                <button class="btn btn-warning" style="padding: 6px 10px; font-size: 13px; background: #f39c12; margin-left: 5px;" onclick="exitStudyEarly()">🏠 结束结算</button>
             </div>
             <span id="progress-text" style="color: #34495e; font-weight: bold; background: #ecf0f1; padding: 4px 10px; border-radius: 20px; font-size: 13px;">0/0</span>
         </div>
@@ -281,20 +256,21 @@
                 <button id="btn-show-answer" class="btn btn-primary btn-huge" onclick="showAnswer()">显示答案</button>
                 <div id="action-buttons" class="hidden">
                     <button class="btn btn-danger btn-huge" onclick="markWord('forgotten')">忘了 (重现)</button>
-                    <button class="btn btn-success btn-huge" onclick="markWord('known')">认识 (下一个)</button>
+                    <button class="btn btn-success btn-huge" onclick="markWord('known')">认识 (曲线+1)</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="summary-view" class="hidden">
-        <h1>🎉 本次学习结算</h1>
+        <h1>🎉 本次结算完毕</h1>
         <div class="stat-box">
-            <p>✅ 本次判定为【认识】：<span id="stat-known-count" style="color:#2ecc71; font-weight:bold; font-size: 18px;">0</span> 个</p>
-            <p>❌ 本次判定为【忘了】：<span id="stat-forgot-count" style="color:#e74c3c; font-weight:bold; font-size: 18px;">0</span> 个</p>
-            <p id="save-notice" style="margin-top: 15px; font-size: 13px; color: #7f8c8d; border-top: 1px dashed #ccc; padding-top: 10px;">💾 学习记录已自动保存至本地。</p>
+            <p>✅ 首次判定为【认识】：<span id="stat-known-count" style="color:#2ecc71; font-weight:bold; font-size: 18px;">0</span> 个</p>
+            <p>❌ 首次判定为【忘了】：<span id="stat-forgot-count" style="color:#e74c3c; font-weight:bold; font-size: 18px;">0</span> 个</p>
+            <p style="margin-top: 15px; font-size: 12px; color: #8e44ad; font-weight:bold;">* 仅统计当前 Session 期间每个词的首次反应。熟练度曲线已由系统自动推算更新。</p>
+            <p id="save-notice" style="margin-top: 10px; font-size: 13px; color: #7f8c8d; border-top: 1px dashed #ccc; padding-top: 10px;">💾 学习和曲线记录已自动保存至本地。</p>
         </div>
-        <button class="btn btn-primary" style="margin-top: 20px; width: 60%;" onclick="backToMenu()">返回主菜单</button>
+        <button class="btn btn-primary" style="margin-top: 20px; width: 60%;" onclick="checkMandatoryOrMenu()">继续 / 返回菜单</button>
     </div>
 
     <div id="stats-view" class="hidden">
@@ -302,17 +278,16 @@
         
         <div class="range-selector">
             <span style="font-weight: bold; color: #34495e;">选中 ID：</span>
-            <input type="number" id="range-start" placeholder="起">
-            <span style="color: #7f8c8d;">至</span>
+            <input type="number" id="range-start" placeholder="起"> <span style="color: #7f8c8d;">至</span>
             <input type="number" id="range-end" placeholder="止">
             <button class="btn btn-primary" style="padding: 6px 12px; margin: 0;" onclick="selectIdRange()">一键勾选</button>
             <button class="btn btn-secondary" style="padding: 6px 12px; margin: 0; background-color: #bdc3c7; color: #333;" onclick="clearSelection()">清空</button>
         </div>
 
         <div class="filter-bar">
-            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('idAsc')">按 ID 排序</button>
-            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('reviewsDesc')">按复习次数</button>
-            <button class="btn btn-danger" style="font-size: 12px;" onclick="renderStatsTable('forgotDesc')">🔥 顽固排行</button>
+            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('idAsc')">按 ID</button>
+            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('reviewsDesc')">按流水次数</button>
+            <button class="btn btn-danger" style="font-size: 12px;" onclick="renderStatsTable('forgotDesc')">🔥 流水顽固</button>
         </div>
         
         <div style="margin: 15px 0;">
@@ -323,16 +298,10 @@
                 <thead>
                     <tr>
                         <th style="width: 25px; text-align: center;"><input type="checkbox" id="select-all-cb" onclick="toggleSelectAll()"></th>
-                        <th>ID</th>
-                        <th>词汇</th>
-                        <th>释义</th>
-                        <th>总复习</th>
-                        <th>点"忘了"</th>
-                        <th>最后状态</th>
+                        <th>ID</th><th>词汇</th><th>到期日</th><th>熟练度</th>
                     </tr>
                 </thead>
-                <tbody id="stats-table-body">
-                </tbody>
+                <tbody id="stats-table-body"></tbody>
             </table>
         </div>
         <button class="btn btn-secondary" style="margin-top: 20px;" onclick="safeBackFromStats()">返回主菜单</button>
@@ -347,6 +316,7 @@
         activeBankName = document.getElementById('dictionary-select').value;
         cleanUpDuplicateLogs(); 
         updateHistoryCalendar(); 
+        checkMandatoryStatus(); // 切换词库时重新检查强制指标
     }
 
     function getCurrentBank() {
@@ -355,11 +325,10 @@
         return [];
     }
 
-    function getLogKey() {
-        return activeBankName === 'hiragana' ? 'vocab_logs' : 'vocab_logs_kundoku';
-    }
+    function getLogKey() { return activeBankName === 'hiragana' ? 'vocab_logs' : 'vocab_logs_kundoku'; }
+    function getSRSKey() { return activeBankName === 'hiragana' ? 'srs_data' : 'srs_data_kundoku'; }
 
-    // ----- 发音引擎核心功能 -----
+    // ----- 发音与震动引擎 -----
     function speakCurrentWord() {
         let currentWord = queue[currentIndex];
         if (!currentWord || !('speechSynthesis' in window)) return;
@@ -370,53 +339,177 @@
         window.speechSynthesis.speak(utterance);
     }
 
-    // ----- 日志存取逻辑 -----
-    function getLogs() { 
-        return JSON.parse(localStorage.getItem(getLogKey()) || '[]'); 
+    function triggerVibration(type) {
+        if ('vibrate' in navigator) {
+            if (type === 'heavy') navigator.vibrate(50);
+            else if (type === 'light') navigator.vibrate([30, 50, 30]);
+        }
     }
+
+    // ----- 🧠 遗忘曲线 (SRS) 核心引擎 -----
+    function getSRSBank() {
+        return JSON.parse(localStorage.getItem(getSRSKey()) || '{}');
+    }
+
+    function saveSRSBank(data) {
+        localStorage.setItem(getSRSKey(), JSON.stringify(data));
+    }
+
+    function saveSRSConfig() {
+        let val = parseInt(document.getElementById('srs-mandatory-limit').value) || 10;
+        localStorage.setItem('srs_limit_config', val);
+    }
+
+    // 更新单个单词的曲线状态 (由结算器统一调度)
+    function updateSRS(wordId, status) {
+        let srsBank = getSRSBank();
+        let today = new Date().toISOString().split('T')[0];
+        
+        // 数据结构: { i: interval(天), e: ease(熟练度), d: dueDate(到期日YYYY-MM-DD), l: lastReviewed(上次结算日) }
+        let data = srsBank[wordId] || { i: 0, e: 2.5, d: today, l: null };
+
+        // 🌟 核心绝对法则：第一印象决定一切。如果今天已经更新过，直接冻结数据，避免反复刷词破坏曲线！
+        if (data.l === today) return;
+
+        if (status === 'known') {
+            if (data.i === 0) {
+                data.i = 1; // 首次记住，明天复习
+            } else {
+                data.i = Math.max(1, Math.round(data.i * data.e)); // 指数增长间隔
+                data.e = Math.min(3.0, data.e + 0.15); // 稍微提升熟练度
+            }
+        } else if (status === 'forgotten') {
+            data.i = 0; // 打回原形，设为 0 会在算日期时直接变明天
+            data.e = Math.max(1.3, data.e - 0.2); // 狠狠降低熟练度，缩短未来的发散
+        }
+
+        // 计算下一次要复习的准确日期
+        let nextDate = new Date();
+        // 如果 interval 为 0 (今天忘了)，强制加 1 天安排在明天复习
+        nextDate.setDate(nextDate.getDate() + (data.i === 0 ? 1 : data.i));
+        
+        data.d = nextDate.toISOString().split('T')[0];
+        data.l = today; // 打上今天的防篡改标记
+
+        srsBank[wordId] = data;
+        saveSRSBank(srsBank);
+    }
+
+    // ----- 🚨 强制阻断与债务查验系统 -----
+    let currentSessionMode = 'normal'; // mandatory, debt, normal
+
+    function checkMandatoryStatus() {
+        let today = new Date().toISOString().split('T')[0];
+        let srsBank = getSRSBank();
+        
+        let savedLimit = parseInt(localStorage.getItem('srs_limit_config')) || 10;
+        document.getElementById('srs-mandatory-limit').value = savedLimit;
+
+        // 挑出所有到期欠债的词 (到期日 <= 今天)
+        let dueIds = Object.keys(srsBank).filter(id => srsBank[id].d <= today).map(Number);
+        
+        // 检查今天这个词库是否已经执行过强制阻断
+        let isMandatoryDone = localStorage.getItem(`mand_done_${today}_${activeBankName}`) === 'true';
+
+        if (dueIds.length > 0 && !isMandatoryDone) {
+            // 触发强制拦截！
+            hideAllViews();
+            document.getElementById('mandatory-view').classList.remove('hidden');
+            document.getElementById('mand-due-count').innerText = dueIds.length;
+            document.getElementById('mand-target-count').innerText = Math.min(dueIds.length, savedLimit);
+        } else {
+            // 已经完结今天的保底，放行回主菜单，更新债务显示
+            backToMenu();
+            document.getElementById('srs-debt-count').innerText = dueIds.length;
+            
+            let debtInput = document.getElementById('srs-debt-repay-count');
+            if (parseInt(debtInput.value) > dueIds.length && dueIds.length > 0) {
+                debtInput.value = dueIds.length;
+            }
+        }
+    }
+
+    function checkMandatoryOrMenu() {
+        if (currentSessionMode === 'mandatory') {
+            let today = new Date().toISOString().split('T')[0];
+            localStorage.setItem(`mand_done_${today}_${activeBankName}`, 'true');
+        }
+        checkMandatoryStatus();
+    }
+
+    function startMandatorySession() {
+        let srsBank = getSRSBank();
+        let today = new Date().toISOString().split('T')[0];
+        let limit = parseInt(document.getElementById('srs-mandatory-limit').value) || 10;
+        
+        let dueIds = Object.keys(srsBank).filter(id => srsBank[id].d <= today).map(Number);
+        // 按紧急程度排序：interval 越小（被忘得越惨）越优先，然后按到期日排序
+        dueIds.sort((a, b) => {
+            if (srsBank[a].i !== srsBank[b].i) return srsBank[a].i - srsBank[b].i;
+            return new Date(srsBank[a].d) - new Date(srsBank[b].d);
+        });
+
+        let targetIds = dueIds.slice(0, limit);
+        let bank = getCurrentBank();
+        let wordsToStudy = targetIds.map(id => bank.find(w => w.id === id)).filter(w => w);
+        
+        currentSessionMode = 'mandatory';
+        initSession(wordsToStudy);
+    }
+
+    function startDebtRepayment() {
+        let count = parseInt(document.getElementById('srs-debt-repay-count').value);
+        if (isNaN(count) || count <= 0) return alert('请输入有效还债数');
+
+        let srsBank = getSRSBank();
+        let today = new Date().toISOString().split('T')[0];
+        let dueIds = Object.keys(srsBank).filter(id => srsBank[id].d <= today).map(Number);
+        
+        if (dueIds.length === 0) return alert('太棒了！你当前没有任何逾期债务！');
+
+        dueIds.sort((a, b) => {
+            if (srsBank[a].i !== srsBank[b].i) return srsBank[a].i - srsBank[b].i;
+            return new Date(srsBank[a].d) - new Date(srsBank[b].d);
+        });
+
+        let targetIds = dueIds.slice(0, count);
+        let bank = getCurrentBank();
+        let wordsToStudy = targetIds.map(id => bank.find(w => w.id === id)).filter(w => w);
+        
+        currentSessionMode = 'debt';
+        initSession(wordsToStudy);
+    }
+
+    // ----- 日志存取与清理逻辑 -----
+    function getLogs() { return JSON.parse(localStorage.getItem(getLogKey()) || '[]'); }
 
     function cleanUpDuplicateLogs() {
         let logs = getLogs();
         if (logs.length === 0) return;
-        
-        let uniqueLogsMap = {};
-        let needsCleanup = false;
-
+        let uniqueLogsMap = {}; let needsCleanup = false;
         logs.forEach(log => {
             let key = log.wordId + "_" + log.date;
-            if (!uniqueLogsMap[key]) {
-                uniqueLogsMap[key] = log;
-            } else {
-                needsCleanup = true;
-                if (log.status === 'forgotten') {
-                    uniqueLogsMap[key].status = 'forgotten';
-                }
-            }
+            if (!uniqueLogsMap[key]) { uniqueLogsMap[key] = log; } 
+            else { needsCleanup = true; if (log.status === 'forgotten') uniqueLogsMap[key].status = 'forgotten'; }
         });
 
         if (needsCleanup) {
-            let cleanedLogs = Object.values(uniqueLogsMap);
-            cleanedLogs.sort((a, b) => new Date(a.date) - new Date(b.date));
-            
+            let cleanedLogs = Object.values(uniqueLogsMap).sort((a, b) => new Date(a.date) - new Date(b.date));
             let roundTracker = {};
             cleanedLogs.forEach(log => {
                 if (!roundTracker[log.wordId]) roundTracker[log.wordId] = 0;
                 roundTracker[log.wordId]++;
                 log.round = roundTracker[log.wordId];
             });
-            
             localStorage.setItem(getLogKey(), JSON.stringify(cleanedLogs));
         }
     }
-    
     cleanUpDuplicateLogs();
 
     function saveLog(wordId, round, firstImpression) {
         let logs = getLogs();
         let today = new Date().toISOString().split('T')[0]; 
-        
         let existingLogIndex = logs.findIndex(l => l.date === today && l.wordId === wordId);
-        
         if (existingLogIndex !== -1) {
             if (firstImpression === 'forgotten') {
                 logs[existingLogIndex].status = 'forgotten';
@@ -435,39 +528,43 @@
         return Math.max(...wordLogs.map(l => l.round));
     }
 
-    // ----- ☁️ 云端/本地 数据管理 -----
+    // ----- ☁️ 云端/本地 数据管理 (包含曲线结构) -----
     function openSyncModal() {
         document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || '';
         document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || '';
         document.getElementById('sync-modal').classList.remove('hidden');
     }
 
-    function closeSyncModal() {
-        document.getElementById('sync-modal').classList.add('hidden');
-    }
+    function closeSyncModal() { document.getElementById('sync-modal').classList.add('hidden'); }
 
     function getCombinedLogs() {
         return {
             hiragana: JSON.parse(localStorage.getItem('vocab_logs') || '[]'),
-            kundoku: JSON.parse(localStorage.getItem('vocab_logs_kundoku') || '[]')
+            kundoku: JSON.parse(localStorage.getItem('vocab_logs_kundoku') || '[]'),
+            srs_hiragana: JSON.parse(localStorage.getItem('srs_data') || '{}'),
+            srs_kundoku: JSON.parse(localStorage.getItem('srs_data_kundoku') || '{}')
         };
     }
 
     function restoreCombinedLogs(data) {
+        // 向前兼容老数据格式
         if (Array.isArray(data)) {
             localStorage.setItem('vocab_logs', JSON.stringify(data));
         } else {
             if (data.hiragana) localStorage.setItem('vocab_logs', JSON.stringify(data.hiragana));
             if (data.kundoku) localStorage.setItem('vocab_logs_kundoku', JSON.stringify(data.kundoku));
+            if (data.srs_hiragana) localStorage.setItem('srs_data', JSON.stringify(data.srs_hiragana));
+            if (data.srs_kundoku) localStorage.setItem('srs_data_kundoku', JSON.stringify(data.srs_kundoku));
         }
         cleanUpDuplicateLogs(); 
         updateHistoryCalendar();
+        checkMandatoryStatus();
     }
 
     async function uploadToCloud() {
         let binId = document.getElementById('bin-id').value.trim();
         let apiKey = document.getElementById('api-key').value.trim();
-        if (!binId || !apiKey) return alert("⚠️ 请先填写 Bin ID 和 API Key！");
+        if (!binId || !apiKey) return alert("⚠️ 请先填写凭证！");
 
         localStorage.setItem('cloud_bin_id', binId);
         localStorage.setItem('cloud_api_key', apiKey);
@@ -475,231 +572,155 @@
         let dataToUpload = getCombinedLogs();
         let btn = document.getElementById('btn-upload');
         btn.innerText = "上传中...";
-        
         try {
             let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': apiKey
-                },
+                method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey },
                 body: JSON.stringify(dataToUpload)
             });
-
-            if (response.ok) {
-                alert("☁️ 所有词库的进度已成功打包上传至云端！");
-                closeSyncModal();
-            } else {
-                let errData = await response.json();
-                alert(`❌ 上传失败！报错说明: ${errData.message || '未知错误'}`);
-            }
-        } catch (error) {
-            alert("❌ 网络连接失败，请检查网络。");
-        } finally {
-            btn.innerText = "⬆️ 覆盖云端存档";
-        }
+            if (response.ok) { alert("☁️ 所有词库及遗忘曲线数据上传成功！"); closeSyncModal(); } 
+            else { let err = await response.json(); alert(`❌ 失败: ${err.message}`); }
+        } catch (e) { alert("网络错误"); } finally { btn.innerText = "⬆️ 覆盖云端"; }
     }
 
     async function downloadFromCloud() {
         let binId = document.getElementById('bin-id').value.trim();
         let apiKey = document.getElementById('api-key').value.trim();
-        if (!binId || !apiKey) return alert("⚠️ 请先填写 Bin ID 和 API Key！");
+        if (!binId || !apiKey) return alert("⚠️ 请填凭证");
 
-        localStorage.setItem('cloud_bin_id', binId);
-        localStorage.setItem('cloud_api_key', apiKey);
+        localStorage.setItem('cloud_bin_id', binId); localStorage.setItem('cloud_api_key', apiKey);
+        if (!confirm("⚠️ 确定要下载并覆盖所有历史和曲线吗？不可逆！")) return;
 
-        if (!confirm("⚠️ 确定要从云端下载并覆盖所有词库的进度吗？此操作不可逆！")) return;
-
-        let btn = document.getElementById('btn-download');
-        btn.innerText = "下载中...";
-
+        let btn = document.getElementById('btn-download'); btn.innerText = "下载中...";
         try {
             let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-                method: 'GET',
-                headers: { 'X-Master-Key': apiKey }
+                method: 'GET', headers: { 'X-Master-Key': apiKey }
             });
-
             if (response.ok) {
                 let json = await response.json();
                 restoreCombinedLogs(json.record);
-                alert("🎉 下载成功，所有词库数据已同步至最新！");
-                closeSyncModal();
-            } else {
-                let errData = await response.json();
-                alert(`❌ 下载失败！报错说明: ${errData.message || '未知错误'}`);
-            }
-        } catch (error) {
-            alert("❌ 网络连接失败，请检查网络。");
-        } finally {
-            btn.innerText = "⬇️ 下载至本设备";
-        }
+                alert("🎉 同步成功！"); closeSyncModal();
+            } else { let err = await response.json(); alert(`❌ 失败: ${err.message}`); }
+        } catch (e) { alert("网络错误"); } finally { btn.innerText = "⬇️ 下载至本设备"; }
     }
 
     function exportData() {
-        let payload = JSON.stringify(getCombinedLogs());
-        let blob = new Blob([payload], { type: "application/json" });
-        let url = URL.createObjectURL(blob);
-        let a = document.createElement('a');
-        a.href = url;
-        let today = new Date().toISOString().split('T')[0];
-        a.download = `N1_全词库备份_${today}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        let blob = new Blob([JSON.stringify(getCombinedLogs())], { type: "application/json" });
+        let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
+        a.download = `N1_全数据备份_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
     function importData(event) {
-        let file = event.target.files[0];
-        if (!file) return;
+        let file = event.target.files[0]; if (!file) return;
         let reader = new FileReader();
         reader.onload = function(e) {
-            try {
-                let data = JSON.parse(e.target.result);
-                restoreCombinedLogs(data);
-                alert("✅ 学习记录导入成功！");
-                document.getElementById('import-file').value = ''; 
-            } catch (err) { alert("❌ 解析文件失败，文件可能已损坏。"); }
+            try { restoreCombinedLogs(JSON.parse(e.target.result)); alert("✅ 导入成功！"); document.getElementById('import-file').value = ''; } 
+            catch (err) { alert("❌ 文件损坏。"); }
         };
         reader.readAsText(file);
     }
 
     function clearData() {
-        if (confirm("⚠️ 警告：这将会彻底清除【所有词库】的学习和复习记录！\n\n你确定要清空吗？")) {
-            localStorage.removeItem('vocab_logs');
-            localStorage.removeItem('vocab_logs_kundoku');
-            updateHistoryCalendar(); 
-            alert("🗑️ 所有记录已清空！");
+        if (confirm("⚠️ 严重警告：彻底清除【所有数据与曲线】？")) {
+            localStorage.removeItem('vocab_logs'); localStorage.removeItem('vocab_logs_kundoku');
+            localStorage.removeItem('srs_data'); localStorage.removeItem('srs_data_kundoku');
+            updateHistoryCalendar(); checkMandatoryStatus(); alert("🗑️ 已清空！");
         }
     }
 
-    // ----- 🌟 自定义日历引擎 (Flatpickr) -----
+    // ----- 日历功能 -----
     let historyCalendarInstance = null;
-
     function updateHistoryCalendar() {
-        let logs = getLogs(); 
-        let activeDates = [...new Set(logs.map(log => log.date))];
-        
-        if (historyCalendarInstance) {
-            historyCalendarInstance.destroy();
-        }
-
-        let dateInput = document.getElementById('history-date');
-
-        historyCalendarInstance = flatpickr(dateInput, {
-            locale: "zh", 
-            dateFormat: "Y-m-d",
-            enable: activeDates.length > 0 ? activeDates : ["1970-01-01"], 
-            onChange: function(selectedDates, dateStr, instance) {
-                document.getElementById('history-date').value = dateStr;
-                viewHistoryDate(); 
-            }
+        let logs = getLogs(); let activeDates = [...new Set(logs.map(log => log.date))];
+        if (historyCalendarInstance) historyCalendarInstance.destroy();
+        historyCalendarInstance = flatpickr(document.getElementById('history-date'), {
+            locale: "zh", dateFormat: "Y-m-d", enable: activeDates.length > 0 ? activeDates : ["1970-01-01"], 
+            onChange: function(d, dateStr) { document.getElementById('history-date').value = dateStr; viewHistoryDate(); }
         });
-
-        if (activeDates.length > 0) {
-            activeDates.sort(); 
-            historyCalendarInstance.setDate(activeDates[activeDates.length - 1]);
-        } else {
-            historyCalendarInstance.clear();
-        }
-    }
-
-    // ----- 学习模式核心变量 -----
-    let queue = [];
-    let historyStack = [];
-    let firstImpressions = {}; 
-    let currentIndex = 0;
-    
-    let currentStudyMode = 'jp2cn';
-    let currentHistoryWords = { all: [], forgotten: [] };
-
-    function startNewLearning() {
-        let count = parseInt(document.getElementById('new-word-count').value);
-        if (isNaN(count) || count <= 0) return alert('请输入有效的数量');
-
-        let bank = getCurrentBank();
-        if (bank.length === 0) return alert('当前词库为空，请检查数据文件。');
-
-        let reviewCounts = {};
-        bank.forEach(w => reviewCounts[w.id] = 0);
-        getLogs().forEach(log => {
-            if (reviewCounts[log.wordId] !== undefined) reviewCounts[log.wordId]++;
-        });
-
-        let extractedWords = [...bank].sort((a, b) => {
-            let weightA = reviewCounts[a.id] + Math.random();
-            let weightB = reviewCounts[b.id] + Math.random();
-            return weightA - weightB;
-        }).slice(0, count);
-
-        initSession(extractedWords);
+        if (activeDates.length > 0) { activeDates.sort(); historyCalendarInstance.setDate(activeDates[activeDates.length - 1]); } 
+        else { historyCalendarInstance.clear(); }
     }
 
     function viewHistoryDate() {
         let dateStr = document.getElementById('history-date').value;
-        if (!dateStr) return alert('请先选择日期');
+        if (!dateStr) return alert('请选择日期');
         let targetLogs = getLogs().filter(log => log.date === dateStr);
-        if (targetLogs.length === 0) return alert('该词库在这一天没有学习记录哦。');
+        if (targetLogs.length === 0) return alert('无记录');
 
-        let dailyMap = {};
-        targetLogs.forEach(log => {
-            if (dailyMap[log.wordId] !== 'forgotten') dailyMap[log.wordId] = log.status; 
-        });
-
-        let bank = getCurrentBank();
-        let allIds = Object.keys(dailyMap).map(Number);
-        let forgotIds = allIds.filter(id => dailyMap[id] === 'forgotten');
-        let knownIds = allIds.filter(id => dailyMap[id] === 'known');
-
+        let dailyMap = {}; targetLogs.forEach(log => { if (dailyMap[log.wordId] !== 'forgotten') dailyMap[log.wordId] = log.status; });
+        let bank = getCurrentBank(); let allIds = Object.keys(dailyMap).map(Number);
+        
         currentHistoryWords.all = allIds.map(id => bank.find(w => w.id === id)).filter(w => w);
-        currentHistoryWords.forgotten = forgotIds.map(id => bank.find(w => w.id === id)).filter(w => w);
+        currentHistoryWords.forgotten = allIds.filter(id => dailyMap[id] === 'forgotten').map(id => bank.find(w => w.id === id)).filter(w => w);
 
-        document.getElementById('history-date-title').innerText = `${dateStr} 学习记录`;
+        document.getElementById('history-date-title').innerText = `${dateStr} 记录`;
         document.getElementById('hist-total').innerText = allIds.length;
-        document.getElementById('hist-known').innerText = knownIds.length;
-        document.getElementById('hist-forgot').innerText = forgotIds.length;
+        document.getElementById('hist-known').innerText = currentHistoryWords.all.length - currentHistoryWords.forgotten.length;
+        document.getElementById('hist-forgot').innerText = currentHistoryWords.forgotten.length;
 
-        let tbody = document.getElementById('history-detail-table-body');
-        tbody.innerHTML = '';
+        let tbody = document.getElementById('history-detail-table-body'); tbody.innerHTML = '';
         allIds.forEach(id => {
             let wordObj = bank.find(w => w.id === id);
             if (wordObj) {
                 let isKnown = dailyMap[id] === 'known';
                 let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="color: #bdc3c7; font-size: 12px;">${id}</td>
-                    <td style="font-weight: bold; color: #2980b9;">${wordObj.word}</td>
-                    <td>${wordObj.meaning}</td>
-                    <td style="font-weight: bold; color: ${isKnown ? '#2ecc71' : '#e74c3c'};">${isKnown ? '✅ 认识' : '❌ 忘了'}</td>
-                `;
+                tr.innerHTML = `<td>${id}</td><td style="font-weight:bold; color:#2980b9;">${wordObj.word}</td><td>${wordObj.meaning}</td><td style="color:${isKnown ? '#2ecc71' : '#e74c3c'};">${isKnown ? '✅' : '❌'}</td>`;
                 tbody.appendChild(tr);
             }
         });
+        hideAllViews(); document.getElementById('history-detail-view').classList.remove('hidden');
+    }
 
-        hideAllViews();
-        document.getElementById('history-detail-view').classList.remove('hidden');
+    // ----- 学习模式核心 -----
+    let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
+    let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
+
+    function startNewLearning() {
+        let count = parseInt(document.getElementById('new-word-count').value);
+        if (isNaN(count) || count <= 0) return alert('无效数量');
+
+        let bank = getCurrentBank();
+        let srsBank = getSRSBank();
+        let today = new Date().toISOString().split('T')[0];
+
+        // 🌟 核心：普通抽签应当避开今天到期的债，防止抢夺 SRS 系统的流量
+        let availableWords = bank.filter(w => !srsBank[w.id] || srsBank[w.id].d > today);
+
+        if (availableWords.length === 0) {
+            // 如果所有词都在债里，那只能抽全局的了
+            availableWords = bank;
+        }
+
+        // 按历史复习次数做权重随机（偏向于抽完全没见过的）
+        let reviewCounts = {}; availableWords.forEach(w => reviewCounts[w.id] = 0);
+        getLogs().forEach(log => { if (reviewCounts[log.wordId] !== undefined) reviewCounts[log.wordId]++; });
+
+        let extractedWords = availableWords.sort((a, b) => {
+            return (reviewCounts[a.id] + Math.random()) - (reviewCounts[b.id] + Math.random());
+        }).slice(0, count);
+
+        currentSessionMode = 'normal';
+        initSession(extractedWords);
     }
 
     function startHistoryReview(type) {
-        let wordsToReview = type === 'forgotten' ? currentHistoryWords.forgotten : currentHistoryWords.all;
-        if (wordsToReview.length === 0) {
-            return alert(type === 'forgotten' ? '太棒了！这一天没有【忘了】的词。' : '没有可复习的词汇。');
-        }
-        initSession(wordsToReview);
+        let words = type === 'forgotten' ? currentHistoryWords.forgotten : currentHistoryWords.all;
+        if (words.length === 0) return alert('没有可复习词汇');
+        currentSessionMode = 'normal';
+        initSession(words);
     }
 
     function startCustomStudy() {
         let bank = getCurrentBank();
         let selectedIds = Array.from(document.querySelectorAll('.word-checkbox:checked')).map(cb => parseInt(cb.value));
-        if (selectedIds.length === 0) return alert('请先在上方数据表中勾选要学习的词汇。');
-        let selectAllCb = document.getElementById('select-all-cb');
-        if (selectAllCb) selectAllCb.checked = false;
+        if (selectedIds.length === 0) return alert('未勾选');
+        document.getElementById('select-all-cb').checked = false;
+        currentSessionMode = 'normal';
         initSession(selectedIds.map(id => bank.find(w => w.id === id)).filter(w => w));
     }
 
     function initSession(words) {
         if (words.length === 0) return;
-        
         let orderMode = document.getElementById('study-order-select').value || 'shuffle';
         let finalWords = [...words];
         
@@ -708,313 +729,170 @@
                 let j = Math.floor(Math.random() * (i + 1));
                 [finalWords[i], finalWords[j]] = [finalWords[j], finalWords[i]];
             }
-        } else if (orderMode === 'ordered') {
-            finalWords.sort((a, b) => a.id - b.id);
-        }
+        } else { finalWords.sort((a, b) => a.id - b.id); }
         
-        queue = finalWords;
-        historyStack = [];
-        firstImpressions = {};
-        currentIndex = 0;
-        
+        queue = finalWords; historyStack = []; firstImpressions = {}; currentIndex = 0;
         currentStudyMode = document.getElementById('study-mode-select').value || 'jp2cn';
         
-        hideAllViews();
-        document.getElementById('study-view').classList.remove('hidden');
-        renderWord();
+        hideAllViews(); document.getElementById('study-view').classList.remove('hidden'); renderWord();
     }
 
     function renderWord() {
-        if (currentIndex >= queue.length) {
-            finishSession();
-            return;
-        }
-        let currentWord = queue[currentIndex];
+        if (currentIndex >= queue.length) return finishSession();
+        let word = queue[currentIndex];
         
-        let promptElem = document.getElementById('card-prompt');
-        let answerTitleElem = document.getElementById('card-answer-title');
-        let meaningElem = document.getElementById('card-meaning');
-        
-        let promptSpeak = document.getElementById('prompt-speak');
-        let answerSpeak = document.getElementById('answer-speak');
+        let pe = document.getElementById('card-prompt'), aT = document.getElementById('card-answer-title'), mE = document.getElementById('card-meaning');
+        let ps = document.getElementById('prompt-speak'), as = document.getElementById('answer-speak');
 
         if (currentStudyMode === 'jp2cn') {
-            promptElem.innerText = currentWord.word;
-            answerTitleElem.style.display = 'none'; 
-            meaningElem.innerText = currentWord.meaning;
-            meaningElem.style.display = 'block';
-            
-            promptSpeak.classList.remove('hidden');
-            answerSpeak.classList.add('hidden');
-            speakCurrentWord();
+            pe.innerText = word.word; aT.style.display = 'none'; mE.innerText = word.meaning; mE.style.display = 'block';
+            ps.classList.remove('hidden'); as.classList.add('hidden'); speakCurrentWord();
         } else {
-            promptElem.innerText = currentWord.meaning;
-            answerTitleElem.innerText = currentWord.word;
-            answerTitleElem.style.display = 'block'; 
-            meaningElem.style.display = 'none'; 
-            
-            promptSpeak.classList.add('hidden');
-            answerSpeak.classList.add('hidden'); 
+            pe.innerText = word.meaning; aT.innerText = word.word; aT.style.display = 'block'; mE.style.display = 'none';
+            ps.classList.add('hidden'); as.classList.add('hidden'); 
         }
         
-        let wordLogs = getLogs().filter(log => log.wordId === currentWord.id).sort((a, b) => a.round - b.round);
-        let blocksHtml = wordLogs.map(log => {
-            if (log.status === 'known') {
-                return '<span class="history-block block-known" title="曾标记：认识"></span>';
-            } else {
-                return '<span class="history-block block-forgotten" title="曾标记：忘了"></span>';
-            }
-        }).join('');
-        document.getElementById('word-history-blocks').innerHTML = blocksHtml;
+        let wordLogs = getLogs().filter(log => log.wordId === word.id).sort((a, b) => a.round - b.round);
+        document.getElementById('word-history-blocks').innerHTML = wordLogs.map(log => 
+            `<span class="history-block ${log.status === 'known' ? 'block-known' : 'block-forgotten'}"></span>`
+        ).join('');
         
-        let kanjiElem = document.getElementById('card-kanji');
-        if (currentWord.kanji && currentWord.kanji.trim() !== "") {
-            kanjiElem.innerText = `【汉字】 ${currentWord.kanji}`;
-            kanjiElem.style.display = 'block';
-        } else {
-            kanjiElem.style.display = 'none';
-        }
-
-        document.getElementById('card-kana').innerText = currentWord.kana;
+        let kE = document.getElementById('card-kanji');
+        if (word.kanji && word.kanji.trim() !== "") { kE.innerText = `【汉字】 ${word.kanji}`; kE.style.display = 'block'; } 
+        else { kE.style.display = 'none'; }
+        document.getElementById('card-kana').innerText = word.kana;
         
-        let exampleElem = document.getElementById('card-example');
-        if (currentWord.example_jp && currentWord.example_cn) {
-            document.getElementById('ex-jp').innerText = currentWord.example_jp;
-            document.getElementById('ex-cn').innerText = currentWord.example_cn;
-            exampleElem.style.display = 'block';
-        } else {
-            exampleElem.style.display = 'none';
-        }
+        let exE = document.getElementById('card-example');
+        if (word.example_jp && word.example_cn) {
+            document.getElementById('ex-jp').innerText = word.example_jp; document.getElementById('ex-cn').innerText = word.example_cn;
+            exE.style.display = 'block';
+        } else { exE.style.display = 'none'; }
 
         document.getElementById('progress-text').innerText = `进度: ${currentIndex + 1} / ${queue.length}`;
-        document.getElementById('answer-section').classList.add('hidden');
-        document.getElementById('action-buttons').classList.add('hidden');
+        document.getElementById('answer-section').classList.add('hidden'); document.getElementById('action-buttons').classList.add('hidden');
         document.getElementById('btn-show-answer').classList.remove('hidden');
     }
 
-    // 🌟 新增震动反馈触发函数
-    function triggerVibration(type) {
-        if ('vibrate' in navigator) {
-            if (type === 'heavy') {
-                navigator.vibrate(50); // 单次震动
-            } else if (type === 'light') {
-                navigator.vibrate([30, 50, 30]); // 连续两次轻震
-            }
-        }
-    }
-
     function showAnswer() {
-        triggerVibration('heavy'); // 🌟 点击显示答案时触发震动
-        
-        document.getElementById('answer-section').classList.remove('hidden');
-        document.getElementById('action-buttons').classList.remove('hidden');
+        triggerVibration('heavy');
+        document.getElementById('answer-section').classList.remove('hidden'); document.getElementById('action-buttons').classList.remove('hidden');
         document.getElementById('btn-show-answer').classList.add('hidden');
-        
-        if (currentStudyMode === 'cn2jp') {
-            document.getElementById('answer-speak').classList.remove('hidden');
-        }
+        if (currentStudyMode === 'cn2jp') document.getElementById('answer-speak').classList.remove('hidden');
         speakCurrentWord();
     }
 
     function markWord(status) {
-        triggerVibration('light'); // 🌟 点击认识/忘了时触发震动
+        triggerVibration('light');
+        let word = queue[currentIndex];
+        // Session 级别第一印象防抖：一轮之内只认第一次
+        let isFirstAppearance = queue.findIndex(w => w.id === word.id) === currentIndex;
         
-        let currentWord = queue[currentIndex];
-        let isFirstAppearance = queue.findIndex(w => w.id === currentWord.id) === currentIndex;
-        
-        if (isFirstAppearance) firstImpressions[currentWord.id] = status;
+        if (isFirstAppearance) firstImpressions[word.id] = status;
         historyStack.push({ index: currentIndex, status: status, isFirst: isFirstAppearance });
 
-        if (status === 'forgotten') {
-            let remainingLength = queue.length - currentIndex - 1;
-            queue.splice(currentIndex + 1 + Math.floor(Math.random() * (remainingLength + 1)), 0, currentWord);
-        }
-        currentIndex++;
-        renderWord();
+        if (status === 'forgotten') queue.splice(currentIndex + 1 + Math.floor(Math.random() * (queue.length - currentIndex)), 0, word);
+        currentIndex++; renderWord();
     }
 
     function goBack() {
         if (historyStack.length === 0) return; 
-        let lastAction = historyStack.pop();
-        let targetIndex = lastAction.index;
-
+        let lastAction = historyStack.pop(); let targetIndex = lastAction.index;
         if (lastAction.status === 'forgotten') {
-            let wordId = queue[targetIndex].id;
-            for (let i = queue.length - 1; i > targetIndex; i--) {
-                if (queue[i].id === wordId) { queue.splice(i, 1); break; }
-            }
+            for (let i = queue.length - 1; i > targetIndex; i--) if (queue[i].id === queue[targetIndex].id) { queue.splice(i, 1); break; }
         }
         if (lastAction.isFirst) delete firstImpressions[queue[targetIndex].id];
-        
-        currentIndex = targetIndex;
-        renderWord(); 
+        currentIndex = targetIndex; renderWord(); 
     }
     
-    function exitStudyEarly() {
-        if (confirm("确定要提前结束本次学习吗？\n当前已判定的词汇记录将被安全保存。")) {
-            finishSession();
-        }
-    }
+    function exitStudyEarly() { if (confirm("确定结束？已判定记录将被保存并将计算曲线。")) finishSession(); }
 
     function finishSession() {
         let knownCount = 0; let forgotCount = 0;
         for (let wordIdStr in firstImpressions) {
-            let wordId = parseInt(wordIdStr);
-            let status = firstImpressions[wordIdStr];
+            let id = parseInt(wordIdStr); let status = firstImpressions[wordIdStr];
             if (status === 'known') knownCount++; else forgotCount++;
             
-            saveLog(wordId, getMaxRound(wordId) + 1, status);
+            saveLog(id, getMaxRound(id) + 1, status);
+            // 🌟 触发核心遗忘引擎，计算并写入数据库
+            updateSRS(id, status);
         }
         
         document.getElementById('stat-known-count').innerText = knownCount;
         document.getElementById('stat-forgot-count').innerText = forgotCount;
-
         updateHistoryCalendar(); 
-
-        hideAllViews();
-        document.getElementById('summary-view').classList.remove('hidden');
+        hideAllViews(); document.getElementById('summary-view').classList.remove('hidden');
     }
 
     document.addEventListener('keydown', function(event) {
-        let studyView = document.getElementById('study-view');
-        if (studyView.classList.contains('hidden')) return;
-        
-        let syncModal = document.getElementById('sync-modal');
-        if (!syncModal.classList.contains('hidden')) return;
-
-        let btnShowAnswer = document.getElementById('btn-show-answer');
-        let actionButtons = document.getElementById('action-buttons');
-
-        if (!btnShowAnswer.classList.contains('hidden')) {
-            if (event.code === 'Space' || event.code === 'Enter') {
-                event.preventDefault(); 
-                showAnswer();
-            }
-        } else if (!actionButtons.classList.contains('hidden')) {
-            if (event.code === 'ArrowLeft' || event.key === '1') {
-                event.preventDefault();
-                markWord('forgotten');
-            } else if (event.code === 'ArrowRight' || event.key === '2') {
-                event.preventDefault();
-                markWord('known');
-            }
+        if (document.getElementById('study-view').classList.contains('hidden') || !document.getElementById('sync-modal').classList.contains('hidden')) return;
+        let b = document.getElementById('btn-show-answer'), a = document.getElementById('action-buttons');
+        if (!b.classList.contains('hidden')) { if (event.code === 'Space' || event.code === 'Enter') { event.preventDefault(); showAnswer(); } } 
+        else if (!a.classList.contains('hidden')) {
+            if (event.code === 'ArrowLeft' || event.key === '1') { event.preventDefault(); markWord('forgotten'); } 
+            else if (event.code === 'ArrowRight' || event.key === '2') { event.preventDefault(); markWord('known'); }
         }
-        
-        if (event.code === 'ArrowUp' || event.key === '3') {
-            event.preventDefault();
-            speakCurrentWord();
-        }
+        if (event.code === 'ArrowUp' || event.key === '3') { event.preventDefault(); speakCurrentWord(); }
     });
 
-    // ----- 数据中心与视图控制 -----
+    // ----- 数据中心功能 -----
     function openStatsCenter() {
-        hideAllViews();
-        document.getElementById('stats-view').classList.remove('hidden');
-        let selectAllCb = document.getElementById('select-all-cb');
-        if (selectAllCb) selectAllCb.checked = false;
-        renderStatsTable('idAsc'); 
+        hideAllViews(); document.getElementById('stats-view').classList.remove('hidden');
+        document.getElementById('select-all-cb').checked = false; renderStatsTable('idAsc'); 
     }
 
     function selectIdRange() {
-        let start = parseInt(document.getElementById('range-start').value);
-        let end = parseInt(document.getElementById('range-end').value);
-        if (isNaN(start) || isNaN(end) || start > end) {
-            return alert('⚠️ 请输入有效的起始和结束 ID (例如: 1 至 50)');
-        }
-        
+        let s = parseInt(document.getElementById('range-start').value), e = parseInt(document.getElementById('range-end').value);
+        if (isNaN(s) || isNaN(e) || s > e) return alert('无效区间');
         let count = 0;
         document.querySelectorAll('.word-checkbox').forEach(cb => {
-            let id = parseInt(cb.value);
-            if (id >= start && id <= end) {
-                cb.checked = true;
-                count++;
-            }
+            if (parseInt(cb.value) >= s && parseInt(cb.value) <= e) { cb.checked = true; count++; }
         });
-        
-        if (count > 0) {
-            let btn = document.querySelector('.range-selector .btn-primary');
-            let oldText = btn.innerText;
-            btn.innerText = `已成功勾选 ${count} 项`;
-            setTimeout(() => btn.innerText = oldText, 1500);
-        } else {
-            alert('范围内没有找到词汇，请检查当前表格中是否包含这些 ID。');
-        }
+        if (count > 0) { let btn = document.querySelector('.range-selector .btn-primary'); let old = btn.innerText; btn.innerText = `勾选 ${count}`; setTimeout(() => btn.innerText = old, 1500); } 
+        else alert('未找到');
     }
 
-    function clearSelection() {
-        document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = false);
-        let selectAllCb = document.getElementById('select-all-cb');
-        if (selectAllCb) selectAllCb.checked = false;
-    }
+    function clearSelection() { document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = false); document.getElementById('select-all-cb').checked = false; }
 
     function renderStatsTable(sortType) {
-        let bank = getCurrentBank();
-        let statsMap = {};
-        bank.forEach(w => statsMap[w.id] = { id: w.id, word: w.word, meaning: w.meaning, totalReviews: 0, forgotCount: 0, lastStatus: '-' });
-        
+        let bank = getCurrentBank(); let srsBank = getSRSBank(); let statsMap = {};
+        bank.forEach(w => {
+            let srsData = srsBank[w.id];
+            let dueDateText = srsData ? srsData.d : '<span style="color:#bdc3c7;">待触发</span>';
+            let easeText = srsData ? `${Math.round(srsData.e * 100)}%` : '-';
+            statsMap[w.id] = { id: w.id, word: w.word, totalReviews: 0, forgotCount: 0, due: dueDateText, ease: easeText };
+        });
         getLogs().forEach(log => {
-            if (statsMap[log.wordId]) {
-                statsMap[log.wordId].totalReviews++;
-                if (log.status === 'forgotten') statsMap[log.wordId].forgotCount++;
-                statsMap[log.wordId].lastStatus = log.status === 'known' ? '✅ 认识' : '❌ 忘了';
-            }
+            if (statsMap[log.wordId]) { statsMap[log.wordId].totalReviews++; if (log.status === 'forgotten') statsMap[log.wordId].forgotCount++; }
         });
         
         let stats = Object.values(statsMap);
         if (sortType === 'idAsc') stats.sort((a, b) => a.id - b.id);
         else if (sortType === 'reviewsDesc') stats.sort((a, b) => b.totalReviews - a.totalReviews);
-        else if (sortType === 'reviewsAsc') stats.sort((a, b) => a.totalReviews - b.totalReviews);
         else if (sortType === 'forgotDesc') stats.sort((a, b) => b.forgotCount - a.forgotCount);
 
-        let tbody = document.getElementById('stats-table-body');
-        tbody.innerHTML = '';
+        let tbody = document.getElementById('stats-table-body'); tbody.innerHTML = '';
         stats.forEach(s => {
             let tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="text-align: center;"><input type="checkbox" class="word-checkbox" value="${s.id}"></td>
-                <td style="color: #bdc3c7; font-size: 12px;">${s.id}</td>
-                <td style="font-weight: bold; color: #2980b9;">${s.word}</td>
-                <td>${s.meaning}</td>
-                <td style="font-weight: bold; color: #34495e;">${s.totalReviews} 次</td>
-                <td style="color: #e74c3c; font-weight: bold;">${s.forgotCount} 次</td>
-                <td>${s.totalReviews === 0 ? '<span style="color:#95a5a6;">未学习</span>' : s.lastStatus}</td>
-            `;
+            tr.innerHTML = `<td style="text-align:center;"><input type="checkbox" class="word-checkbox" value="${s.id}"></td><td style="color:#bdc3c7;font-size:12px;">${s.id}</td><td style="font-weight:bold;color:#2980b9;">${s.word}</td><td style="font-weight:bold;color:#e67e22;">${s.due}</td><td style="color:#27ae60;">${s.ease}</td>`;
             tbody.appendChild(tr);
         });
-        let selectAllCb = document.getElementById('select-all-cb');
-        if (selectAllCb) selectAllCb.checked = false;
+        document.getElementById('select-all-cb').checked = false;
     }
 
-    function toggleSelectAll() {
-        let selectAllCb = document.getElementById('select-all-cb');
-        document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = selectAllCb.checked);
-    }
-
-    function safeBackFromStats() {
-        let checkedCount = document.querySelectorAll('.word-checkbox:checked').length;
-        if (checkedCount > 0) {
-            if (!confirm(`⚠️ 你当前选中了 ${checkedCount} 个词汇。\n\n返回主菜单将会丢失这些勾选状态，确定要返回吗？`)) {
-                return; 
-            }
-        }
-        backToMenu(); 
-    }
+    function toggleSelectAll() { let c = document.getElementById('select-all-cb').checked; document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = c); }
+    function safeBackFromStats() { if (document.querySelectorAll('.word-checkbox:checked').length > 0 && !confirm(`舍弃当前勾选并返回？`)) return; backToMenu(); }
 
     function hideAllViews() {
-        document.getElementById('menu-view').classList.add('hidden');
-        document.getElementById('study-view').classList.add('hidden');
-        document.getElementById('summary-view').classList.add('hidden');
-        document.getElementById('stats-view').classList.add('hidden');
-        document.getElementById('history-detail-view').classList.add('hidden');
+        document.getElementById('menu-view').classList.add('hidden'); document.getElementById('study-view').classList.add('hidden');
+        document.getElementById('summary-view').classList.add('hidden'); document.getElementById('stats-view').classList.add('hidden');
+        document.getElementById('history-detail-view').classList.add('hidden'); document.getElementById('mandatory-view').classList.add('hidden');
     }
     
-    function backToMenu() {
-        hideAllViews();
-        document.getElementById('menu-view').classList.remove('hidden');
-    }
+    function backToMenu() { hideAllViews(); document.getElementById('menu-view').classList.remove('hidden'); }
 
+    // 🌟 初始化入口变更
     updateHistoryCalendar();
-    backToMenu();
+    checkMandatoryStatus(); // 启动时率先判定是否触发强制复习
 </script>
 </body>
 </html>
