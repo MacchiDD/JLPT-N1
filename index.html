@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>N1 词汇间隔重复系统</title>
+    <title>N1 語彙インターバル反復システム</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
     
     <style>
-        body { font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; padding: 20px 10px; color: #2c3e50; min-height: 100vh; margin: 0; box-sizing: border-box; }
+        body { font-family: 'Hiragino Sans', 'Meiryo', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; padding: 20px 10px; color: #2c3e50; min-height: 100vh; margin: 0; box-sizing: border-box; }
         #app { background: rgba(255, 255, 255, 0.95); width: 100%; max-width: 620px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; backdrop-filter: blur(10px); box-sizing: border-box; position: relative; }
-        h1 { font-size: 22px; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; margin-top: 0; }
+        h1 { font-size: 22px; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; margin-top: 0; font-weight: bold; }
         .hidden { display: none !important; }
         .btn { padding: 10px 15px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .btn-primary { background-color: #3498db; color: white; }
@@ -27,7 +27,7 @@
         .btn:active { transform: translateY(0); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         input[type="number"], input[type="date"], input[type="text"], input[type="password"], select { padding: 10px 12px; width: 140px; border: 1px solid #dcdde1; border-radius: 6px; font-size: 14px; margin: 10px 0; outline: none; transition: 0.3s; background: #fdfdfd; box-sizing: border-box; }
         input[type="number"]:focus, input[type="date"]:focus, input[type="text"]:focus, input[type="password"]:focus, select:focus { border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
-        select { width: 100%; }
+        select { width: 100%; font-family: inherit; }
         
         .word-card { margin: 20px 0; padding: 20px; border: none; border-top: 6px solid #3498db; border-radius: 12px; background: #ffffff; box-shadow: 0 8px 25px rgba(0,0,0,0.06); min-height: 140px; display: flex; flex-direction: column; justify-content: center; word-wrap: break-word; }
         .word-title { font-size: 32px; font-weight: bold; color: #2980b9; text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
@@ -41,7 +41,7 @@
         .stat-box { text-align: left; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #ecf0f1; font-size: 14px; }
         .settings-box { background: #fff5e6; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 5px solid #f39c12; font-size: 14px; }
         .range-selector { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; border: 1px solid #ecf0f1; }
-        .range-selector input { width: 60px; padding: 6px; font-size: 13px; }
+        .range-selector input { width: 60px; padding: 6px; font-size: 13px; text-align: center; }
         
         .table-container { max-height: 380px; overflow-y: auto; margin-top: 15px; border: 1px solid #ecf0f1; border-radius: 8px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; background: white; }
@@ -70,7 +70,6 @@
         .speak-btn:hover { transform: scale(1.2); filter: grayscale(0%) opacity(1); }
         .speak-btn:active { transform: scale(0.9); }
 
-        /* 盲按兼容底部固定栏 */
         #study-view { padding-bottom: 120px; }
         .bottom-action-bar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px calc(20px + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 -5px 25px rgba(0,0,0,0.08); z-index: 1000; display: flex; justify-content: center; box-sizing: border-box; }
         .bottom-action-inner { width: 100%; max-width: 620px; display: flex; justify-content: center; }
@@ -87,90 +86,90 @@
 <div id="app">
     
     <div id="mandatory-view" class="hidden" style="text-align: center; padding: 40px 10px;">
-        <h1 style="color: #e74c3c; font-size: 28px; border:none;">🚨 强制复习拦截</h1>
+        <h1 style="color: #e74c3c; font-size: 26px; border:none;">🚨 必須復習セッション</h1>
         <p style="color: #34495e; margin: 20px 0; line-height: 1.6; font-size: 15px;">
-            系统根据遗忘曲线检测到，<br>当前词库你有 <strong id="mand-due-count" style="color: #e74c3c; font-size: 22px;">0</strong> 个词汇亟待巩固。
+            忘却曲線アルゴリズムにより、現在<br><strong id="mand-due-count" style="color: #e74c3c; font-size: 24px;">0</strong> 個の単語が復習期日を迎えています。
         </p>
         <div style="background: #fdf5f5; padding: 15px; border-radius: 10px; border-left: 5px solid #e74c3c; text-align: left; font-size: 13px; color: #7f8c8d;">
-            💡 规则：为了保证长期记忆，你必须先完成今天的首批强制复习指标才能进入主页学习新词。如果逾期积压过多，你可以在主页选择“提前还债”。
+            💡 ルール：長期記憶を定着させるため、新規学習の前に、まずは本日の必須ノルマをクリアしてください。（未完了のタスクはダッシュボードから継続可能です）
         </div>
         <button class="btn btn-danger btn-huge" style="margin-top: 30px;" onclick="startMandatorySession()">
-            开始复习 (本次需清 <span id="mand-target-count">0</span> 个)
+            復習を開始 (今回の目標：<span id="mand-target-count">0</span> 個)
         </button>
     </div>
 
     <div id="menu-view">
-        <h1 style="color: #34495e;">📚 N1 备考中控台</h1>
+        <h1 style="color: #34495e;">📚 N1 学習ダッシュボード</h1>
         
         <div class="settings-box" style="border-left-color: #8e44ad; background: #fdfaef;">
-            <strong style="color: #8e44ad;">📖 选择当前词库：</strong>
+            <strong style="color: #8e44ad;">📖 単語帳を選択：</strong>
             <select id="dictionary-select" onchange="switchDictionary()" style="margin-top: 5px; margin-bottom: 5px; font-weight: bold; color: #8e44ad;">
-                <option value="hiragana">假名 + 拟声词题库</option>
-                <option value="kundoku">訓読词汇题库</option>
+                <option value="hiragana">仮名・擬音語ベース</option>
+                <option value="kundoku">訓読語彙ベース</option>
             </select>
         </div>
 
         <div class="settings-box" style="border-left-color: #2ecc71; background: #f0fdf4;">
-            <strong style="color: #27ae60;">🧠 遗忘曲线引擎 (SRS)</strong>
-            <p style="font-size: 11px; color: #7f8c8d; margin: 5px 0 10px 0;">算法机制：单日内仅记录首次判定。连续答对指数延后，答错立即坠入次日重修。</p>
+            <strong style="color: #27ae60;">🧠 忘却曲線エンジン (SRS)</strong>
+            <p style="font-size: 11px; color: #7f8c8d; margin: 5px 0 10px 0;">アルゴリズム：1日1回の初回判定のみを記録。正解で次回までの期間が延び、間違えると翌日に再設定されます。</p>
             
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <span style="font-size: 13px; font-weight: bold; color: #2c3e50;">强制启动指标 (个/天)：</span>
+                <span style="font-size: 13px; font-weight: bold; color: #2c3e50;">起動時必須ノルマ (個/日)：</span>
                 <input type="number" id="srs-mandatory-limit" value="10" min="1" max="500" style="width: 70px; padding: 6px; margin:0;" onchange="saveSRSConfig()">
             </div>
             
             <hr style="border-top: 1px dashed #a3e4d7; margin: 12px 0;">
             
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 13px; font-weight: bold; color: #e74c3c;">逾期记忆债务：<span id="srs-debt-count" style="font-size: 18px;">0</span></span>
+                <span style="font-size: 13px; font-weight: bold; color: #e74c3c;">本日の復習タスク：<span id="srs-debt-count" style="font-size: 18px;">0</span></span>
                 <div style="display: flex; align-items: center; gap: 5px;">
                     <input type="number" id="srs-debt-repay-count" value="30" min="1" style="width: 60px; padding: 6px; margin:0;">
-                    <button class="btn btn-success" style="padding: 8px 10px; margin: 0; font-size: 12px;" onclick="startDebtRepayment()">主动还债</button>
+                    <button class="btn btn-success" style="padding: 8px 10px; margin: 0; font-size: 12px;" onclick="startDebtRepayment()">復習を続ける</button>
                 </div>
             </div>
         </div>
 
         <div class="settings-box">
-            <strong style="color: #d35400;">⚙️ 基础设定：</strong>
+            <strong style="color: #d35400;">⚙️ 基本設定：</strong>
             <select id="study-mode-select" style="margin-top: 5px; margin-bottom: 10px;">
-                <option value="jp2cn">🇯🇵 日文 → 🇨🇳 中文 (默认)</option>
-                <option value="cn2jp">🇨🇳 中文 → 🇯🇵 日文 (挑战)</option>
+                <option value="jp2cn">🇯🇵 日本語 ➔ 🇨🇳 中国語 (標準)</option>
+                <option value="cn2jp">🇨🇳 中国語 ➔ 🇯🇵 日本語 (挑戦)</option>
             </select>
             <br>
-            <strong style="color: #d35400;">🔄 出场顺序：</strong>
+            <strong style="color: #d35400;">🔄 出題順序：</strong>
             <select id="study-order-select" style="margin-top: 5px;">
-                <option value="shuffle">🔀 打乱顺序 (防位置记忆)</option>
-                <option value="ordered">⬇️ 按 ID 顺序</option>
+                <option value="shuffle">🔀 ランダム (位置記憶を防止)</option>
+                <option value="ordered">⬇️ ID順</option>
             </select>
         </div>
 
         <div style="margin-top: 15px;">
-            <p style="font-weight: bold; color: #34495e;">🎯 抽签学习 (自动避开今日到期词)：</p>
-            <input type="number" id="new-word-count" value="10" min="1" max="100"> 个
+            <p style="font-weight: bold; color: #34495e;">🎯 新規学習 (復習タスクを除外)：</p>
+            <input type="number" id="new-word-count" value="10" min="1" max="100"> 個
             <br>
-            <button class="btn btn-primary" onclick="startNewLearning()">🚀 开始普通抽背</button>
+            <button class="btn btn-primary" onclick="startNewLearning()">🚀 新規学習を開始</button>
         </div>
         <hr>
         <div>
-            <p style="font-weight: bold; color: #34495e;">📅 历史流水账查阅：</p>
+            <p style="font-weight: bold; color: #34495e;">📅 学習履歴カレンダー：</p>
             <input type="text" id="history-date" style="text-align: center; cursor: pointer; background-color: #fff;">
             <br>
-            <button class="btn btn-primary" onclick="viewHistoryDate()">🔍 查看这一天</button>
+            <button class="btn btn-primary" onclick="viewHistoryDate()">🔍 この日を確認</button>
         </div>
         <hr>
         <div>
-            <button class="btn btn-warning" style="width: 80%; padding: 12px; font-size: 15px;" onclick="openStatsCenter()">📊 进入当前词库数据中心</button>
+            <button class="btn btn-warning" style="width: 80%; padding: 12px; font-size: 15px;" onclick="openStatsCenter()">📊 単語データセンターへ</button>
         </div>
         <hr style="border-top: 1px dashed #bdc3c7;">
         <div>
-            <p style="color: #95a5a6; font-size: 12px; margin-bottom: 5px;">💾 跨设备同步与本地备份 (包含所有词库和曲线数据)</p>
+            <p style="color: #95a5a6; font-size: 12px; margin-bottom: 5px;">💾 データ同期・バックアップ (全単語帳共通)</p>
             <div class="data-management">
-                <button class="btn btn-primary" style="width: 100%; font-size: 14px; background-color: #8e44ad;" onclick="openSyncModal()">☁️ API 云端存档同步 (JSONBin)</button>
+                <button class="btn btn-primary" style="width: 100%; font-size: 14px; background-color: #8e44ad;" onclick="openSyncModal()">☁️ API クラウド同期 (JSONBin)</button>
                 <div class="data-buttons-row">
-                    <button class="btn btn-secondary" onclick="exportData()">⬇️ 导出本地</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆️ 导入本地</button>
+                    <button class="btn btn-secondary" onclick="exportData()">⬇️ エクスポート</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆️ インポート</button>
                     <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
-                    <button class="btn btn-danger" onclick="clearData()">🗑️ 清空记录</button>
+                    <button class="btn btn-danger" onclick="clearData()">🗑️ 全記録を消去</button>
                 </div>
             </div>
         </div>
@@ -179,8 +178,8 @@
     <div id="sync-modal" class="hidden">
         <div class="sync-box">
             <button class="close-btn" onclick="closeSyncModal()">×</button>
-            <h3>☁️ 云端存档设置</h3>
-            <p style="font-size: 13px; color: #7f8c8d; line-height: 1.5; margin-bottom: 15px;">利用 <b>JSONBin.io</b> 同步历史和遗忘曲线状态。</p>
+            <h3>☁️ クラウド同期設定</h3>
+            <p style="font-size: 13px; color: #7f8c8d; line-height: 1.5; margin-bottom: 15px;"><b>JSONBin.io</b> を利用して、学習履歴と忘却曲線の状態を同期します。</p>
             <div style="margin-bottom: 10px;">
                 <label style="font-size: 12px; font-weight: bold; color: #34495e;">Bin ID:</label>
                 <input type="text" id="bin-id" style="width: 100%;">
@@ -190,45 +189,45 @@
                 <input type="password" id="api-key" style="width: 100%;">
             </div>
             <div style="display: flex; gap: 10px;">
-                <button class="btn btn-warning" id="btn-upload" style="flex: 1;" onclick="uploadToCloud()">⬆️ 覆盖云端</button>
-                <button class="btn btn-success" id="btn-download" style="flex: 1;" onclick="downloadFromCloud()">⬇️ 下载至本设备</button>
+                <button class="btn btn-warning" id="btn-upload" style="flex: 1;" onclick="uploadToCloud()">⬆️ クラウドへ上書き</button>
+                <button class="btn btn-success" id="btn-download" style="flex: 1;" onclick="downloadFromCloud()">⬇️ 端末へダウンロード</button>
             </div>
         </div>
     </div>
 
     <div id="history-detail-view" class="hidden">
-        <h1 id="history-date-title">学习记录</h1>
+        <h1 id="history-date-title">学習記録</h1>
         <div class="stat-box">
-            <p>📚 当日复习总词数：<span id="hist-total" style="font-weight:bold; color:#2980b9;">0</span></p>
-            <p>✅ 当日判定【认识】：<span id="hist-known" style="color:#2ecc71; font-weight:bold;">0</span></p>
-            <p>❌ 当日判定【忘了】：<span id="hist-forgot" style="color:#e74c3c; font-weight:bold;">0</span></p>
+            <p>📚 当日の復習総数：<span id="hist-total" style="font-weight:bold; color:#2980b9;">0</span></p>
+            <p>✅ 当日判定【覚えた】：<span id="hist-known" style="color:#2ecc71; font-weight:bold;">0</span></p>
+            <p>❌ 当日判定【もう一度】：<span id="hist-forgot" style="color:#e74c3c; font-weight:bold;">0</span></p>
         </div>
         <div style="margin: 15px 0;">
-            <button class="btn btn-primary" onclick="startHistoryReview('all')">复习这一天全部</button>
-            <button class="btn btn-danger" onclick="startHistoryReview('forgotten')">仅复习【忘了】</button>
+            <button class="btn btn-primary" onclick="startHistoryReview('all')">この日の全てを復習</button>
+            <button class="btn btn-danger" onclick="startHistoryReview('forgotten')">【もう一度】のみ復習</button>
         </div>
         <div class="table-container">
             <table>
-                <thead><tr><th>ID</th><th>词汇</th><th>释义</th><th>状态</th></tr></thead>
+                <thead><tr><th>ID</th><th>単語</th><th>意味</th><th>状態</th></tr></thead>
                 <tbody id="history-detail-table-body"></tbody>
             </table>
         </div>
-        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="backToMenu()">返回主菜单</button>
+        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="backToMenu()">ダッシュボードに戻る</button>
     </div>
 
     <div id="study-view" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <div>
-                <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 13px; background: #bdc3c7; color: #2c3e50;" onclick="goBack()">🔙 上一个</button>
-                <button class="btn btn-warning" style="padding: 6px 10px; font-size: 13px; background: #f39c12; margin-left: 5px;" onclick="exitStudyEarly()">🏠 结束结算</button>
+                <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 13px; background: #bdc3c7; color: #2c3e50;" onclick="goBack()">🔙 前へ</button>
+                <button class="btn btn-warning" style="padding: 6px 10px; font-size: 13px; background: #f39c12; margin-left: 5px;" onclick="exitStudyEarly()">🏠 終了して集計</button>
             </div>
             <span id="progress-text" style="color: #34495e; font-weight: bold; background: #ecf0f1; padding: 4px 10px; border-radius: 20px; font-size: 13px;">0/0</span>
         </div>
         
         <div class="word-card">
             <div style="display: flex; justify-content: center; align-items: center;">
-                <div id="card-prompt" class="word-title" style="margin-bottom: 0;">提示区</div>
-                <span id="prompt-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="点击朗读">🔊</span>
+                <div id="card-prompt" class="word-title" style="margin-bottom: 0;">提示エリア</div>
+                <span id="prompt-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="再生">🔊</span>
             </div>
             
             <div id="word-history-blocks"></div>
@@ -236,12 +235,12 @@
             <div id="answer-section" class="hidden">
                 <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
                     <div id="card-answer-title" class="word-title" style="color: #e67e22; margin-bottom: 0; font-size: 26px;"></div>
-                    <span id="answer-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="点击朗读">🔊</span>
+                    <span id="answer-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="再生">🔊</span>
                 </div>
                 
                 <div id="card-kanji" class="word-kanji"></div>
-                <div id="card-kana" class="word-kana">假名</div>
-                <div id="card-meaning" class="word-meaning">释义</div>
+                <div id="card-kana" class="word-kana">仮名</div>
+                <div id="card-meaning" class="word-meaning">意味</div>
                 <div id="card-example" class="word-example">
                     <p id="ex-jp" class="ex-jp"></p>
                     <p id="ex-cn" class="ex-cn"></p>
@@ -249,74 +248,74 @@
             </div>
         </div>
 
-        <p class="keyboard-hint" style="margin-bottom: 80px;">⌨️ PC端快捷键：[空格]答案 | [←]忘了 | [→]认识 | [↑]发音</p>
+        <p class="keyboard-hint" style="margin-bottom: 80px;">⌨️ PCショートカット：[Space]解答 | [←]もう一度 | [→]覚えた | [↑]発音</p>
 
         <div class="bottom-action-bar">
             <div class="bottom-action-inner">
-                <button id="btn-show-answer" class="btn btn-primary btn-huge" onclick="showAnswer()">显示答案</button>
+                <button id="btn-show-answer" class="btn btn-primary btn-huge" onclick="showAnswer()">解答を表示</button>
                 <div id="action-buttons" class="hidden">
-                    <button class="btn btn-danger btn-huge" onclick="markWord('forgotten')">忘了 (重现)</button>
-                    <button class="btn btn-success btn-huge" onclick="markWord('known')">认识 (曲线+1)</button>
+                    <button class="btn btn-danger btn-huge" onclick="markWord('forgotten')">もう一度</button>
+                    <button class="btn btn-success btn-huge" onclick="markWord('known')">覚えた</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="summary-view" class="hidden">
-        <h1>🎉 本次结算完毕</h1>
+        <h1>🎉 セッション終了</h1>
         <div class="stat-box">
-            <p>✅ 首次判定为【认识】：<span id="stat-known-count" style="color:#2ecc71; font-weight:bold; font-size: 18px;">0</span> 个</p>
-            <p>❌ 首次判定为【忘了】：<span id="stat-forgot-count" style="color:#e74c3c; font-weight:bold; font-size: 18px;">0</span> 个</p>
-            <p style="margin-top: 15px; font-size: 12px; color: #8e44ad; font-weight:bold;">* 仅统计当前 Session 期间每个词的首次反应。熟练度曲线已由系统自动推算更新。</p>
-            <p id="save-notice" style="margin-top: 10px; font-size: 13px; color: #7f8c8d; border-top: 1px dashed #ccc; padding-top: 10px;">💾 学习和曲线记录已自动保存至本地。</p>
+            <p>✅ 今回の初回判定【覚えた】：<span id="stat-known-count" style="color:#2ecc71; font-weight:bold; font-size: 18px;">0</span> 個</p>
+            <p>❌ 今回の初回判定【もう一度】：<span id="stat-forgot-count" style="color:#e74c3c; font-weight:bold; font-size: 18px;">0</span> 個</p>
+            <p style="margin-top: 15px; font-size: 12px; color: #8e44ad; font-weight:bold;">* 本セッションでの初回リアクションのみが忘却曲線に反映されます。</p>
+            <p id="save-notice" style="margin-top: 10px; font-size: 13px; color: #7f8c8d; border-top: 1px dashed #ccc; padding-top: 10px;">💾 学習記録はローカルに自動保存されました。</p>
         </div>
-        <button class="btn btn-primary" style="margin-top: 20px; width: 60%;" onclick="checkMandatoryOrMenu()">继续 / 返回菜单</button>
+        <button class="btn btn-primary" style="margin-top: 20px; width: 60%;" onclick="checkMandatoryOrMenu()">続ける / 戻る</button>
     </div>
 
     <div id="stats-view" class="hidden">
-        <h1>📊 词汇数据中心</h1>
+        <h1>📊 単語データセンター</h1>
         
         <div class="range-selector">
-            <span style="font-weight: bold; color: #34495e;">选中 ID：</span>
-            <input type="number" id="range-start" placeholder="起"> <span style="color: #7f8c8d;">至</span>
-            <input type="number" id="range-end" placeholder="止">
-            <button class="btn btn-primary" style="padding: 6px 12px; margin: 0;" onclick="selectIdRange()">一键勾选</button>
-            <button class="btn btn-secondary" style="padding: 6px 12px; margin: 0; background-color: #bdc3c7; color: #333;" onclick="clearSelection()">清空</button>
+            <span style="font-weight: bold; color: #34495e;">ID指定：</span>
+            <input type="number" id="range-start" placeholder="始"> <span style="color: #7f8c8d;">〜</span>
+            <input type="number" id="range-end" placeholder="終">
+            <button class="btn btn-primary" style="padding: 6px 12px; margin: 0;" onclick="selectIdRange()">一括選択</button>
+            <button class="btn btn-secondary" style="padding: 6px 12px; margin: 0; background-color: #bdc3c7; color: #333;" onclick="clearSelection()">クリア</button>
         </div>
 
         <div class="filter-bar">
-            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('idAsc')">按 ID</button>
-            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('reviewsDesc')">按流水次数</button>
-            <button class="btn btn-danger" style="font-size: 12px;" onclick="renderStatsTable('forgotDesc')">🔥 流水顽固</button>
+            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('idAsc')">ID順</button>
+            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('reviewsDesc')">復習回数順</button>
+            <button class="btn btn-danger" style="font-size: 12px;" onclick="renderStatsTable('forgotDesc')">🔥 苦手ランキング</button>
         </div>
         
         <div style="margin: 15px 0;">
-            <button class="btn btn-success" style="width: 100%; font-weight: bold; padding: 10px;" onclick="startCustomStudy()">📚 开始特训选中词汇</button>
+            <button class="btn btn-success" style="width: 100%; font-weight: bold; padding: 10px;" onclick="startCustomStudy()">📚 選択した単語を特訓</button>
         </div>
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
                         <th style="width: 25px; text-align: center;"><input type="checkbox" id="select-all-cb" onclick="toggleSelectAll()"></th>
-                        <th>ID</th><th>词汇</th><th>到期日</th><th>熟练度</th>
+                        <th>ID</th><th>単語</th><th>次回期日</th><th>定着度</th>
                     </tr>
                 </thead>
                 <tbody id="stats-table-body"></tbody>
             </table>
         </div>
-        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="safeBackFromStats()">返回主菜单</button>
+        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="safeBackFromStats()">ダッシュボードに戻る</button>
     </div>
 </div>
 
 <script>
-    // ----- 🌟 多词库管理逻辑 -----
+    // ----- 🌟 複数単語帳管理 -----
     let activeBankName = 'hiragana';
 
     function switchDictionary() {
         activeBankName = document.getElementById('dictionary-select').value;
         cleanUpDuplicateLogs(); 
         updateHistoryCalendar(); 
-        checkMandatoryStatus(); // 切换词库时重新检查强制指标
+        checkMandatoryStatus(); 
     }
 
     function getCurrentBank() {
@@ -328,7 +327,7 @@
     function getLogKey() { return activeBankName === 'hiragana' ? 'vocab_logs' : 'vocab_logs_kundoku'; }
     function getSRSKey() { return activeBankName === 'hiragana' ? 'srs_data' : 'srs_data_kundoku'; }
 
-    // ----- 发音与震动引擎 -----
+    // ----- 発音 & 触覚フィードバック -----
     function speakCurrentWord() {
         let currentWord = queue[currentIndex];
         if (!currentWord || !('speechSynthesis' in window)) return;
@@ -346,7 +345,7 @@
         }
     }
 
-    // ----- 🧠 遗忘曲线 (SRS) 核心引擎 -----
+    // ----- 🧠 忘却曲線 (SRS) エンジン -----
     function getSRSBank() {
         return JSON.parse(localStorage.getItem(getSRSKey()) || '{}');
     }
@@ -360,43 +359,39 @@
         localStorage.setItem('srs_limit_config', val);
     }
 
-    // 更新单个单词的曲线状态 (由结算器统一调度)
     function updateSRS(wordId, status) {
         let srsBank = getSRSBank();
         let today = new Date().toISOString().split('T')[0];
         
-        // 数据结构: { i: interval(天), e: ease(熟练度), d: dueDate(到期日YYYY-MM-DD), l: lastReviewed(上次结算日) }
         let data = srsBank[wordId] || { i: 0, e: 2.5, d: today, l: null };
 
-        // 🌟 核心绝对法则：第一印象决定一切。如果今天已经更新过，直接冻结数据，避免反复刷词破坏曲线！
+        // 🌟 防破壞機制：今日已更新過則凍結
         if (data.l === today) return;
 
         if (status === 'known') {
             if (data.i === 0) {
-                data.i = 1; // 首次记住，明天复习
+                data.i = 1; 
             } else {
-                data.i = Math.max(1, Math.round(data.i * data.e)); // 指数增长间隔
-                data.e = Math.min(3.0, data.e + 0.15); // 稍微提升熟练度
+                data.i = Math.max(1, Math.round(data.i * data.e)); 
+                data.e = Math.min(3.0, data.e + 0.15); 
             }
         } else if (status === 'forgotten') {
-            data.i = 0; // 打回原形，设为 0 会在算日期时直接变明天
-            data.e = Math.max(1.3, data.e - 0.2); // 狠狠降低熟练度，缩短未来的发散
+            data.i = 0; 
+            data.e = Math.max(1.3, data.e - 0.2); 
         }
 
-        // 计算下一次要复习的准确日期
         let nextDate = new Date();
-        // 如果 interval 为 0 (今天忘了)，强制加 1 天安排在明天复习
         nextDate.setDate(nextDate.getDate() + (data.i === 0 ? 1 : data.i));
         
         data.d = nextDate.toISOString().split('T')[0];
-        data.l = today; // 打上今天的防篡改标记
+        data.l = today; 
 
         srsBank[wordId] = data;
         saveSRSBank(srsBank);
     }
 
-    // ----- 🚨 强制阻断与债务查验系统 -----
-    let currentSessionMode = 'normal'; // mandatory, debt, normal
+    // ----- 🚨 必須セッション・復習タスク管理 -----
+    let currentSessionMode = 'normal'; 
 
     function checkMandatoryStatus() {
         let today = new Date().toISOString().split('T')[0];
@@ -405,20 +400,17 @@
         let savedLimit = parseInt(localStorage.getItem('srs_limit_config')) || 10;
         document.getElementById('srs-mandatory-limit').value = savedLimit;
 
-        // 挑出所有到期欠债的词 (到期日 <= 今天)
+        // 期日が今日以前の単語を抽出
         let dueIds = Object.keys(srsBank).filter(id => srsBank[id].d <= today).map(Number);
         
-        // 检查今天这个词库是否已经执行过强制阻断
         let isMandatoryDone = localStorage.getItem(`mand_done_${today}_${activeBankName}`) === 'true';
 
         if (dueIds.length > 0 && !isMandatoryDone) {
-            // 触发强制拦截！
             hideAllViews();
             document.getElementById('mandatory-view').classList.remove('hidden');
             document.getElementById('mand-due-count').innerText = dueIds.length;
             document.getElementById('mand-target-count').innerText = Math.min(dueIds.length, savedLimit);
         } else {
-            // 已经完结今天的保底，放行回主菜单，更新债务显示
             backToMenu();
             document.getElementById('srs-debt-count').innerText = dueIds.length;
             
@@ -443,7 +435,7 @@
         let limit = parseInt(document.getElementById('srs-mandatory-limit').value) || 10;
         
         let dueIds = Object.keys(srsBank).filter(id => srsBank[id].d <= today).map(Number);
-        // 按紧急程度排序：interval 越小（被忘得越惨）越优先，然后按到期日排序
+        // 緊急度順（intervalが小さい＝最近間違えた単語を優先、次に期日順）
         dueIds.sort((a, b) => {
             if (srsBank[a].i !== srsBank[b].i) return srsBank[a].i - srsBank[b].i;
             return new Date(srsBank[a].d) - new Date(srsBank[b].d);
@@ -459,13 +451,13 @@
 
     function startDebtRepayment() {
         let count = parseInt(document.getElementById('srs-debt-repay-count').value);
-        if (isNaN(count) || count <= 0) return alert('请输入有效还债数');
+        if (isNaN(count) || count <= 0) return alert('有効な数値を入力してください');
 
         let srsBank = getSRSBank();
         let today = new Date().toISOString().split('T')[0];
         let dueIds = Object.keys(srsBank).filter(id => srsBank[id].d <= today).map(Number);
         
-        if (dueIds.length === 0) return alert('太棒了！你当前没有任何逾期债务！');
+        if (dueIds.length === 0) return alert('素晴らしい！現在、復習待ちの単語はありません！');
 
         dueIds.sort((a, b) => {
             if (srsBank[a].i !== srsBank[b].i) return srsBank[a].i - srsBank[b].i;
@@ -480,7 +472,7 @@
         initSession(wordsToStudy);
     }
 
-    // ----- 日志存取与清理逻辑 -----
+    // ----- ログ保存とクリーンアップ -----
     function getLogs() { return JSON.parse(localStorage.getItem(getLogKey()) || '[]'); }
 
     function cleanUpDuplicateLogs() {
@@ -528,7 +520,7 @@
         return Math.max(...wordLogs.map(l => l.round));
     }
 
-    // ----- ☁️ 云端/本地 数据管理 (包含曲线结构) -----
+    // ----- ☁️ クラウド管理 -----
     function openSyncModal() {
         document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || '';
         document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || '';
@@ -547,7 +539,6 @@
     }
 
     function restoreCombinedLogs(data) {
-        // 向前兼容老数据格式
         if (Array.isArray(data)) {
             localStorage.setItem('vocab_logs', JSON.stringify(data));
         } else {
@@ -564,33 +555,33 @@
     async function uploadToCloud() {
         let binId = document.getElementById('bin-id').value.trim();
         let apiKey = document.getElementById('api-key').value.trim();
-        if (!binId || !apiKey) return alert("⚠️ 请先填写凭证！");
+        if (!binId || !apiKey) return alert("⚠️ IDとKeyを入力してください！");
 
         localStorage.setItem('cloud_bin_id', binId);
         localStorage.setItem('cloud_api_key', apiKey);
 
         let dataToUpload = getCombinedLogs();
         let btn = document.getElementById('btn-upload');
-        btn.innerText = "上传中...";
+        btn.innerText = "アップロード中...";
         try {
             let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
                 method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey },
                 body: JSON.stringify(dataToUpload)
             });
-            if (response.ok) { alert("☁️ 所有词库及遗忘曲线数据上传成功！"); closeSyncModal(); } 
-            else { let err = await response.json(); alert(`❌ 失败: ${err.message}`); }
-        } catch (e) { alert("网络错误"); } finally { btn.innerText = "⬆️ 覆盖云端"; }
+            if (response.ok) { alert("☁️ データ同期が完了しました！"); closeSyncModal(); } 
+            else { let err = await response.json(); alert(`❌ エラー: ${err.message}`); }
+        } catch (e) { alert("ネットワークエラーです"); } finally { btn.innerText = "⬆️ クラウドへ上書き"; }
     }
 
     async function downloadFromCloud() {
         let binId = document.getElementById('bin-id').value.trim();
         let apiKey = document.getElementById('api-key').value.trim();
-        if (!binId || !apiKey) return alert("⚠️ 请填凭证");
+        if (!binId || !apiKey) return alert("⚠️ IDとKeyを入力してください");
 
         localStorage.setItem('cloud_bin_id', binId); localStorage.setItem('cloud_api_key', apiKey);
-        if (!confirm("⚠️ 确定要下载并覆盖所有历史和曲线吗？不可逆！")) return;
+        if (!confirm("⚠️ 本当にクラウドのデータで上書きしますか？（元に戻せません）")) return;
 
-        let btn = document.getElementById('btn-download'); btn.innerText = "下载中...";
+        let btn = document.getElementById('btn-download'); btn.innerText = "ダウンロード中...";
         try {
             let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 method: 'GET', headers: { 'X-Master-Key': apiKey }
@@ -598,15 +589,15 @@
             if (response.ok) {
                 let json = await response.json();
                 restoreCombinedLogs(json.record);
-                alert("🎉 同步成功！"); closeSyncModal();
-            } else { let err = await response.json(); alert(`❌ 失败: ${err.message}`); }
-        } catch (e) { alert("网络错误"); } finally { btn.innerText = "⬇️ 下载至本设备"; }
+                alert("🎉 同期成功！"); closeSyncModal();
+            } else { let err = await response.json(); alert(`❌ エラー: ${err.message}`); }
+        } catch (e) { alert("ネットワークエラーです"); } finally { btn.innerText = "⬇️ 端末へダウンロード"; }
     }
 
     function exportData() {
         let blob = new Blob([JSON.stringify(getCombinedLogs())], { type: "application/json" });
         let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
-        a.download = `N1_全数据备份_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `N1_Backup_${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
@@ -614,27 +605,27 @@
         let file = event.target.files[0]; if (!file) return;
         let reader = new FileReader();
         reader.onload = function(e) {
-            try { restoreCombinedLogs(JSON.parse(e.target.result)); alert("✅ 导入成功！"); document.getElementById('import-file').value = ''; } 
-            catch (err) { alert("❌ 文件损坏。"); }
+            try { restoreCombinedLogs(JSON.parse(e.target.result)); alert("✅ インポート成功！"); document.getElementById('import-file').value = ''; } 
+            catch (err) { alert("❌ ファイルが破損しています。"); }
         };
         reader.readAsText(file);
     }
 
     function clearData() {
-        if (confirm("⚠️ 严重警告：彻底清除【所有数据与曲线】？")) {
+        if (confirm("⚠️ 警告：全ての記録と忘却曲線を初期化しますか？")) {
             localStorage.removeItem('vocab_logs'); localStorage.removeItem('vocab_logs_kundoku');
             localStorage.removeItem('srs_data'); localStorage.removeItem('srs_data_kundoku');
-            updateHistoryCalendar(); checkMandatoryStatus(); alert("🗑️ 已清空！");
+            updateHistoryCalendar(); checkMandatoryStatus(); alert("🗑️ 消去しました！");
         }
     }
 
-    // ----- 日历功能 -----
+    // ----- カレンダー機能 -----
     let historyCalendarInstance = null;
     function updateHistoryCalendar() {
         let logs = getLogs(); let activeDates = [...new Set(logs.map(log => log.date))];
         if (historyCalendarInstance) historyCalendarInstance.destroy();
         historyCalendarInstance = flatpickr(document.getElementById('history-date'), {
-            locale: "zh", dateFormat: "Y-m-d", enable: activeDates.length > 0 ? activeDates : ["1970-01-01"], 
+            locale: "ja", dateFormat: "Y-m-d", enable: activeDates.length > 0 ? activeDates : ["1970-01-01"], 
             onChange: function(d, dateStr) { document.getElementById('history-date').value = dateStr; viewHistoryDate(); }
         });
         if (activeDates.length > 0) { activeDates.sort(); historyCalendarInstance.setDate(activeDates[activeDates.length - 1]); } 
@@ -643,9 +634,9 @@
 
     function viewHistoryDate() {
         let dateStr = document.getElementById('history-date').value;
-        if (!dateStr) return alert('请选择日期');
+        if (!dateStr) return alert('日付を選択してください');
         let targetLogs = getLogs().filter(log => log.date === dateStr);
-        if (targetLogs.length === 0) return alert('无记录');
+        if (targetLogs.length === 0) return alert('記録がありません');
 
         let dailyMap = {}; targetLogs.forEach(log => { if (dailyMap[log.wordId] !== 'forgotten') dailyMap[log.wordId] = log.status; });
         let bank = getCurrentBank(); let allIds = Object.keys(dailyMap).map(Number);
@@ -653,7 +644,7 @@
         currentHistoryWords.all = allIds.map(id => bank.find(w => w.id === id)).filter(w => w);
         currentHistoryWords.forgotten = allIds.filter(id => dailyMap[id] === 'forgotten').map(id => bank.find(w => w.id === id)).filter(w => w);
 
-        document.getElementById('history-date-title').innerText = `${dateStr} 记录`;
+        document.getElementById('history-date-title').innerText = `${dateStr} の記録`;
         document.getElementById('hist-total').innerText = allIds.length;
         document.getElementById('hist-known').innerText = currentHistoryWords.all.length - currentHistoryWords.forgotten.length;
         document.getElementById('hist-forgot').innerText = currentHistoryWords.forgotten.length;
@@ -671,27 +662,25 @@
         hideAllViews(); document.getElementById('history-detail-view').classList.remove('hidden');
     }
 
-    // ----- 学习模式核心 -----
+    // ----- 学習コア -----
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
     let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
 
     function startNewLearning() {
         let count = parseInt(document.getElementById('new-word-count').value);
-        if (isNaN(count) || count <= 0) return alert('无效数量');
+        if (isNaN(count) || count <= 0) return alert('無効な数値です');
 
         let bank = getCurrentBank();
         let srsBank = getSRSBank();
         let today = new Date().toISOString().split('T')[0];
 
-        // 🌟 核心：普通抽签应当避开今天到期的债，防止抢夺 SRS 系统的流量
+        // 🌟 今日のタスク（復習）を新規学習から除外
         let availableWords = bank.filter(w => !srsBank[w.id] || srsBank[w.id].d > today);
 
         if (availableWords.length === 0) {
-            // 如果所有词都在债里，那只能抽全局的了
             availableWords = bank;
         }
 
-        // 按历史复习次数做权重随机（偏向于抽完全没见过的）
         let reviewCounts = {}; availableWords.forEach(w => reviewCounts[w.id] = 0);
         getLogs().forEach(log => { if (reviewCounts[log.wordId] !== undefined) reviewCounts[log.wordId]++; });
 
@@ -705,7 +694,7 @@
 
     function startHistoryReview(type) {
         let words = type === 'forgotten' ? currentHistoryWords.forgotten : currentHistoryWords.all;
-        if (words.length === 0) return alert('没有可复习词汇');
+        if (words.length === 0) return alert('該当する単語がありません');
         currentSessionMode = 'normal';
         initSession(words);
     }
@@ -713,7 +702,7 @@
     function startCustomStudy() {
         let bank = getCurrentBank();
         let selectedIds = Array.from(document.querySelectorAll('.word-checkbox:checked')).map(cb => parseInt(cb.value));
-        if (selectedIds.length === 0) return alert('未勾选');
+        if (selectedIds.length === 0) return alert('選択されていません');
         document.getElementById('select-all-cb').checked = false;
         currentSessionMode = 'normal';
         initSession(selectedIds.map(id => bank.find(w => w.id === id)).filter(w => w));
@@ -758,7 +747,7 @@
         ).join('');
         
         let kE = document.getElementById('card-kanji');
-        if (word.kanji && word.kanji.trim() !== "") { kE.innerText = `【汉字】 ${word.kanji}`; kE.style.display = 'block'; } 
+        if (word.kanji && word.kanji.trim() !== "") { kE.innerText = `【漢字】 ${word.kanji}`; kE.style.display = 'block'; } 
         else { kE.style.display = 'none'; }
         document.getElementById('card-kana').innerText = word.kana;
         
@@ -768,7 +757,7 @@
             exE.style.display = 'block';
         } else { exE.style.display = 'none'; }
 
-        document.getElementById('progress-text').innerText = `进度: ${currentIndex + 1} / ${queue.length}`;
+        document.getElementById('progress-text').innerText = `進捗: ${currentIndex + 1} / ${queue.length}`;
         document.getElementById('answer-section').classList.add('hidden'); document.getElementById('action-buttons').classList.add('hidden');
         document.getElementById('btn-show-answer').classList.remove('hidden');
     }
@@ -784,7 +773,7 @@
     function markWord(status) {
         triggerVibration('light');
         let word = queue[currentIndex];
-        // Session 级别第一印象防抖：一轮之内只认第一次
+        
         let isFirstAppearance = queue.findIndex(w => w.id === word.id) === currentIndex;
         
         if (isFirstAppearance) firstImpressions[word.id] = status;
@@ -804,7 +793,7 @@
         currentIndex = targetIndex; renderWord(); 
     }
     
-    function exitStudyEarly() { if (confirm("确定结束？已判定记录将被保存并将计算曲线。")) finishSession(); }
+    function exitStudyEarly() { if (confirm("終了しますか？判定済みの記録は計算され保存されます。")) finishSession(); }
 
     function finishSession() {
         let knownCount = 0; let forgotCount = 0;
@@ -813,7 +802,6 @@
             if (status === 'known') knownCount++; else forgotCount++;
             
             saveLog(id, getMaxRound(id) + 1, status);
-            // 🌟 触发核心遗忘引擎，计算并写入数据库
             updateSRS(id, status);
         }
         
@@ -834,7 +822,7 @@
         if (event.code === 'ArrowUp' || event.key === '3') { event.preventDefault(); speakCurrentWord(); }
     });
 
-    // ----- 数据中心功能 -----
+    // ----- データセンター -----
     function openStatsCenter() {
         hideAllViews(); document.getElementById('stats-view').classList.remove('hidden');
         document.getElementById('select-all-cb').checked = false; renderStatsTable('idAsc'); 
@@ -842,13 +830,13 @@
 
     function selectIdRange() {
         let s = parseInt(document.getElementById('range-start').value), e = parseInt(document.getElementById('range-end').value);
-        if (isNaN(s) || isNaN(e) || s > e) return alert('无效区间');
+        if (isNaN(s) || isNaN(e) || s > e) return alert('無効な範囲です');
         let count = 0;
         document.querySelectorAll('.word-checkbox').forEach(cb => {
             if (parseInt(cb.value) >= s && parseInt(cb.value) <= e) { cb.checked = true; count++; }
         });
-        if (count > 0) { let btn = document.querySelector('.range-selector .btn-primary'); let old = btn.innerText; btn.innerText = `勾选 ${count}`; setTimeout(() => btn.innerText = old, 1500); } 
-        else alert('未找到');
+        if (count > 0) { let btn = document.querySelector('.range-selector .btn-primary'); let old = btn.innerText; btn.innerText = `${count} 個選択済`; setTimeout(() => btn.innerText = old, 1500); } 
+        else alert('見つかりませんでした');
     }
 
     function clearSelection() { document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = false); document.getElementById('select-all-cb').checked = false; }
@@ -857,7 +845,7 @@
         let bank = getCurrentBank(); let srsBank = getSRSBank(); let statsMap = {};
         bank.forEach(w => {
             let srsData = srsBank[w.id];
-            let dueDateText = srsData ? srsData.d : '<span style="color:#bdc3c7;">待触发</span>';
+            let dueDateText = srsData ? srsData.d : '<span style="color:#bdc3c7;">未学習</span>';
             let easeText = srsData ? `${Math.round(srsData.e * 100)}%` : '-';
             statsMap[w.id] = { id: w.id, word: w.word, totalReviews: 0, forgotCount: 0, due: dueDateText, ease: easeText };
         });
@@ -880,7 +868,7 @@
     }
 
     function toggleSelectAll() { let c = document.getElementById('select-all-cb').checked; document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = c); }
-    function safeBackFromStats() { if (document.querySelectorAll('.word-checkbox:checked').length > 0 && !confirm(`舍弃当前勾选并返回？`)) return; backToMenu(); }
+    function safeBackFromStats() { if (document.querySelectorAll('.word-checkbox:checked').length > 0 && !confirm(`選択状態を解除して戻りますか？`)) return; backToMenu(); }
 
     function hideAllViews() {
         document.getElementById('menu-view').classList.add('hidden'); document.getElementById('study-view').classList.add('hidden');
@@ -890,9 +878,8 @@
     
     function backToMenu() { hideAllViews(); document.getElementById('menu-view').classList.remove('hidden'); }
 
-    // 🌟 初始化入口变更
     updateHistoryCalendar();
-    checkMandatoryStatus(); // 启动时率先判定是否触发强制复习
+    checkMandatoryStatus(); 
 </script>
 </body>
 </html>
