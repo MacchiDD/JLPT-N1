@@ -85,19 +85,6 @@
 <body>
 <div id="app">
     
-    <div id="mandatory-view" class="hidden" style="text-align: center; padding: 40px 10px;">
-        <h1 style="color: #e74c3c; font-size: 26px; border:none;">🚨 必須復習セッション</h1>
-        <p style="color: #34495e; margin: 20px 0; line-height: 1.6; font-size: 15px;">
-            忘却曲線アルゴリズムにより、現在<br><strong id="mand-due-count" style="color: #e74c3c; font-size: 24px;">0</strong> 個の単語が復習期日を迎えています。
-        </p>
-        <div style="background: #fdf5f5; padding: 15px; border-radius: 10px; border-left: 5px solid #e74c3c; text-align: left; font-size: 13px; color: #7f8c8d;">
-            💡 ルール：長期記憶を定着させるため、新規学習の前に、まずは本日の必須ノルマをクリアしてください。（未完了のタスクはダッシュボードから継続可能です）
-        </div>
-        <button class="btn btn-danger btn-huge" style="margin-top: 30px;" onclick="startMandatorySession()">
-            復習を開始 (今回の目標：<span id="mand-target-count">0</span> 個)
-        </button>
-    </div>
-
     <div id="menu-view">
         <h1 style="color: #34495e;">📚 N1 学習ダッシュボード</h1>
         
@@ -110,23 +97,21 @@
         </div>
 
         <div class="settings-box" style="border-left-color: #2ecc71; background: #f0fdf4;">
-            <strong style="color: #27ae60;">🧠 忘却曲線エンジン (SRS)</strong>
-            <p style="font-size: 11px; color: #7f8c8d; margin: 5px 0 10px 0;">アルゴリズム：1日1回の初回判定のみを記録。正解で次回までの期間が延び、間違えると翌日に再設定されます。</p>
+            <strong style="color: #27ae60;">🎯 今日の学習目標（統合モード）</strong>
+            <p style="font-size: 11px; color: #7f8c8d; margin: 5px 0 10px 0;">忘却曲線に基づき、復習が必要な単語を最優先で抽出し、残りの枠を新規単語で自動的に埋めます。</p>
             
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <span style="font-size: 13px; font-weight: bold; color: #2c3e50;">起動時必須ノルマ (個/日)：</span>
-                <input type="number" id="srs-mandatory-limit" value="10" min="1" max="500" style="width: 70px; padding: 6px; margin:0;" onchange="saveSRSConfig()">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 13px; font-weight: bold; color: #2c3e50;">1日の学習単語数：</span>
+                <input type="number" id="daily-goal-count" value="100" min="1" max="1000" style="width: 80px; padding: 6px; margin:0;" onchange="saveDailyGoal()">
             </div>
             
-            <hr style="border-top: 1px dashed #a3e4d7; margin: 12px 0;">
-            
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 13px; font-weight: bold; color: #e74c3c;">本日の復習タスク：<span id="srs-debt-count" style="font-size: 18px;">0</span></span>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <input type="number" id="srs-debt-repay-count" value="30" min="1" style="width: 60px; padding: 6px; margin:0;">
-                    <button class="btn btn-success" style="padding: 8px 10px; margin: 0; font-size: 12px;" onclick="startDebtRepayment()">復習を続ける</button>
-                </div>
+            <div style="font-size: 12px; color: #e74c3c; margin-bottom: 15px; background: #fdf5f5; padding: 8px; border-radius: 6px; text-align: center;">
+                現在の復習待ち単語：<span id="srs-due-count" style="font-weight:bold; font-size:16px;">0</span> 個
             </div>
+
+            <button class="btn btn-success" style="width: 100%; font-size: 16px; padding: 12px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);" onclick="startDailyStudy()">
+                🚀 今日の学習を開始
+            </button>
         </div>
 
         <div class="settings-box">
@@ -143,23 +128,18 @@
             </select>
         </div>
 
-        <div style="margin-top: 15px;">
-            <p style="font-weight: bold; color: #34495e;">🎯 新規学習 (復習タスクを除外)：</p>
-            <input type="number" id="new-word-count" value="10" min="1" max="100"> 個
-            <br>
-            <button class="btn btn-primary" onclick="startNewLearning()">🚀 新規学習を開始</button>
-        </div>
         <hr>
         <div>
+            <button class="btn btn-warning" style="width: 80%; padding: 12px; font-size: 15px;" onclick="openStatsCenter()">📊 単語データセンターへ</button>
+        </div>
+        
+        <div style="margin-top: 15px;">
             <p style="font-weight: bold; color: #34495e;">📅 学習履歴カレンダー：</p>
             <input type="text" id="history-date" style="text-align: center; cursor: pointer; background-color: #fff;">
             <br>
             <button class="btn btn-primary" onclick="viewHistoryDate()">🔍 この日を確認</button>
         </div>
-        <hr>
-        <div>
-            <button class="btn btn-warning" style="width: 80%; padding: 12px; font-size: 15px;" onclick="openStatsCenter()">📊 単語データセンターへ</button>
-        </div>
+
         <hr style="border-top: 1px dashed #bdc3c7;">
         <div>
             <p style="color: #95a5a6; font-size: 12px; margin-bottom: 5px;">💾 データ同期・バックアップ (全単語帳共通)</p>
@@ -264,12 +244,12 @@
     <div id="summary-view" class="hidden">
         <h1>🎉 セッション終了</h1>
         <div class="stat-box">
-            <p>✅ 今回の初回判定【覚えた】：<span id="stat-known-count" style="color:#2ecc71; font-weight:bold; font-size: 18px;">0</span> 個</p>
-            <p>❌ 今回の初回判定【もう一度】：<span id="stat-forgot-count" style="color:#e74c3c; font-weight:bold; font-size: 18px;">0</span> 個</p>
-            <p style="margin-top: 15px; font-size: 12px; color: #8e44ad; font-weight:bold;">* 本セッションでの初回リアクションのみが忘却曲線に反映されます。</p>
+            <p>✅ 初回判定【覚えた】：<span id="stat-known-count" style="color:#2ecc71; font-weight:bold; font-size: 18px;">0</span> 個</p>
+            <p>❌ 初回判定【もう一度】：<span id="stat-forgot-count" style="color:#e74c3c; font-weight:bold; font-size: 18px;">0</span> 個</p>
+            <p style="margin-top: 15px; font-size: 12px; color: #8e44ad; font-weight:bold;">* 本セッションでの初回リアクションのみが忘却曲線に反映されました。</p>
             <p id="save-notice" style="margin-top: 10px; font-size: 13px; color: #7f8c8d; border-top: 1px dashed #ccc; padding-top: 10px;">💾 学習記録はローカルに自動保存されました。</p>
         </div>
-        <button class="btn btn-primary" style="margin-top: 20px; width: 60%;" onclick="checkMandatoryOrMenu()">続ける / 戻る</button>
+        <button class="btn btn-primary" style="margin-top: 20px; width: 60%;" onclick="backToMenu()">ダッシュボードに戻る</button>
     </div>
 
     <div id="stats-view" class="hidden">
@@ -315,7 +295,7 @@
         activeBankName = document.getElementById('dictionary-select').value;
         cleanUpDuplicateLogs(); 
         updateHistoryCalendar(); 
-        checkMandatoryStatus(); 
+        updateDueCountDisplay();
     }
 
     function getCurrentBank() {
@@ -345,7 +325,7 @@
         }
     }
 
-    // ----- 🧠 忘却曲線 (SRS) エンジン -----
+    // ----- 🧠 忘却曲線 (SRS) エンジン (修正版) -----
     function getSRSBank() {
         return JSON.parse(localStorage.getItem(getSRSKey()) || '{}');
     }
@@ -354,9 +334,9 @@
         localStorage.setItem(getSRSKey(), JSON.stringify(data));
     }
 
-    function saveSRSConfig() {
-        let val = parseInt(document.getElementById('srs-mandatory-limit').value) || 10;
-        localStorage.setItem('srs_limit_config', val);
+    function saveDailyGoal() {
+        let val = parseInt(document.getElementById('daily-goal-count').value) || 100;
+        localStorage.setItem('daily_goal_config', val);
     }
 
     function updateSRS(wordId, status) {
@@ -365,23 +345,27 @@
         
         let data = srsBank[wordId] || { i: 0, e: 2.5, d: today, l: null };
 
-        // 🌟 防破壞機制：今日已更新過則凍結
+        // 🌟 防刷機制：今日已更新過則凍結，不破壞真實記憶曲線
         if (data.l === today) return;
 
         if (status === 'known') {
             if (data.i === 0) {
-                data.i = 1; 
+                // 💥 核心修正：新詞或者忘光的詞，只要今天答對了，推遲到 3 天後，而不是明天！
+                data.i = 3; 
             } else {
-                data.i = Math.max(1, Math.round(data.i * data.e)); 
-                data.e = Math.min(3.0, data.e + 0.15); 
+                // 舊詞複習成功，間隔指數增長，最少+2天
+                data.i = Math.max(2, Math.round(data.i * data.e)); 
             }
+            data.e = Math.min(3.0, data.e + 0.15); // 提升熟練度
         } else if (status === 'forgotten') {
-            data.i = 0; 
-            data.e = Math.max(1.3, data.e - 0.2); 
+            // 忘了，直接打回原形，明天必須見
+            data.i = 1; 
+            data.e = Math.max(1.3, data.e - 0.2); // 狠狠扣除熟練度
         }
 
         let nextDate = new Date();
-        nextDate.setDate(nextDate.getDate() + (data.i === 0 ? 1 : data.i));
+        // data.i 是 1 就代表明天，是 3 就代表 3 天後
+        nextDate.setDate(nextDate.getDate() + data.i);
         
         data.d = nextDate.toISOString().split('T')[0];
         data.l = today; 
@@ -390,85 +374,59 @@
         saveSRSBank(srsBank);
     }
 
-    // ----- 🚨 必須セッション・復習タスク管理 -----
-    let currentSessionMode = 'normal'; 
+    // ----- 🎯 統合学習モード (Unified Study Flow) -----
+    function updateDueCountDisplay() {
+        let savedGoal = parseInt(localStorage.getItem('daily_goal_config')) || 100;
+        document.getElementById('daily-goal-count').value = savedGoal;
 
-    function checkMandatoryStatus() {
         let today = new Date().toISOString().split('T')[0];
         let srsBank = getSRSBank();
-        
-        let savedLimit = parseInt(localStorage.getItem('srs_limit_config')) || 10;
-        document.getElementById('srs-mandatory-limit').value = savedLimit;
-
-        // 期日が今日以前の単語を抽出
         let dueIds = Object.keys(srsBank).filter(id => srsBank[id].d <= today).map(Number);
         
-        let isMandatoryDone = localStorage.getItem(`mand_done_${today}_${activeBankName}`) === 'true';
-
-        if (dueIds.length > 0 && !isMandatoryDone) {
-            hideAllViews();
-            document.getElementById('mandatory-view').classList.remove('hidden');
-            document.getElementById('mand-due-count').innerText = dueIds.length;
-            document.getElementById('mand-target-count').innerText = Math.min(dueIds.length, savedLimit);
-        } else {
-            backToMenu();
-            document.getElementById('srs-debt-count').innerText = dueIds.length;
-            
-            let debtInput = document.getElementById('srs-debt-repay-count');
-            if (parseInt(debtInput.value) > dueIds.length && dueIds.length > 0) {
-                debtInput.value = dueIds.length;
-            }
-        }
+        document.getElementById('srs-due-count').innerText = dueIds.length;
     }
 
-    function checkMandatoryOrMenu() {
-        if (currentSessionMode === 'mandatory') {
-            let today = new Date().toISOString().split('T')[0];
-            localStorage.setItem(`mand_done_${today}_${activeBankName}`, 'true');
-        }
-        checkMandatoryStatus();
-    }
+    function startDailyStudy() {
+        let totalGoal = parseInt(document.getElementById('daily-goal-count').value);
+        if (isNaN(totalGoal) || totalGoal <= 0) return alert('有効な数値を入力してください');
+        saveDailyGoal();
 
-    function startMandatorySession() {
         let srsBank = getSRSBank();
+        let bank = getCurrentBank();
         let today = new Date().toISOString().split('T')[0];
-        let limit = parseInt(document.getElementById('srs-mandatory-limit').value) || 10;
-        
+
+        // 1. 提取所有逾期/今天该复习的词
         let dueIds = Object.keys(srsBank).filter(id => srsBank[id].d <= today).map(Number);
-        // 緊急度順（intervalが小さい＝最近間違えた単語を優先、次に期日順）
+        
+        // 按照紧急程度排序 (刚忘的 interval=1 的排最前面，然后按逾期时间排)
         dueIds.sort((a, b) => {
             if (srsBank[a].i !== srsBank[b].i) return srsBank[a].i - srsBank[b].i;
             return new Date(srsBank[a].d) - new Date(srsBank[b].d);
         });
 
-        let targetIds = dueIds.slice(0, limit);
-        let bank = getCurrentBank();
-        let wordsToStudy = targetIds.map(id => bank.find(w => w.id === id)).filter(w => w);
+        // 2. 从急需复习的词中抽出目标数量
+        let reviewIds = dueIds.slice(0, totalGoal);
+        let wordsToStudy = reviewIds.map(id => bank.find(w => w.id === id)).filter(w => w);
+
+        // 3. 如果没填满目标，拿新词补齐空位
+        let remainingQuota = totalGoal - wordsToStudy.length;
+        if (remainingQuota > 0) {
+            // 挑出仓库里根本没学过的，或者还没到期的新词
+            let availableNewWords = bank.filter(w => !srsBank[w.id] || srsBank[w.id].d > today);
+
+            // 稍微打乱，但偏向于完全没见过的词
+            let reviewCounts = {}; availableNewWords.forEach(w => reviewCounts[w.id] = 0);
+            getLogs().forEach(log => { if (reviewCounts[log.wordId] !== undefined) reviewCounts[log.wordId]++; });
+
+            let newWords = availableNewWords.sort((a, b) => {
+                return (reviewCounts[a.id] + Math.random()) - (reviewCounts[b.id] + Math.random());
+            }).slice(0, remainingQuota);
+
+            wordsToStudy = wordsToStudy.concat(newWords);
+        }
+
+        if (wordsToStudy.length === 0) return alert('学習する単語がありません。単語帳を確認してください。');
         
-        currentSessionMode = 'mandatory';
-        initSession(wordsToStudy);
-    }
-
-    function startDebtRepayment() {
-        let count = parseInt(document.getElementById('srs-debt-repay-count').value);
-        if (isNaN(count) || count <= 0) return alert('有効な数値を入力してください');
-
-        let srsBank = getSRSBank();
-        let today = new Date().toISOString().split('T')[0];
-        let dueIds = Object.keys(srsBank).filter(id => srsBank[id].d <= today).map(Number);
-        
-        if (dueIds.length === 0) return alert('素晴らしい！現在、復習待ちの単語はありません！');
-
-        dueIds.sort((a, b) => {
-            if (srsBank[a].i !== srsBank[b].i) return srsBank[a].i - srsBank[b].i;
-            return new Date(srsBank[a].d) - new Date(srsBank[b].d);
-        });
-
-        let targetIds = dueIds.slice(0, count);
-        let bank = getCurrentBank();
-        let wordsToStudy = targetIds.map(id => bank.find(w => w.id === id)).filter(w => w);
-        
-        currentSessionMode = 'debt';
         initSession(wordsToStudy);
     }
 
@@ -549,7 +507,7 @@
         }
         cleanUpDuplicateLogs(); 
         updateHistoryCalendar();
-        checkMandatoryStatus();
+        updateDueCountDisplay();
     }
 
     async function uploadToCloud() {
@@ -615,7 +573,7 @@
         if (confirm("⚠️ 警告：全ての記録と忘却曲線を初期化しますか？")) {
             localStorage.removeItem('vocab_logs'); localStorage.removeItem('vocab_logs_kundoku');
             localStorage.removeItem('srs_data'); localStorage.removeItem('srs_data_kundoku');
-            updateHistoryCalendar(); checkMandatoryStatus(); alert("🗑️ 消去しました！");
+            updateHistoryCalendar(); updateDueCountDisplay(); alert("🗑️ 消去しました！");
         }
     }
 
@@ -666,36 +624,9 @@
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
     let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
 
-    function startNewLearning() {
-        let count = parseInt(document.getElementById('new-word-count').value);
-        if (isNaN(count) || count <= 0) return alert('無効な数値です');
-
-        let bank = getCurrentBank();
-        let srsBank = getSRSBank();
-        let today = new Date().toISOString().split('T')[0];
-
-        // 🌟 今日のタスク（復習）を新規学習から除外
-        let availableWords = bank.filter(w => !srsBank[w.id] || srsBank[w.id].d > today);
-
-        if (availableWords.length === 0) {
-            availableWords = bank;
-        }
-
-        let reviewCounts = {}; availableWords.forEach(w => reviewCounts[w.id] = 0);
-        getLogs().forEach(log => { if (reviewCounts[log.wordId] !== undefined) reviewCounts[log.wordId]++; });
-
-        let extractedWords = availableWords.sort((a, b) => {
-            return (reviewCounts[a.id] + Math.random()) - (reviewCounts[b.id] + Math.random());
-        }).slice(0, count);
-
-        currentSessionMode = 'normal';
-        initSession(extractedWords);
-    }
-
     function startHistoryReview(type) {
         let words = type === 'forgotten' ? currentHistoryWords.forgotten : currentHistoryWords.all;
         if (words.length === 0) return alert('該当する単語がありません');
-        currentSessionMode = 'normal';
         initSession(words);
     }
 
@@ -704,7 +635,6 @@
         let selectedIds = Array.from(document.querySelectorAll('.word-checkbox:checked')).map(cb => parseInt(cb.value));
         if (selectedIds.length === 0) return alert('選択されていません');
         document.getElementById('select-all-cb').checked = false;
-        currentSessionMode = 'normal';
         initSession(selectedIds.map(id => bank.find(w => w.id === id)).filter(w => w));
     }
 
@@ -808,6 +738,7 @@
         document.getElementById('stat-known-count').innerText = knownCount;
         document.getElementById('stat-forgot-count').innerText = forgotCount;
         updateHistoryCalendar(); 
+        updateDueCountDisplay(); // 返回时刷新待复习数量
         hideAllViews(); document.getElementById('summary-view').classList.remove('hidden');
     }
 
@@ -873,13 +804,13 @@
     function hideAllViews() {
         document.getElementById('menu-view').classList.add('hidden'); document.getElementById('study-view').classList.add('hidden');
         document.getElementById('summary-view').classList.add('hidden'); document.getElementById('stats-view').classList.add('hidden');
-        document.getElementById('history-detail-view').classList.add('hidden'); document.getElementById('mandatory-view').classList.add('hidden');
+        document.getElementById('history-detail-view').classList.add('hidden');
     }
     
     function backToMenu() { hideAllViews(); document.getElementById('menu-view').classList.remove('hidden'); }
 
     updateHistoryCalendar();
-    checkMandatoryStatus(); 
+    updateDueCountDisplay(); 
 </script>
 </body>
 </html>
