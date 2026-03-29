@@ -35,9 +35,12 @@
         .word-kanji { font-size: 16px; color: #8e44ad; margin-bottom: 8px; font-weight: bold; }
         .word-kana { font-size: 20px; color: #7f8c8d; margin-bottom: 15px; letter-spacing: 1px; }
         .word-meaning { font-size: 20px; font-weight: bold; color: #2c3e50; }
-        .word-example { margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f2f6; text-align: left; background: #f8f9fa; padding: 12px; border-radius: 8px; border-left: 4px solid #3498db; }
-        .ex-jp { font-size: 15px; color: #2c3e50; margin: 0 0 8px 0; line-height: 1.6; }
-        .ex-cn { font-size: 13px; color: #7f8c8d; margin: 0; line-height: 1.6; }
+        
+        /* 🌟 例句拆分：正面无翻译版，反面翻译版 */
+        .example-front { margin-top: 20px; text-align: left; background: #f0fdf4; padding: 15px; border-radius: 10px; border-left: 5px solid #2ecc71; }
+        .example-back { margin-top: 15px; text-align: left; background: #fdfdfd; padding: 12px; border-radius: 8px; border: 1px dashed #bdc3c7; }
+        .ex-jp { font-size: 16px; color: #2c3e50; margin: 0; line-height: 1.6; }
+        .ex-cn { font-size: 14px; color: #7f8c8d; margin: 0; line-height: 1.6; }
         
         .stat-box { text-align: left; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #ecf0f1; font-size: 14px; }
         .settings-box { background: #fff5e6; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 5px solid #f39c12; font-size: 14px; }
@@ -209,6 +212,7 @@
         </div>
         
         <div class="word-card">
+            
             <div style="display: flex; justify-content: center; align-items: center;">
                 <div id="card-prompt" class="word-title" style="margin-bottom: 0;">提示エリア</div>
                 <span id="prompt-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="再生">🔊</span>
@@ -216,7 +220,13 @@
             
             <div id="word-history-blocks"></div>
             
+            <div id="card-example-front" class="example-front hidden">
+                <p id="ex-front-text" class="ex-jp"></p>
+            </div>
+            
             <div id="answer-section" class="hidden">
+                <hr style="border-top: 1px dashed #ecf0f1; margin: 20px 0 15px 0;">
+                
                 <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
                     <div id="card-answer-title" class="word-title" style="color: #e67e22; margin-bottom: 0; font-size: 26px;"></div>
                     <span id="answer-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="再生">🔊</span>
@@ -225,11 +235,13 @@
                 <div id="card-kanji" class="word-kanji"></div>
                 <div id="card-kana" class="word-kana">仮名</div>
                 <div id="card-meaning" class="word-meaning">意味</div>
-                <div id="card-example" class="word-example">
-                    <p id="ex-jp" class="ex-jp"></p>
-                    <p id="ex-cn" class="ex-cn"></p>
+                
+                <div id="card-example-back" class="example-back hidden">
+                    <span style="font-size: 12px; color: #95a5a6; font-weight: bold; display: block; margin-bottom: 5px;">📝 翻訳</span>
+                    <p id="ex-back-text" class="ex-cn"></p>
                 </div>
             </div>
+            
         </div>
 
         <p class="keyboard-hint" style="margin-bottom: 80px;">⌨️ PCショートカット：[Space]解答 | [←]もう一度 | [→]覚えた | [↑]発音</p>
@@ -315,7 +327,7 @@
     function speakCurrentWord() {
         let currentWord = queue[currentIndex];
         if (!currentWord || !('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel(); 
+        window.speechSynthesis.cancel(); // 切断之前的发音，确保立即播放新的
         let utterance = new SpeechSynthesisUtterance(currentWord.word);
         utterance.lang = 'ja-JP'; 
         utterance.rate = 0.85;    
@@ -471,7 +483,7 @@
         return Math.max(...wordLogs.map(l => l.round));
     }
 
-    // ----- ☁️ クラウド管理 (🌟LZ-String 圧縮対応) -----
+    // ----- ☁️ クラウド管理 (LZ-String 圧縮対応) -----
     function openSyncModal() {
         document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || '';
         document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || '';
@@ -511,11 +523,8 @@
         localStorage.setItem('cloud_bin_id', binId);
         localStorage.setItem('cloud_api_key', apiKey);
 
-        // 🌟 核心修改：利用 LZ-String 将整个 JSON 对象压缩为 Base64 字符串
         let rawData = JSON.stringify(getCombinedLogs());
         let compressedData = LZString.compressToBase64(rawData);
-        
-        // 将压缩后的字符串包装在一个小对象中发送
         let payload = { data: compressedData, compressed: true };
 
         let btn = document.getElementById('btn-upload');
@@ -548,12 +557,10 @@
                 let record = json.record;
                 let finalData;
 
-                // 🌟 核心修改：判断云端拉取下来的数据是否是压缩格式
                 if (record.compressed === true && record.data) {
                     let decompressedString = LZString.decompressFromBase64(record.data);
                     finalData = JSON.parse(decompressedString);
                 } else {
-                    // 向下兼容：如果云端是没有压缩过的老数据，直接使用
                     finalData = record;
                 }
 
@@ -631,7 +638,7 @@
         hideAllViews(); document.getElementById('history-detail-view').classList.remove('hidden');
     }
 
-    // ----- 学習コア -----
+    // ----- 🌟 学習コア (レンダリングロジック更新) -----
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
     let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
 
@@ -673,13 +680,54 @@
         
         let pe = document.getElementById('card-prompt'), aT = document.getElementById('card-answer-title'), mE = document.getElementById('card-meaning');
         let ps = document.getElementById('prompt-speak'), as = document.getElementById('answer-speak');
+        
+        let exFrontDiv = document.getElementById('card-example-front');
+        let exBackDiv = document.getElementById('card-example-back');
+        let exFrontText = document.getElementById('ex-front-text');
+        let exBackText = document.getElementById('ex-back-text');
 
         if (currentStudyMode === 'jp2cn') {
-            pe.innerText = word.word; aT.style.display = 'none'; mE.innerText = word.meaning; mE.style.display = 'block';
-            ps.classList.remove('hidden'); as.classList.add('hidden'); speakCurrentWord();
+            // 正面文字
+            pe.innerText = word.word; 
+            aT.style.display = 'none'; 
+            mE.innerText = word.meaning; 
+            mE.style.display = 'block';
+            
+            // 喇叭控制
+            ps.classList.remove('hidden'); 
+            as.classList.add('hidden'); 
+            
+            // 例句拆分控制
+            if (word.example_jp && word.example_cn) {
+                exFrontText.innerText = word.example_jp;
+                exBackText.innerText = word.example_cn;
+                exFrontDiv.classList.remove('hidden');
+                exBackDiv.classList.remove('hidden'); // 被 answer-section 暂存隐藏
+            } else {
+                exFrontDiv.classList.add('hidden');
+                exBackDiv.classList.add('hidden');
+            }
+            
+            speakCurrentWord(); // 第一次发音
+            
         } else {
-            pe.innerText = word.meaning; aT.innerText = word.word; aT.style.display = 'block'; mE.style.display = 'none';
-            ps.classList.add('hidden'); as.classList.add('hidden'); 
+            // 中->日 挑战模式
+            pe.innerText = word.meaning; 
+            aT.innerText = word.word; 
+            aT.style.display = 'block'; 
+            mE.style.display = 'none';
+            ps.classList.add('hidden'); 
+            as.classList.add('hidden'); 
+            
+            if (word.example_jp && word.example_cn) {
+                exFrontText.innerText = word.example_cn; // 挑战模式正面先看中文
+                exBackText.innerText = word.example_jp;
+                exFrontDiv.classList.remove('hidden');
+                exBackDiv.classList.remove('hidden');
+            } else {
+                exFrontDiv.classList.add('hidden');
+                exBackDiv.classList.add('hidden');
+            }
         }
         
         let wordLogs = getLogs().filter(log => log.wordId === word.id).sort((a, b) => a.round - b.round);
@@ -691,23 +739,26 @@
         if (word.kanji && word.kanji.trim() !== "") { kE.innerText = `【漢字】 ${word.kanji}`; kE.style.display = 'block'; } 
         else { kE.style.display = 'none'; }
         document.getElementById('card-kana').innerText = word.kana;
-        
-        let exE = document.getElementById('card-example');
-        if (word.example_jp && word.example_cn) {
-            document.getElementById('ex-jp').innerText = word.example_jp; document.getElementById('ex-cn').innerText = word.example_cn;
-            exE.style.display = 'block';
-        } else { exE.style.display = 'none'; }
 
         document.getElementById('progress-text').innerText = `進捗: ${currentIndex + 1} / ${queue.length}`;
-        document.getElementById('answer-section').classList.add('hidden'); document.getElementById('action-buttons').classList.add('hidden');
+        
+        // 初始化重置界面
+        document.getElementById('answer-section').classList.add('hidden'); 
+        document.getElementById('action-buttons').classList.add('hidden');
         document.getElementById('btn-show-answer').classList.remove('hidden');
     }
 
     function showAnswer() {
         triggerVibration('heavy');
-        document.getElementById('answer-section').classList.remove('hidden'); document.getElementById('action-buttons').classList.remove('hidden');
+        document.getElementById('answer-section').classList.remove('hidden'); 
+        document.getElementById('action-buttons').classList.remove('hidden');
         document.getElementById('btn-show-answer').classList.add('hidden');
-        if (currentStudyMode === 'cn2jp') document.getElementById('answer-speak').classList.remove('hidden');
+        
+        if (currentStudyMode === 'cn2jp') {
+            document.getElementById('answer-speak').classList.remove('hidden');
+        }
+        
+        // 🌟 核心：点击显示答案后，强制再发音一次
         speakCurrentWord();
     }
 
