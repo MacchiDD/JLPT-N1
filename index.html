@@ -15,7 +15,10 @@
     
     <style>
         body { font-family: 'Hiragino Sans', 'Meiryo', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; padding: 20px 10px; color: #2c3e50; min-height: 100vh; margin: 0; box-sizing: border-box; }
-        #app { background: rgba(255, 255, 255, 0.95); width: 100%; max-width: 620px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; backdrop-filter: blur(10px); box-sizing: border-box; position: relative; }
+        
+        /* 🌟 核心修复：去掉了 backdrop-filter，解除结界，让 fixed 完美生效 */
+        #app { background: rgba(255, 255, 255, 0.95); width: 100%; max-width: 620px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; box-sizing: border-box; position: relative; }
+        
         h1 { font-size: 22px; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; margin-top: 0; font-weight: bold; }
         .hidden { display: none !important; }
         .btn { padding: 10px 15px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -36,10 +39,10 @@
         .word-kana { font-size: 20px; color: #7f8c8d; margin-bottom: 15px; letter-spacing: 1px; }
         .word-meaning { font-size: 20px; font-weight: bold; color: #2c3e50; }
         
-        /* 🌟 恢复经典例句框样式：同一个框内包含中日对照 */
-        .word-example { margin-top: 15px; text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; }
-        .ex-jp { font-size: 15px; color: #2c3e50; margin: 0; line-height: 1.6; }
-        .ex-cn { font-size: 13px; color: #7f8c8d; margin: 0; line-height: 1.6; }
+        .example-front { margin-top: 20px; text-align: left; background: #f0fdf4; padding: 15px; border-radius: 10px; border-left: 5px solid #2ecc71; }
+        .example-back { margin-top: 15px; text-align: left; background: #fdfdfd; padding: 12px; border-radius: 8px; border: 1px dashed #bdc3c7; }
+        .ex-jp { font-size: 16px; color: #2c3e50; margin: 0; line-height: 1.6; }
+        .ex-cn { font-size: 14px; color: #7f8c8d; margin: 0; line-height: 1.6; }
         
         .stat-box { text-align: left; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #ecf0f1; font-size: 14px; }
         .settings-box { background: #fff5e6; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 5px solid #f39c12; font-size: 14px; }
@@ -64,7 +67,7 @@
         .keyboard-hint { color: #bdc3c7; font-size: 12px; margin-top: 15px; text-align: center; }
         hr { border: 0; border-top: 1px solid #ecf0f1; margin: 20px 0; }
 
-        #sync-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        #sync-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; justify-content: center; align-items: center; }
         .sync-box { background: white; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: left; position: relative; }
         .sync-box h3 { margin-top: 0; color: #2980b9; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .close-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 20px; color: #95a5a6; border: none; background: none; }
@@ -73,12 +76,50 @@
         .speak-btn:hover { transform: scale(1.2); filter: grayscale(0%) opacity(1); }
         .speak-btn:active { transform: scale(0.9); }
 
-        #study-view { padding-bottom: 120px; }
-        .bottom-action-bar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px calc(20px + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 -5px 25px rgba(0,0,0,0.08); z-index: 1000; display: flex; justify-content: center; box-sizing: border-box; }
-        .bottom-action-inner { width: 100%; max-width: 620px; display: flex; justify-content: center; }
-        .btn-huge { height: 75px !important; font-size: 20px !important; border-radius: 16px !important; font-weight: bold; margin: 0 !important; width: 100%; display: flex; justify-content: center; align-items: center; }
-        #action-buttons { width: 100%; display: flex; justify-content: space-between; gap: 15px; margin: 0; }
-        #action-buttons .btn { width: 100%; padding: 0; } 
+        /* 🌟 终极防抖底部操作栏样式 */
+        #study-view { padding-bottom: 140px; } /* 预留充足的底部空间，防止正文被遮挡 */
+        
+        .bottom-action-bar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            padding: 15px 20px calc(20px + env(safe-area-inset-bottom)); 
+            background: rgba(255, 255, 255, 0.98); /* 纯色背景，增强视觉分离感 */
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.08); 
+            z-index: 9999; 
+            display: flex; 
+            justify-content: center; 
+            box-sizing: border-box; 
+        }
+        .bottom-action-inner { 
+            width: 100%; 
+            max-width: 620px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        
+        /* 强制超大按钮，平分屏幕 */
+        .btn-huge { 
+            height: 75px !important; 
+            font-size: 20px !important; 
+            border-radius: 16px !important; 
+            font-weight: bold; 
+            margin: 0 !important; 
+            flex: 1; /* 强制平分空间 */
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        
+        #action-buttons { 
+            width: 100%; 
+            display: flex; 
+            justify-content: space-between; 
+            gap: 15px; 
+            margin: 0; 
+        }
     </style>
     
     <script>
@@ -219,8 +260,12 @@
             
             <div id="word-history-blocks"></div>
             
+            <div id="card-example-front" class="example-front hidden">
+                <p id="ex-front-text" class="ex-jp"></p>
+            </div>
+            
             <div id="answer-section" class="hidden">
-                <hr style="border-top: 1px dashed #ecf0f1; margin: 15px 0;">
+                <hr style="border-top: 1px dashed #ecf0f1; margin: 20px 0 15px 0;">
                 
                 <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
                     <div id="card-answer-title" class="word-title" style="color: #e67e22; margin-bottom: 0; font-size: 26px;"></div>
@@ -230,29 +275,16 @@
                 <div id="card-kanji" class="word-kanji"></div>
                 <div id="card-kana" class="word-kana">仮名</div>
                 <div id="card-meaning" class="word-meaning">意味</div>
-            </div>
-
-            <div id="card-example" class="word-example hidden">
-                <p id="ex-primary" class="ex-jp"></p>
-                <div id="ex-secondary-container" class="hidden">
-                    <hr style="border-top: 1px dashed #bdc3c7; margin: 10px 0;">
-                    <p id="ex-secondary" class="ex-cn"></p>
+                
+                <div id="card-example-back" class="example-back hidden">
+                    <span style="font-size: 12px; color: #95a5a6; font-weight: bold; display: block; margin-bottom: 5px;">📝 翻訳</span>
+                    <p id="ex-back-text" class="ex-cn"></p>
                 </div>
             </div>
             
         </div>
 
         <p class="keyboard-hint" style="margin-bottom: 80px;">⌨️ PCショートカット：[Space]解答 | [←]もう一度 | [→]覚えた | [↑]発音</p>
-
-        <div class="bottom-action-bar">
-            <div class="bottom-action-inner">
-                <button id="btn-show-answer" class="btn btn-primary btn-huge" onclick="showAnswer()">解答を表示</button>
-                <div id="action-buttons" class="hidden">
-                    <button class="btn btn-danger btn-huge" onclick="markWord('forgotten')">もう一度</button>
-                    <button class="btn btn-success btn-huge" onclick="markWord('known')">覚えた</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div id="summary-view" class="hidden">
@@ -298,6 +330,16 @@
             </table>
         </div>
         <button class="btn btn-secondary" style="margin-top: 20px;" onclick="safeBackFromStats()">ダッシュボードに戻る</button>
+    </div>
+</div>
+
+<div id="study-action-bar" class="bottom-action-bar hidden">
+    <div class="bottom-action-inner">
+        <button id="btn-show-answer" class="btn btn-primary btn-huge" onclick="showAnswer()">解答を表示</button>
+        <div id="action-buttons" class="hidden">
+            <button class="btn btn-danger btn-huge" onclick="markWord('forgotten')">もう一度</button>
+            <button class="btn btn-success btn-huge" onclick="markWord('known')">覚えた</button>
+        </div>
     </div>
 </div>
 
@@ -481,7 +523,7 @@
         return Math.max(...wordLogs.map(l => l.round));
     }
 
-    // ----- ☁️ クラウド管理 -----
+    // ----- ☁️ クラウド管理 (LZ-String 圧縮対応) -----
     function openSyncModal() {
         document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || '';
         document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || '';
@@ -636,7 +678,7 @@
         hideAllViews(); document.getElementById('history-detail-view').classList.remove('hidden');
     }
 
-    // ----- 🌟 学習コア (レンダリング更新) -----
+    // ----- 🌟 学習コア -----
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
     let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
 
@@ -669,7 +711,10 @@
         queue = finalWords; historyStack = []; firstImpressions = {}; currentIndex = 0;
         currentStudyMode = document.getElementById('study-mode-select').value || 'jp2cn';
         
-        hideAllViews(); document.getElementById('study-view').classList.remove('hidden'); renderWord();
+        hideAllViews(); 
+        document.getElementById('study-view').classList.remove('hidden'); 
+        document.getElementById('study-action-bar').classList.remove('hidden'); // 显示底部栏
+        renderWord();
     }
 
     function renderWord() {
@@ -679,54 +724,42 @@
         let pe = document.getElementById('card-prompt'), aT = document.getElementById('card-answer-title'), mE = document.getElementById('card-meaning');
         let ps = document.getElementById('prompt-speak'), as = document.getElementById('answer-speak');
         
-        let exContainer = document.getElementById('card-example');
-        let exPrimary = document.getElementById('ex-primary');
-        let exSecondary = document.getElementById('ex-secondary');
-        let exSecContainer = document.getElementById('ex-secondary-container');
+        let exFrontDiv = document.getElementById('card-example-front');
+        let exBackDiv = document.getElementById('card-example-back');
+        let exFrontText = document.getElementById('ex-front-text');
+        let exBackText = document.getElementById('ex-back-text');
 
         if (currentStudyMode === 'jp2cn') {
-            // 🌟 正面：只显示单词和发音按钮
-            pe.innerText = word.word; 
-            aT.style.display = 'none'; 
-            mE.innerText = word.meaning; 
-            mE.style.display = 'block';
+            pe.innerText = word.word; aT.style.display = 'none'; mE.innerText = word.meaning; mE.style.display = 'block';
+            ps.classList.remove('hidden'); as.classList.add('hidden'); 
             
-            ps.classList.remove('hidden'); 
-            as.classList.add('hidden'); 
-            
-            // 🌟 例句分离逻辑
             if (word.example_jp && word.example_cn) {
-                exPrimary.innerText = word.example_jp;
-                exPrimary.className = 'ex-jp';
-                exSecondary.innerText = word.example_cn;
-                exSecondary.className = 'ex-cn';
-                
-                exContainer.classList.remove('hidden'); // 显示整个例句框
-                exSecContainer.classList.add('hidden'); // 但隐藏下半部的虚线和中文翻译
+                exFrontText.innerText = word.example_jp;
+                exFrontText.className = 'ex-jp';
+                exBackText.innerText = word.example_cn;
+                exBackText.className = 'ex-cn';
+                exFrontDiv.classList.remove('hidden');
+                exBackDiv.classList.remove('hidden'); 
             } else {
-                exContainer.classList.add('hidden');
+                exFrontDiv.classList.add('hidden');
+                exBackDiv.classList.add('hidden');
             }
-            
-            speakCurrentWord(); // 第一次自动发音
+            speakCurrentWord(); 
             
         } else {
-            pe.innerText = word.meaning; 
-            aT.innerText = word.word; 
-            aT.style.display = 'block'; 
-            mE.style.display = 'none';
-            ps.classList.add('hidden'); 
-            as.classList.add('hidden'); 
+            pe.innerText = word.meaning; aT.innerText = word.word; aT.style.display = 'block'; mE.style.display = 'none';
+            ps.classList.add('hidden'); as.classList.add('hidden'); 
             
             if (word.example_jp && word.example_cn) {
-                exPrimary.innerText = word.example_cn;
-                exPrimary.className = 'ex-cn';
-                exSecondary.innerText = word.example_jp;
-                exSecondary.className = 'ex-jp';
-                
-                exContainer.classList.remove('hidden');
-                exSecContainer.classList.add('hidden');
+                exFrontText.innerText = word.example_cn;
+                exFrontText.className = 'ex-cn';
+                exBackText.innerText = word.example_jp;
+                exBackText.className = 'ex-jp';
+                exFrontDiv.classList.remove('hidden');
+                exBackDiv.classList.remove('hidden');
             } else {
-                exContainer.classList.add('hidden');
+                exFrontDiv.classList.add('hidden');
+                exBackDiv.classList.add('hidden');
             }
         }
         
@@ -742,7 +775,6 @@
 
         document.getElementById('progress-text').innerText = `進捗: ${currentIndex + 1} / ${queue.length}`;
         
-        // 确保答案区处于折叠状态
         document.getElementById('answer-section').classList.add('hidden'); 
         document.getElementById('action-buttons').classList.add('hidden');
         document.getElementById('btn-show-answer').classList.remove('hidden');
@@ -750,12 +782,7 @@
 
     function showAnswer() {
         triggerVibration('heavy');
-        
-        // 🌟 点击后，展开答案区
         document.getElementById('answer-section').classList.remove('hidden'); 
-        // 🌟 点击后，在例句框内部展开中文翻译
-        document.getElementById('ex-secondary-container').classList.remove('hidden'); 
-        
         document.getElementById('action-buttons').classList.remove('hidden');
         document.getElementById('btn-show-answer').classList.add('hidden');
         
@@ -763,7 +790,6 @@
             document.getElementById('answer-speak').classList.remove('hidden');
         }
         
-        // 🌟 核心：显示答案后再次自动发音
         speakCurrentWord();
     }
 
@@ -872,6 +898,7 @@
         document.getElementById('menu-view').classList.add('hidden'); document.getElementById('study-view').classList.add('hidden');
         document.getElementById('summary-view').classList.add('hidden'); document.getElementById('stats-view').classList.add('hidden');
         document.getElementById('history-detail-view').classList.add('hidden');
+        document.getElementById('study-action-bar').classList.add('hidden'); // 切换视图时隐藏底部栏
     }
     
     function backToMenu() { hideAllViews(); document.getElementById('menu-view').classList.remove('hidden'); }
