@@ -15,7 +15,6 @@
     
     <style>
         body { font-family: 'Hiragino Sans', 'Meiryo', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; padding: 20px 10px; color: #2c3e50; min-height: 100vh; margin: 0; box-sizing: border-box; }
-        /* 移除 backdrop-filter 解决移动端 fixed 失效问题，稍微提高透明度弥补视觉 */
         #app { background: rgba(255, 255, 255, 0.98); width: 100%; max-width: 620px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; box-sizing: border-box; position: relative; }
         h1 { font-size: 22px; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 12px; margin-top: 0; font-weight: bold; }
         .hidden { display: none !important; }
@@ -680,14 +679,7 @@
         if (currentStudyMode === 'cn2jp') { document.getElementById('answer-speak').classList.remove('hidden'); }
         
         speakCurrentWord();
-
-        // 💡 自动平滑滚动到最底部，确保完整的释义和中日对比例句完全展示
-        setTimeout(() => {
-            window.scrollTo({
-                top: document.documentElement.scrollHeight,
-                behavior: 'smooth'
-            });
-        }, 50);
+        // 自动滚动代码已彻底删除
     }
 
     function markWord(status) {
@@ -700,9 +692,7 @@
 
         if (status === 'forgotten') queue.splice(currentIndex + 1 + Math.floor(Math.random() * (queue.length - currentIndex)), 0, word);
         currentIndex++; renderWord();
-
-        // 💡 切换到下一个词时，瞬间自动复原到屏幕最顶部
-        window.scrollTo({ top: 0, behavior: 'auto' });
+        // 自动复原置顶代码已彻底删除
     }
 
     function goBack() {
