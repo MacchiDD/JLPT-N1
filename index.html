@@ -36,7 +36,6 @@
         .word-kana { font-size: 20px; color: #7f8c8d; margin-bottom: 15px; letter-spacing: 1px; }
         .word-meaning { font-size: 20px; font-weight: bold; color: #2c3e50; }
         
-        /* 🌟 重构例句框样式：强制上下紧凑对照，增加标签结构 */
         .word-example { margin-top: 15px; text-align: left; background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #3498db; }
         .ex-row { display: flex; align-items: flex-start; margin-top: 6px; margin-bottom: 6px; }
         .ex-label { font-size: 11px; font-weight: bold; color: white; padding: 2px 5px; border-radius: 4px; margin-right: 8px; white-space: nowrap; line-height: 1.4; margin-top: 2px; }
@@ -77,9 +76,8 @@
         .speak-btn:hover { transform: scale(1.2); filter: grayscale(0%) opacity(1); }
         .speak-btn:active { transform: scale(0.9); }
 
-        #study-view { padding-bottom: 140px; /* 增加底部留白，防止被操作栏遮挡 */ }
+        #study-view { padding-bottom: 140px; }
         
-        /* 完善的移动端底部操作栏适配 */
         .bottom-action-bar { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px calc(20px + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 -5px 25px rgba(0,0,0,0.08); z-index: 9999; display: flex; justify-content: center; box-sizing: border-box; }
         .bottom-action-inner { width: 100%; max-width: 620px; display: flex; justify-content: center; }
         .btn-huge { height: 75px !important; font-size: 20px !important; border-radius: 16px !important; font-weight: bold; margin: 0 !important; width: 100%; display: flex; justify-content: center; align-items: center; }
@@ -679,7 +677,6 @@
         if (currentStudyMode === 'cn2jp') { document.getElementById('answer-speak').classList.remove('hidden'); }
         
         speakCurrentWord();
-        // 自动滚动代码已彻底删除
     }
 
     function markWord(status) {
@@ -690,9 +687,12 @@
         if (isFirstAppearance) firstImpressions[word.id] = status;
         historyStack.push({ index: currentIndex, status: status, isFirst: isFirstAppearance });
 
-        if (status === 'forgotten') queue.splice(currentIndex + 1 + Math.floor(Math.random() * (queue.length - currentIndex)), 0, word);
+        if (status === 'forgotten') {
+            // 将错题精准插入到 3 个词之后（若剩余队列不足 3 个词，将自动追加至队尾）
+            queue.splice(currentIndex + 3, 0, word);
+        }
+        
         currentIndex++; renderWord();
-        // 自动复原置顶代码已彻底删除
     }
 
     function goBack() {
