@@ -30,13 +30,13 @@
         input[type="number"]:focus, input[type="date"]:focus, input[type="text"]:focus, input[type="password"]:focus, select:focus { border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
         select { width: 100%; font-family: inherit; }
         
-        .word-card { margin: 20px 0; padding: 20px; border: none; border-top: 6px solid #3498db; border-radius: 12px; background: #ffffff; box-shadow: 0 8px 25px rgba(0,0,0,0.06); min-height: 140px; display: flex; flex-direction: column; justify-content: center; word-wrap: break-word; }
+        .word-card { margin: 20px 0; padding: 20px; border: none; border-top: 6px solid #3498db; border-radius: 12px; background: #ffffff; box-shadow: 0 8px 25px rgba(0,0,0,0.06); min-height: 140px; display: flex; flex-direction: column; justify-content: center; word-wrap: break-word; align-items: center; }
         .word-title { font-size: 32px; font-weight: bold; color: #2980b9; text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
-        .word-kanji { font-size: 16px; color: #8e44ad; margin-bottom: 8px; font-weight: bold; }
-        .word-kana { font-size: 20px; color: #7f8c8d; margin-bottom: 15px; letter-spacing: 1px; }
-        .word-meaning { font-size: 20px; font-weight: bold; color: #2c3e50; }
+        .word-kanji { font-size: 16px; color: #8e44ad; margin-bottom: 8px; font-weight: bold; text-align: center; }
+        .word-kana { font-size: 20px; color: #7f8c8d; margin-bottom: 15px; letter-spacing: 1px; text-align: center; }
+        .word-meaning { font-size: 20px; font-weight: bold; color: #2c3e50; text-align: center; }
         
-        .word-example { margin-top: 15px; text-align: left; background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #3498db; }
+        .word-example { margin-top: 15px; width: 100%; text-align: left; background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #3498db; box-sizing: border-box; }
         .ex-row { display: flex; align-items: flex-start; margin-top: 6px; margin-bottom: 6px; }
         .ex-label { font-size: 11px; font-weight: bold; color: white; padding: 2px 5px; border-radius: 4px; margin-right: 8px; white-space: nowrap; line-height: 1.4; margin-top: 2px; }
         .jp-label { background-color: #3498db; }
@@ -216,14 +216,16 @@
         
         <div class="word-card">
             
-            <div style="display: flex; justify-content: center; align-items: center;">
+            <div id="relearn-status" class="hidden" style="font-size: 13px; font-weight: bold; color: #e74c3c; margin-bottom: 12px; background: #fdf5f5; padding: 6px 12px; border-radius: 20px; border: 1px solid #fadbd8; box-shadow: 0 2px 4px rgba(231,76,60,0.1);"></div>
+            
+            <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
                 <div id="card-prompt" class="word-title" style="margin-bottom: 0;">提示エリア</div>
                 <span id="prompt-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="再生">🔊</span>
             </div>
             
             <div id="word-history-blocks"></div>
             
-            <div id="answer-section" class="hidden">
+            <div id="answer-section" class="hidden" style="width: 100%;">
                 <hr style="border-top: 1px dashed #ecf0f1; margin: 15px 0;">
                 
                 <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
@@ -555,7 +557,9 @@
         hideAllViews(); document.getElementById('history-detail-view').classList.remove('hidden');
     }
 
+    // 🌟🌟🌟 核心逻辑更新区：状态管理变量 🌟🌟🌟
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
+    let relearnSteps = {}; // 🔥 新增：用于记录当前会话中每个错题的“修复星级”(0, 1, 2)
     let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
 
     function startHistoryReview(type) {
@@ -582,6 +586,7 @@
         } else { finalWords.sort((a, b) => a.id - b.id); }
         
         queue = finalWords; historyStack = []; firstImpressions = {}; currentIndex = 0;
+        relearnSteps = {}; // 每次新会话重置阶梯记忆状态
         currentStudyMode = document.getElementById('study-mode-select').value || 'jp2cn';
         
         hideAllViews(); document.getElementById('study-view').classList.remove('hidden'); renderWord();
@@ -593,6 +598,7 @@
         
         let pe = document.getElementById('card-prompt'), aT = document.getElementById('card-answer-title'), mE = document.getElementById('card-meaning');
         let ps = document.getElementById('prompt-speak'), as = document.getElementById('answer-speak');
+        let rsEl = document.getElementById('relearn-status'); // 获取修复提示框
         
         let exContainer = document.getElementById('card-example');
         let exPrimary = document.getElementById('ex-primary');
@@ -600,6 +606,15 @@
         let exSecContainer = document.getElementById('ex-secondary-container');
         let labelPrimary = document.getElementById('label-primary');
         let labelSecondary = document.getElementById('label-secondary');
+
+        // 🔥 更新提示框：如果这个词在错题本阶段，显示还需要几次正解
+        let currentStep = relearnSteps[word.id];
+        if (currentStep !== undefined && currentStep < 3) {
+            rsEl.innerText = `🔥 強化中: あと ${3 - currentStep} 回正解でクリア`;
+            rsEl.classList.remove('hidden');
+        } else {
+            rsEl.classList.add('hidden');
+        }
 
         if (currentStudyMode === 'jp2cn') {
             pe.innerText = word.word; 
@@ -667,29 +682,49 @@
 
     function showAnswer() {
         triggerVibration('heavy');
-        
         document.getElementById('answer-section').classList.remove('hidden'); 
         document.getElementById('ex-secondary-container').classList.remove('hidden'); 
-        
         document.getElementById('action-buttons').classList.remove('hidden');
         document.getElementById('btn-show-answer').classList.add('hidden');
-        
         if (currentStudyMode === 'cn2jp') { document.getElementById('answer-speak').classList.remove('hidden'); }
-        
         speakCurrentWord();
     }
 
+    // 🌟🌟🌟 核心打怪逻辑实现 🌟🌟🌟
     function markWord(status) {
         triggerVibration('light');
         let word = queue[currentIndex];
-        let isFirstAppearance = queue.findIndex(w => w.id === word.id) === currentIndex;
         
+        // 判断是不是在当前会话的第一次展现（用于计入 SRS 和日志）
+        let isFirstAppearance = queue.findIndex(w => w.id === word.id) === currentIndex;
         if (isFirstAppearance) firstImpressions[word.id] = status;
-        historyStack.push({ index: currentIndex, status: status, isFirst: isFirstAppearance });
+        
+        // 记录操作前的等级，用于悔棋（goBack）
+        let previousStep = relearnSteps[word.id];
+        historyStack.push({ index: currentIndex, status: status, isFirst: isFirstAppearance, prevStep: previousStep });
 
         if (status === 'forgotten') {
-            // 将错题精准插入到 3 个词之后（若剩余队列不足 3 个词，将自动追加至队尾）
+            if (isFirstAppearance) {
+                relearnSteps[word.id] = 0; // 第一次错：定为 0 星
+            } else {
+                // 如果已经错过，这次又错：降一个等级（扣一星）。Math.max(0, ...) 是底层保底机制，绝不扣成负数。
+                relearnSteps[word.id] = Math.max(0, (previousStep || 0) - 1);
+            }
+            // 只要错了，一定往后推 3 格继续考
             queue.splice(currentIndex + 3, 0, word);
+            
+        } else if (status === 'known') {
+            if (!isFirstAppearance) { // 第一次就选认识的，直接毕业通过，不做处理
+                let currentStep = previousStep || 0;
+                if (currentStep < 2) {
+                    // 还没达到满级（3星），升一级，往后排 3 格继续考
+                    relearnSteps[word.id] = currentStep + 1;
+                    queue.splice(currentIndex + 3, 0, word);
+                } else {
+                    // 已经达到了 2 星，这次再答对就是 3 星毕业啦！不再重新排队。
+                    relearnSteps[word.id] = 3; 
+                }
+            }
         }
         
         currentIndex++; renderWord();
@@ -697,9 +732,35 @@
 
     function goBack() {
         if (historyStack.length === 0) return; 
-        let lastAction = historyStack.pop(); let targetIndex = lastAction.index;
-        if (lastAction.status === 'forgotten') { for (let i = queue.length - 1; i > targetIndex; i--) if (queue[i].id === queue[targetIndex].id) { queue.splice(i, 1); break; } }
-        if (lastAction.isFirst) delete firstImpressions[queue[targetIndex].id];
+        let lastAction = historyStack.pop(); 
+        let targetIndex = lastAction.index;
+        let targetWord = queue[targetIndex];
+
+        // 悔棋的核心：我们要判断上一步到底有没有往后方插队。如果有，我们要把它从后面拔出来。
+        let wasInjected = false;
+        if (lastAction.status === 'forgotten') {
+            wasInjected = true; // 点忘记一定插队了
+        } else if (lastAction.status === 'known' && !lastAction.isFirst && (lastAction.prevStep || 0) < 2) {
+            wasInjected = true; // 点认识，但是星级不够没毕业，也插队了
+        }
+
+        if (wasInjected) { 
+            // 从后往前找，拔掉刚刚插进去的那个词
+            for (let i = queue.length - 1; i > targetIndex; i--) {
+                if (queue[i].id === targetWord.id) { queue.splice(i, 1); break; } 
+            }
+        }
+        
+        // 撤销第一印象
+        if (lastAction.isFirst) delete firstImpressions[targetWord.id];
+        
+        // 撤销阶梯等级
+        if (lastAction.prevStep === undefined) {
+            delete relearnSteps[targetWord.id];
+        } else {
+            relearnSteps[targetWord.id] = lastAction.prevStep;
+        }
+        
         currentIndex = targetIndex; renderWord(); 
     }
     
