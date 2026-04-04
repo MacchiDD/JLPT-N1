@@ -9893,3 +9893,24 @@ const kundokuBank = [
         "example_cn": "仰望秋日澄澈湛蓝的天空。"
     },
     ];
+// 📝 随手记词汇题库 (Notes)
+const noteBank = [
+    { 
+        id: 1, 
+        word: "たっぷり", 
+        kanji: "", 
+        kana: "たっぷり", 
+        meaning: "充分，足够，大量",
+        example_jp: "彼は自信たっぷりの態度で面接に臨んだ。",
+        example_cn: "他满怀自信地迎接了面试。"
+    },
+    { 
+        id: 2, 
+        word: "やがて", 
+        kanji: "", 
+        kana: "やがて", 
+        meaning: "不久，马上；最终，总有一天",
+        example_jp: "努力を続ければ、やがて報われる日が来るだろう。",
+        example_cn: "只要继续努力，总有一天会得到回报的吧。"
+    }
+];
