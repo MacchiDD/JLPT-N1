@@ -100,6 +100,7 @@
             <select id="dictionary-select" onchange="switchDictionary()" style="margin-top: 5px; margin-bottom: 5px; font-weight: bold; color: #8e44ad;">
                 <option value="hiragana">仮名・擬音語ベース</option>
                 <option value="kundoku">訓読語彙ベース</option>
+                <option value="notes">📝 随手记词汇 (Notes)</option>
             </select>
         </div>
 
@@ -323,11 +324,23 @@
     function getCurrentBank() {
         if (activeBankName === 'hiragana') return typeof hiraganaBank !== 'undefined' ? hiraganaBank : [];
         if (activeBankName === 'kundoku') return typeof kundokuBank !== 'undefined' ? kundokuBank : [];
+        if (activeBankName === 'notes') return typeof noteBank !== 'undefined' ? noteBank : [];
         return [];
     }
 
-    function getLogKey() { return activeBankName === 'hiragana' ? 'vocab_logs' : 'vocab_logs_kundoku'; }
-    function getSRSKey() { return activeBankName === 'hiragana' ? 'srs_data' : 'srs_data_kundoku'; }
+    function getLogKey() { 
+        if (activeBankName === 'hiragana') return 'vocab_logs';
+        if (activeBankName === 'kundoku') return 'vocab_logs_kundoku';
+        if (activeBankName === 'notes') return 'vocab_logs_notes';
+        return 'vocab_logs';
+    }
+    
+    function getSRSKey() { 
+        if (activeBankName === 'hiragana') return 'srs_data';
+        if (activeBankName === 'kundoku') return 'srs_data_kundoku';
+        if (activeBankName === 'notes') return 'srs_data_notes';
+        return 'srs_data';
+    }
 
     function speakCurrentWord() {
         let currentWord = queue[currentIndex];
@@ -453,16 +466,24 @@
 
     function getCombinedLogs() {
         return {
-            hiragana: JSON.parse(localStorage.getItem('vocab_logs') || '[]'), kundoku: JSON.parse(localStorage.getItem('vocab_logs_kundoku') || '[]'),
-            srs_hiragana: JSON.parse(localStorage.getItem('srs_data') || '{}'), srs_kundoku: JSON.parse(localStorage.getItem('srs_data_kundoku') || '{}')
+            hiragana: JSON.parse(localStorage.getItem('vocab_logs') || '[]'), 
+            kundoku: JSON.parse(localStorage.getItem('vocab_logs_kundoku') || '[]'),
+            notes: JSON.parse(localStorage.getItem('vocab_logs_notes') || '[]'),
+            srs_hiragana: JSON.parse(localStorage.getItem('srs_data') || '{}'), 
+            srs_kundoku: JSON.parse(localStorage.getItem('srs_data_kundoku') || '{}'),
+            srs_notes: JSON.parse(localStorage.getItem('srs_data_notes') || '{}')
         };
     }
 
     function restoreCombinedLogs(data) {
         if (Array.isArray(data)) { localStorage.setItem('vocab_logs', JSON.stringify(data)); } 
         else {
-            if (data.hiragana) localStorage.setItem('vocab_logs', JSON.stringify(data.hiragana)); if (data.kundoku) localStorage.setItem('vocab_logs_kundoku', JSON.stringify(data.kundoku));
-            if (data.srs_hiragana) localStorage.setItem('srs_data', JSON.stringify(data.srs_hiragana)); if (data.srs_kundoku) localStorage.setItem('srs_data_kundoku', JSON.stringify(data.srs_kundoku));
+            if (data.hiragana) localStorage.setItem('vocab_logs', JSON.stringify(data.hiragana)); 
+            if (data.kundoku) localStorage.setItem('vocab_logs_kundoku', JSON.stringify(data.kundoku));
+            if (data.notes) localStorage.setItem('vocab_logs_notes', JSON.stringify(data.notes));
+            if (data.srs_hiragana) localStorage.setItem('srs_data', JSON.stringify(data.srs_hiragana)); 
+            if (data.srs_kundoku) localStorage.setItem('srs_data_kundoku', JSON.stringify(data.srs_kundoku));
+            if (data.srs_notes) localStorage.setItem('srs_data_notes', JSON.stringify(data.srs_notes));
         }
         cleanUpDuplicateLogs(); updateHistoryCalendar(); updateDueCountDisplay();
     }
@@ -513,8 +534,8 @@
 
     function clearData() {
         if (confirm("⚠️ 警告：全ての記録と忘却曲線を初期化しますか？")) {
-            localStorage.removeItem('vocab_logs'); localStorage.removeItem('vocab_logs_kundoku');
-            localStorage.removeItem('srs_data'); localStorage.removeItem('srs_data_kundoku');
+            localStorage.removeItem('vocab_logs'); localStorage.removeItem('vocab_logs_kundoku'); localStorage.removeItem('vocab_logs_notes');
+            localStorage.removeItem('srs_data'); localStorage.removeItem('srs_data_kundoku'); localStorage.removeItem('srs_data_notes');
             updateHistoryCalendar(); updateDueCountDisplay(); alert("🗑️ 消去しました！");
         }
     }
@@ -656,7 +677,7 @@
                 exPrimary.innerText = word.example_cn;
                 exPrimary.className = 'ex-cn';
                 exSecondary.innerText = word.example_jp;
-                exSecondary.className = 'ex-jp';
+                exSecondary.className = 'ex-cn';
                 
                 exContainer.classList.remove('hidden');
                 exSecContainer.classList.add('hidden');
