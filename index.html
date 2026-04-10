@@ -100,7 +100,7 @@
             <select id="dictionary-select" onchange="switchDictionary()" style="margin-top: 5px; margin-bottom: 5px; font-weight: bold; color: #8e44ad;">
                 <option value="hiragana">仮名・擬音語ベース</option>
                 <option value="kundoku">訓読語彙ベース</option>
-                <option value="notes">📝 随手记词汇 (Notes)</option>
+                <option value="personal">🌟 随手记生词题库</option>
             </select>
         </div>
 
@@ -125,14 +125,14 @@
         <div class="settings-box">
             <strong style="color: #d35400;">⚙️ 基本設定：</strong>
             <select id="study-mode-select" style="margin-top: 5px; margin-bottom: 10px;">
-                <option value="jp2cn">🇯🇵 日本語 ➔ 🇨🇳 中国語 (標準)</option>
-                <option value="cn2jp">🇨🇳 中国語 ➔ 🇯🇵 日本語 (挑戦)</option>
+                <option value="jp2cn">🇯🇵 日本語 ➔ 🇨🇳 中国語 (标准)</option>
+                <option value="cn2jp">🇨🇳 中国語 ➔ 🇯🇵 日本語 (挑战)</option>
             </select>
             <br>
             <strong style="color: #d35400;">🔄 出題順序：</strong>
             <select id="study-order-select" style="margin-top: 5px;">
-                <option value="shuffle">🔀 ランダム (位置記憶を防止)</option>
-                <option value="ordered">⬇️ ID順</option>
+                <option value="shuffle">🔀 ランダム (位置记忆防止)</option>
+                <option value="ordered">⬇️ ID顺</option>
             </select>
         </div>
 
@@ -145,19 +145,19 @@
             <p style="font-weight: bold; color: #34495e;">📅 学習履歴カレンダー：</p>
             <input type="text" id="history-date" style="text-align: center; cursor: pointer; background-color: #fff;">
             <br>
-            <button class="btn btn-primary" onclick="viewHistoryDate()">🔍 この日を確認</button>
+            <button class="btn btn-primary" onclick="viewHistoryDate()">🔍 这个日期を確認</button>
         </div>
 
         <hr style="border-top: 1px dashed #bdc3c7;">
         <div>
-            <p style="color: #95a5a6; font-size: 12px; margin-bottom: 5px;">💾 データ同期・バックアップ (全単語帳共通)</p>
+            <p style="color: #95a5a6; font-size: 12px; margin-bottom: 5px;">💾 数据同步・备份 (全题库通用)</p>
             <div class="data-management">
-                <button class="btn btn-primary" style="width: 100%; font-size: 14px; background-color: #8e44ad;" onclick="openSyncModal()">☁️ API クラウド同期 (圧縮版)</button>
+                <button class="btn btn-primary" style="width: 100%; font-size: 14px; background-color: #8e44ad;" onclick="openSyncModal()">☁️ API クラウド同期 (压缩版)</button>
                 <div class="data-buttons-row">
-                    <button class="btn btn-secondary" onclick="exportData()">⬇️ エクスポート</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆️ インポート</button>
+                    <button class="btn btn-secondary" onclick="exportData()">⬇️ 导出</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆️ 导入</button>
                     <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
-                    <button class="btn btn-danger" onclick="clearData()">🗑️ 全記録を消去</button>
+                    <button class="btn btn-danger" onclick="clearData()">🗑️ 清空所有记录</button>
                 </div>
             </div>
         </div>
@@ -169,7 +169,7 @@
             <h3>☁️ クラウド同期設定</h3>
             <p style="font-size: 13px; color: #7f8c8d; line-height: 1.5; margin-bottom: 15px;">
                 <b>JSONBin.io</b> を利用して同期します。<br>
-                <span style="color:#27ae60; font-weight:bold;">※LZ-String高圧縮アルゴリズム搭載により、無料枠100KBの制限を突破しました！</span>
+                <span style="color:#27ae60; font-weight:bold;">※LZ-String高压缩算法已支持同步随手记题库！</span>
             </p>
             <div style="margin-bottom: 10px;">
                 <label style="font-size: 12px; font-weight: bold; color: #34495e;">Bin ID:</label>
@@ -180,8 +180,8 @@
                 <input type="password" id="api-key" style="width: 100%;">
             </div>
             <div style="display: flex; gap: 10px;">
-                <button class="btn btn-warning" id="btn-upload" style="flex: 1;" onclick="uploadToCloud()">⬆️ クラウドへ上書き</button>
-                <button class="btn btn-success" id="btn-download" style="flex: 1;" onclick="downloadFromCloud()">⬇️ 端末へダウンロード</button>
+                <button class="btn btn-warning" id="btn-upload" style="flex: 1;" onclick="uploadToCloud()">⬆️ 覆盖到云端</button>
+                <button class="btn btn-success" id="btn-download" style="flex: 1;" onclick="downloadFromCloud()">⬇️ 下载到本地</button>
             </div>
         </div>
     </div>
@@ -199,7 +199,7 @@
         </div>
         <div class="table-container">
             <table>
-                <thead><tr><th>ID</th><th>単語</th><th>意味</th><th>状態</th></tr></thead>
+                <thead><tr><th>ID</th><th>単語</th><th>意味</th><th>状态</th></tr></thead>
                 <tbody id="history-detail-table-body"></tbody>
             </table>
         </div>
@@ -216,29 +216,22 @@
         </div>
         
         <div class="word-card">
-            
             <div id="relearn-status" class="hidden" style="font-size: 13px; font-weight: bold; color: #e74c3c; margin-bottom: 12px; background: #fdf5f5; padding: 6px 12px; border-radius: 20px; border: 1px solid #fadbd8; box-shadow: 0 2px 4px rgba(231,76,60,0.1);"></div>
-            
             <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
                 <div id="card-prompt" class="word-title" style="margin-bottom: 0;">提示エリア</div>
                 <span id="prompt-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="再生">🔊</span>
             </div>
-            
             <div id="word-history-blocks"></div>
-            
             <div id="answer-section" class="hidden" style="width: 100%;">
                 <hr style="border-top: 1px dashed #ecf0f1; margin: 15px 0;">
-                
                 <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
                     <div id="card-answer-title" class="word-title" style="color: #e67e22; margin-bottom: 0; font-size: 26px;"></div>
                     <span id="answer-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="再生">🔊</span>
                 </div>
-                
                 <div id="card-kanji" class="word-kanji"></div>
-                <div id="card-kana" class="word-kana">仮名</div>
-                <div id="card-meaning" class="word-meaning">意味</div>
+                <div id="card-kana" class="word-kana">假名</div>
+                <div id="card-meaning" class="word-meaning">意思</div>
             </div>
-
             <div id="card-example" class="word-example hidden">
                 <div class="ex-row">
                     <span id="label-primary" class="ex-label jp-label">日</span>
@@ -249,10 +242,9 @@
                     <p id="ex-secondary" class="ex-cn"></p>
                 </div>
             </div>
-            
         </div>
 
-        <p class="keyboard-hint" style="margin-bottom: 80px;">⌨️ PCショートカット：[Space]解答 | [←]もう一度 | [→]覚えた | [↑]発音</p>
+        <p class="keyboard-hint" style="margin-bottom: 80px;">⌨️ PC快捷键：[Space]解答 | [←]もう一度 | [→]覚えた | [↑]发音</p>
 
         <div class="bottom-action-bar">
             <div class="bottom-action-inner">
@@ -268,40 +260,37 @@
     <div id="summary-view" class="hidden">
         <h1>🎉 セッション終了</h1>
         <div class="stat-box">
-            <p>✅ 初回判定【覚えた】：<span id="stat-known-count" style="color:#2ecc71; font-weight:bold; font-size: 18px;">0</span> 個</p>
-            <p>❌ 初回判定【もう一度】：<span id="stat-forgot-count" style="color:#e74c3c; font-weight:bold; font-size: 18px;">0</span> 個</p>
-            <p style="margin-top: 15px; font-size: 12px; color: #8e44ad; font-weight:bold;">* 本セッションでの初回リアクションのみが忘却曲線に反映されました。</p>
-            <p id="save-notice" style="margin-top: 10px; font-size: 13px; color: #7f8c8d; border-top: 1px dashed #ccc; padding-top: 10px;">💾 学習記録はローカルに自動保存されました。</p>
+            <p>✅ 初回判定【覚えた】：<span id="stat-known-count" style="color:#2ecc71; font-weight:bold; font-size: 18px;">0</span> 个</p>
+            <p>❌ 初回判定【もう一度】：<span id="stat-forgot-count" style="color:#e74c3c; font-weight:bold; font-size: 18px;">0</span> 个</p>
+            <p style="margin-top: 15px; font-size: 12px; color: #8e44ad; font-weight:bold;">* 仅该单词在本次会话的初次反应会计入忘却曲线。</p>
+            <p id="save-notice" style="margin-top: 10px; font-size: 13px; color: #7f8c8d; border-top: 1px dashed #ccc; padding-top: 10px;">💾 学习记录已自动保存。</p>
         </div>
         <button class="btn btn-primary" style="margin-top: 20px; width: 60%;" onclick="backToMenu()">ダッシュボードに戻る</button>
     </div>
 
     <div id="stats-view" class="hidden">
         <h1>📊 単語データセンター</h1>
-        
         <div class="range-selector">
             <span style="font-weight: bold; color: #34495e;">ID指定：</span>
             <input type="number" id="range-start" placeholder="始"> <span style="color: #7f8c8d;">〜</span>
-            <input type="number" id="range-end" placeholder="終">
-            <button class="btn btn-primary" style="padding: 6px 12px; margin: 0;" onclick="selectIdRange()">一括選択</button>
-            <button class="btn btn-secondary" style="padding: 6px 12px; margin: 0; background-color: #bdc3c7; color: #333;" onclick="clearSelection()">クリア</button>
+            <input type="number" id="range-end" placeholder="终">
+            <button class="btn btn-primary" style="padding: 6px 12px; margin: 0;" onclick="selectIdRange()">一括选择</button>
+            <button class="btn btn-secondary" style="padding: 6px 12px; margin: 0; background-color: #bdc3c7; color: #333;" onclick="clearSelection()">清空选择</button>
         </div>
-
         <div class="filter-bar">
-            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('idAsc')">ID順</button>
-            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('reviewsDesc')">復習回数順</button>
-            <button class="btn btn-danger" style="font-size: 12px;" onclick="renderStatsTable('forgotDesc')">🔥 苦手ランキング</button>
+            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('idAsc')">ID顺</button>
+            <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('reviewsDesc')">复习次数顺</button>
+            <button class="btn btn-danger" style="font-size: 12px;" onclick="renderStatsTable('forgotDesc')">🔥 弱点排行</button>
         </div>
-        
         <div style="margin: 15px 0;">
-            <button class="btn btn-success" style="width: 100%; font-weight: bold; padding: 10px;" onclick="startCustomStudy()">📚 選択した単語を特訓</button>
+            <button class="btn btn-success" style="width: 100%; font-weight: bold; padding: 10px;" onclick="startCustomStudy()">📚 对选中单词进行特训</button>
         </div>
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
                         <th style="width: 25px; text-align: center;"><input type="checkbox" id="select-all-cb" onclick="toggleSelectAll()"></th>
-                        <th>ID</th><th>単語</th><th>次回期日</th><th>定着度</th>
+                        <th>ID</th><th>単語</th><th>下次日期</th><th>熟悉度</th>
                     </tr>
                 </thead>
                 <tbody id="stats-table-body"></tbody>
@@ -312,6 +301,7 @@
 </div>
 
 <script>
+    // ----- 🌟 多题库动态管理模块 -----
     let activeBankName = 'hiragana';
 
     function switchDictionary() {
@@ -324,32 +314,26 @@
     function getCurrentBank() {
         if (activeBankName === 'hiragana') return typeof hiraganaBank !== 'undefined' ? hiraganaBank : [];
         if (activeBankName === 'kundoku') return typeof kundokuBank !== 'undefined' ? kundokuBank : [];
-        if (activeBankName === 'notes') return typeof noteBank !== 'undefined' ? noteBank : [];
+        if (activeBankName === 'personal') return typeof personalBank !== 'undefined' ? personalBank : [];
         return [];
     }
 
     function getLogKey() { 
-        if (activeBankName === 'hiragana') return 'vocab_logs';
-        if (activeBankName === 'kundoku') return 'vocab_logs_kundoku';
-        if (activeBankName === 'notes') return 'vocab_logs_notes';
-        return 'vocab_logs';
+        if (activeBankName === 'personal') return 'vocab_logs_personal';
+        return activeBankName === 'hiragana' ? 'vocab_logs' : 'vocab_logs_kundoku'; 
     }
-    
     function getSRSKey() { 
-        if (activeBankName === 'hiragana') return 'srs_data';
-        if (activeBankName === 'kundoku') return 'srs_data_kundoku';
-        if (activeBankName === 'notes') return 'srs_data_notes';
-        return 'srs_data';
+        if (activeBankName === 'personal') return 'srs_data_personal';
+        return activeBankName === 'hiragana' ? 'srs_data' : 'srs_data_kundoku'; 
     }
 
+    // ----- 核心功能 -----
     function speakCurrentWord() {
         let currentWord = queue[currentIndex];
         if (!currentWord || !('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel(); 
         let utterance = new SpeechSynthesisUtterance(currentWord.word);
-        utterance.lang = 'ja-JP'; 
-        utterance.rate = 0.85;    
-        window.speechSynthesis.speak(utterance);
+        utterance.lang = 'ja-JP'; utterance.rate = 0.85; window.speechSynthesis.speak(utterance);
     }
 
     function triggerVibration(type) {
@@ -363,20 +347,25 @@
     function saveSRSBank(data) { localStorage.setItem(getSRSKey(), JSON.stringify(data)); }
     function saveDailyGoal() { localStorage.setItem('daily_goal_config', parseInt(document.getElementById('daily-goal-count').value) || 100); }
 
+    // 🌟🌟🌟 更新后的忘却曲线核心：加入 180 天封顶机制 🌟🌟🌟
     function updateSRS(wordId, status) {
         let srsBank = getSRSBank();
         let today = new Date().toISOString().split('T')[0];
         let data = srsBank[wordId] || { i: 0, e: 2.5, d: today, l: null };
         if (data.l === today) return;
 
+        const MAX_INTERVAL = 180; // 最大 180 天的防爆机制
+
         if (status === 'known') {
             if (data.i === 0) data.i = 3; 
             else data.i = Math.max(2, Math.round(data.i * data.e)); 
             data.e = Math.min(3.0, data.e + 0.15); 
         } else if (status === 'forgotten') {
-            data.i = 1; 
-            data.e = Math.max(1.3, data.e - 0.2); 
+            data.i = 1; data.e = Math.max(1.3, data.e - 0.2); 
         }
+
+        // 强行把复习天数压在 180 天以内，防止出现几万年后的日期
+        data.i = Math.min(data.i, MAX_INTERVAL);
 
         let nextDate = new Date(); nextDate.setDate(nextDate.getDate() + data.i);
         data.d = nextDate.toISOString().split('T')[0]; data.l = today; 
@@ -396,19 +385,15 @@
         let totalGoal = parseInt(document.getElementById('daily-goal-count').value);
         if (isNaN(totalGoal) || totalGoal <= 0) return alert('有効な数値を入力してください');
         saveDailyGoal();
-
         let srsBank = getSRSBank(); let bank = getCurrentBank(); let today = new Date().toISOString().split('T')[0];
         let dueIds = Object.keys(srsBank).filter(id => srsBank[id].d <= today).map(Number);
-        
         dueIds.sort((a, b) => {
             if (srsBank[a].i !== srsBank[b].i) return srsBank[a].i - srsBank[b].i;
             return new Date(srsBank[a].d) - new Date(srsBank[b].d);
         });
-
         let reviewIds = dueIds.slice(0, totalGoal);
         let wordsToStudy = reviewIds.map(id => bank.find(w => w.id === id)).filter(w => w);
         let remainingQuota = totalGoal - wordsToStudy.length;
-
         if (remainingQuota > 0) {
             let availableNewWords = bank.filter(w => !srsBank[w.id] || srsBank[w.id].d > today);
             let reviewCounts = {}; availableNewWords.forEach(w => reviewCounts[w.id] = 0);
@@ -416,13 +401,11 @@
             let newWords = availableNewWords.sort((a, b) => (reviewCounts[a.id] + Math.random()) - (reviewCounts[b.id] + Math.random())).slice(0, remainingQuota);
             wordsToStudy = wordsToStudy.concat(newWords);
         }
-
-        if (wordsToStudy.length === 0) return alert('学習する単語がありません。単語帳を確認してください。');
+        if (wordsToStudy.length === 0) return alert('単語がありません。');
         initSession(wordsToStudy);
     }
 
     function getLogs() { return JSON.parse(localStorage.getItem(getLogKey()) || '[]'); }
-
     function cleanUpDuplicateLogs() {
         let logs = getLogs(); if (logs.length === 0) return;
         let uniqueLogsMap = {}; let needsCleanup = false;
@@ -431,7 +414,6 @@
             if (!uniqueLogsMap[key]) { uniqueLogsMap[key] = log; } 
             else { needsCleanup = true; if (log.status === 'forgotten') uniqueLogsMap[key].status = 'forgotten'; }
         });
-
         if (needsCleanup) {
             let cleanedLogs = Object.values(uniqueLogsMap).sort((a, b) => new Date(a.date) - new Date(b.date));
             let roundTracker = {};
@@ -457,8 +439,7 @@
 
     function getMaxRound(wordId) {
         let logs = getLogs(); let wordLogs = logs.filter(log => log.wordId === wordId);
-        if (wordLogs.length === 0) return 0;
-        return Math.max(...wordLogs.map(l => l.round));
+        if (wordLogs.length === 0) return 0; return Math.max(...wordLogs.map(l => l.round));
     }
 
     function openSyncModal() { document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || ''; document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || ''; document.getElementById('sync-modal').classList.remove('hidden'); }
@@ -466,25 +447,22 @@
 
     function getCombinedLogs() {
         return {
-            hiragana: JSON.parse(localStorage.getItem('vocab_logs') || '[]'), 
+            hiragana: JSON.parse(localStorage.getItem('vocab_logs') || '[]'),
             kundoku: JSON.parse(localStorage.getItem('vocab_logs_kundoku') || '[]'),
-            notes: JSON.parse(localStorage.getItem('vocab_logs_notes') || '[]'),
-            srs_hiragana: JSON.parse(localStorage.getItem('srs_data') || '{}'), 
+            personal: JSON.parse(localStorage.getItem('vocab_logs_personal') || '[]'),
+            srs_hiragana: JSON.parse(localStorage.getItem('srs_data') || '{}'),
             srs_kundoku: JSON.parse(localStorage.getItem('srs_data_kundoku') || '{}'),
-            srs_notes: JSON.parse(localStorage.getItem('srs_data_notes') || '{}')
+            srs_personal: JSON.parse(localStorage.getItem('srs_data_personal') || '{}')
         };
     }
 
     function restoreCombinedLogs(data) {
-        if (Array.isArray(data)) { localStorage.setItem('vocab_logs', JSON.stringify(data)); } 
-        else {
-            if (data.hiragana) localStorage.setItem('vocab_logs', JSON.stringify(data.hiragana)); 
-            if (data.kundoku) localStorage.setItem('vocab_logs_kundoku', JSON.stringify(data.kundoku));
-            if (data.notes) localStorage.setItem('vocab_logs_notes', JSON.stringify(data.notes));
-            if (data.srs_hiragana) localStorage.setItem('srs_data', JSON.stringify(data.srs_hiragana)); 
-            if (data.srs_kundoku) localStorage.setItem('srs_data_kundoku', JSON.stringify(data.srs_kundoku));
-            if (data.srs_notes) localStorage.setItem('srs_data_notes', JSON.stringify(data.srs_notes));
-        }
+        if (data.hiragana) localStorage.setItem('vocab_logs', JSON.stringify(data.hiragana));
+        if (data.kundoku) localStorage.setItem('vocab_logs_kundoku', JSON.stringify(data.kundoku));
+        if (data.personal) localStorage.setItem('vocab_logs_personal', JSON.stringify(data.personal));
+        if (data.srs_hiragana) localStorage.setItem('srs_data', JSON.stringify(data.srs_hiragana));
+        if (data.srs_kundoku) localStorage.setItem('srs_data_kundoku', JSON.stringify(data.srs_kundoku));
+        if (data.srs_personal) localStorage.setItem('srs_data_personal', JSON.stringify(data.srs_personal));
         cleanUpDuplicateLogs(); updateHistoryCalendar(); updateDueCountDisplay();
     }
 
@@ -494,28 +472,28 @@
         localStorage.setItem('cloud_bin_id', binId); localStorage.setItem('cloud_api_key', apiKey);
         let rawData = JSON.stringify(getCombinedLogs()); let compressedData = LZString.compressToBase64(rawData);
         let payload = { data: compressedData, compressed: true };
-        let btn = document.getElementById('btn-upload'); btn.innerText = "圧縮してアップロード中...";
+        let btn = document.getElementById('btn-upload'); btn.innerText = "上传中...";
         try {
             let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey }, body: JSON.stringify(payload) });
-            if (response.ok) { alert("☁️ データ同期が完了しました！（圧縮成功）"); closeSyncModal(); } 
-            else { let err = await response.json(); alert(`❌ エラー: ${err.message}`); }
-        } catch (e) { alert("ネットワークエラーです"); } finally { btn.innerText = "⬆️ クラウドへ上書き"; }
+            if (response.ok) { alert("☁️ 同期完了！"); closeSyncModal(); } 
+            else { let err = await response.json(); alert(`❌ Error: ${err.message}`); }
+        } catch (e) { alert("Network Error"); } finally { btn.innerText = "⬆️ 覆盖到云端"; }
     }
 
     async function downloadFromCloud() {
         let binId = document.getElementById('bin-id').value.trim(); let apiKey = document.getElementById('api-key').value.trim();
         if (!binId || !apiKey) return alert("⚠️ IDとKeyを入力してください");
         localStorage.setItem('cloud_bin_id', binId); localStorage.setItem('cloud_api_key', apiKey);
-        if (!confirm("⚠️ 本当にクラウドのデータで上書きしますか？（元に戻せません）")) return;
-        let btn = document.getElementById('btn-download'); btn.innerText = "ダウンロード中...";
+        if (!confirm("⚠️ クラウドのデータで上書きしますか？")) return;
+        let btn = document.getElementById('btn-download'); btn.innerText = "下载中...";
         try {
             let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, { method: 'GET', headers: { 'X-Master-Key': apiKey } });
             if (response.ok) {
                 let json = await response.json(); let record = json.record; let finalData;
                 if (record.compressed === true && record.data) { finalData = JSON.parse(LZString.decompressFromBase64(record.data)); } else { finalData = record; }
                 restoreCombinedLogs(finalData); alert("🎉 同期成功！"); closeSyncModal();
-            } else { let err = await response.json(); alert(`❌ エラー: ${err.message}`); }
-        } catch (e) { alert("ネットワークエラーです"); } finally { btn.innerText = "⬇️ 端末へダウンロード"; }
+            } else { let err = await response.json(); alert(`❌ Error: ${err.message}`); }
+        } catch (e) { alert("Network Error"); } finally { btn.innerText = "⬇️ 下载到本地"; }
     }
 
     function exportData() {
@@ -528,14 +506,14 @@
     function importData(event) {
         let file = event.target.files[0]; if (!file) return;
         let reader = new FileReader();
-        reader.onload = function(e) { try { restoreCombinedLogs(JSON.parse(e.target.result)); alert("✅ インポート成功！"); document.getElementById('import-file').value = ''; } catch (err) { alert("❌ ファイルが破損しています。"); } };
+        reader.onload = function(e) { try { restoreCombinedLogs(JSON.parse(e.target.result)); alert("✅ インポート成功！"); } catch (err) { alert("❌ 文件解析失败"); } };
         reader.readAsText(file);
     }
 
     function clearData() {
-        if (confirm("⚠️ 警告：全ての記録と忘却曲線を初期化しますか？")) {
-            localStorage.removeItem('vocab_logs'); localStorage.removeItem('vocab_logs_kundoku'); localStorage.removeItem('vocab_logs_notes');
-            localStorage.removeItem('srs_data'); localStorage.removeItem('srs_data_kundoku'); localStorage.removeItem('srs_data_notes');
+        if (confirm("⚠️ 警告：全ての記録を消去しますか？")) {
+            localStorage.removeItem('vocab_logs'); localStorage.removeItem('vocab_logs_kundoku'); localStorage.removeItem('vocab_logs_personal');
+            localStorage.removeItem('srs_data'); localStorage.removeItem('srs_data_kundoku'); localStorage.removeItem('srs_data_personal');
             updateHistoryCalendar(); updateDueCountDisplay(); alert("🗑️ 消去しました！");
         }
     }
@@ -549,23 +527,19 @@
             onChange: function(d, dateStr) { document.getElementById('history-date').value = dateStr; viewHistoryDate(); }
         });
         if (activeDates.length > 0) { activeDates.sort(); historyCalendarInstance.setDate(activeDates[activeDates.length - 1]); } 
-        else { historyCalendarInstance.clear(); }
     }
 
     function viewHistoryDate() {
-        let dateStr = document.getElementById('history-date').value; if (!dateStr) return alert('日付を選択してください');
-        let targetLogs = getLogs().filter(log => log.date === dateStr); if (targetLogs.length === 0) return alert('記録がありません');
+        let dateStr = document.getElementById('history-date').value; if (!dateStr) return;
+        let targetLogs = getLogs().filter(log => log.date === dateStr); if (targetLogs.length === 0) return;
         let dailyMap = {}; targetLogs.forEach(log => { if (dailyMap[log.wordId] !== 'forgotten') dailyMap[log.wordId] = log.status; });
         let bank = getCurrentBank(); let allIds = Object.keys(dailyMap).map(Number);
-        
         currentHistoryWords.all = allIds.map(id => bank.find(w => w.id === id)).filter(w => w);
         currentHistoryWords.forgotten = allIds.filter(id => dailyMap[id] === 'forgotten').map(id => bank.find(w => w.id === id)).filter(w => w);
-
         document.getElementById('history-date-title').innerText = `${dateStr} の記録`;
         document.getElementById('hist-total').innerText = allIds.length;
         document.getElementById('hist-known').innerText = currentHistoryWords.all.length - currentHistoryWords.forgotten.length;
         document.getElementById('hist-forgot').innerText = currentHistoryWords.forgotten.length;
-
         let tbody = document.getElementById('history-detail-table-body'); tbody.innerHTML = '';
         allIds.forEach(id => {
             let wordObj = bank.find(w => w.id === id);
@@ -579,19 +553,18 @@
     }
 
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
-    let relearnSteps = {}; 
-    let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
+    let relearnSteps = {}; let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
 
     function startHistoryReview(type) {
         let words = type === 'forgotten' ? currentHistoryWords.forgotten : currentHistoryWords.all;
-        if (words.length === 0) return alert('該当する単語がありません');
+        if (words.length === 0) return alert('該当する単语がありません');
         initSession(words);
     }
 
     function startCustomStudy() {
         let bank = getCurrentBank();
         let selectedIds = Array.from(document.querySelectorAll('.word-checkbox:checked')).map(cb => parseInt(cb.value));
-        if (selectedIds.length === 0) return alert('選択されていません');
+        if (selectedIds.length === 0) return alert('选择为空');
         document.getElementById('select-all-cb').checked = false;
         initSession(selectedIds.map(id => bank.find(w => w.id === id)).filter(w => w));
     }
@@ -600,184 +573,77 @@
         if (words.length === 0) return;
         let orderMode = document.getElementById('study-order-select').value || 'shuffle';
         let finalWords = [...words];
-        
-        if (orderMode === 'shuffle') {
-            for (let i = finalWords.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); [finalWords[i], finalWords[j]] = [finalWords[j], finalWords[i]]; }
-        } else { finalWords.sort((a, b) => a.id - b.id); }
-        
-        queue = finalWords; historyStack = []; firstImpressions = {}; currentIndex = 0;
-        relearnSteps = {}; 
+        if (orderMode === 'shuffle') { for (let i = finalWords.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); [finalWords[i], finalWords[j]] = [finalWords[j], finalWords[i]]; } }
+        queue = finalWords; historyStack = []; firstImpressions = {}; currentIndex = 0; relearnSteps = {};
         currentStudyMode = document.getElementById('study-mode-select').value || 'jp2cn';
-        
         hideAllViews(); document.getElementById('study-view').classList.remove('hidden'); renderWord();
     }
 
     function renderWord() {
         if (currentIndex >= queue.length) return finishSession();
         let word = queue[currentIndex];
-        
         let pe = document.getElementById('card-prompt'), aT = document.getElementById('card-answer-title'), mE = document.getElementById('card-meaning');
-        let ps = document.getElementById('prompt-speak'), as = document.getElementById('answer-speak');
-        let rsEl = document.getElementById('relearn-status'); 
-        
-        let exContainer = document.getElementById('card-example');
-        let exPrimary = document.getElementById('ex-primary');
-        let exSecondary = document.getElementById('ex-secondary');
-        let exSecContainer = document.getElementById('ex-secondary-container');
-        let labelPrimary = document.getElementById('label-primary');
-        let labelSecondary = document.getElementById('label-secondary');
+        let ps = document.getElementById('prompt-speak'), as = document.getElementById('answer-speak'), rsEl = document.getElementById('relearn-status'); 
+        let exContainer = document.getElementById('card-example'), exPrimary = document.getElementById('ex-primary'), exSecondary = document.getElementById('ex-secondary'), exSecContainer = document.getElementById('ex-secondary-container'), labelPrimary = document.getElementById('label-primary'), labelSecondary = document.getElementById('label-secondary');
 
         let currentStep = relearnSteps[word.id];
-        if (currentStep !== undefined && currentStep < 3) {
-            rsEl.innerText = `🔥 強化中: あと ${3 - currentStep} 回正解でクリア`;
-            rsEl.classList.remove('hidden');
-        } else {
-            rsEl.classList.add('hidden');
-        }
+        if (currentStep !== undefined && currentStep < 3) { rsEl.innerText = `🔥 強化中: あと ${3 - currentStep} 回正解でクリア`; rsEl.classList.remove('hidden'); } 
+        else { rsEl.classList.add('hidden'); }
 
         if (currentStudyMode === 'jp2cn') {
-            pe.innerText = word.word; 
-            aT.style.display = 'none'; 
-            mE.innerText = word.meaning; 
-            mE.style.display = 'block';
-            ps.classList.remove('hidden'); 
-            as.classList.add('hidden'); 
-            
-            if (word.example_jp && word.example_cn) {
-                labelPrimary.innerText = '日';
-                labelPrimary.className = 'ex-label jp-label';
-                labelSecondary.innerText = '中';
-                labelSecondary.className = 'ex-label cn-label';
-
-                exPrimary.innerText = word.example_jp;
-                exPrimary.className = 'ex-jp';
-                exSecondary.innerText = word.example_cn;
-                exSecondary.className = 'ex-cn';
-                
-                exContainer.classList.remove('hidden'); 
-                exSecContainer.classList.add('hidden'); 
-            } else { exContainer.classList.add('hidden'); }
-            
+            pe.innerText = word.word; aT.style.display = 'none'; mE.innerText = word.meaning; mE.style.display = 'block'; ps.classList.remove('hidden'); as.classList.add('hidden'); 
+            if (word.example_jp && word.example_cn) { labelPrimary.innerText = '日'; labelPrimary.className = 'ex-label jp-label'; labelSecondary.innerText = '中'; labelSecondary.className = 'ex-label cn-label'; exPrimary.innerText = word.example_jp; exPrimary.className = 'ex-jp'; exSecondary.innerText = word.example_cn; exSecondary.className = 'ex-cn'; exContainer.classList.remove('hidden'); exSecContainer.classList.add('hidden'); } 
+            else { exContainer.classList.add('hidden'); }
             speakCurrentWord(); 
-            
         } else {
-            pe.innerText = word.meaning; 
-            aT.innerText = word.word; 
-            aT.style.display = 'block'; 
-            mE.style.display = 'none';
-            ps.classList.add('hidden'); 
-            as.classList.add('hidden'); 
-            
-            if (word.example_jp && word.example_cn) {
-                labelPrimary.innerText = '中';
-                labelPrimary.className = 'ex-label cn-label';
-                labelSecondary.innerText = '日';
-                labelSecondary.className = 'ex-label jp-label';
-
-                exPrimary.innerText = word.example_cn;
-                exPrimary.className = 'ex-cn';
-                exSecondary.innerText = word.example_jp;
-                exSecondary.className = 'ex-cn';
-                
-                exContainer.classList.remove('hidden');
-                exSecContainer.classList.add('hidden');
-            } else { exContainer.classList.add('hidden'); }
+            pe.innerText = word.meaning; aT.innerText = word.word; aT.style.display = 'block'; mE.style.display = 'none'; ps.classList.add('hidden'); as.classList.add('hidden'); 
+            if (word.example_jp && word.example_cn) { labelPrimary.innerText = '中'; labelPrimary.className = 'ex-label cn-label'; labelSecondary.innerText = '日'; labelSecondary.className = 'ex-label jp-label'; exPrimary.innerText = word.example_cn; exPrimary.className = 'ex-cn'; exSecondary.innerText = word.example_jp; exSecondary.className = 'ex-jp'; exContainer.classList.remove('hidden'); exSecContainer.classList.add('hidden'); } 
+            else { exContainer.classList.add('hidden'); }
         }
-        
         let wordLogs = getLogs().filter(log => log.wordId === word.id).sort((a, b) => a.round - b.round);
         document.getElementById('word-history-blocks').innerHTML = wordLogs.map(log => `<span class="history-block ${log.status === 'known' ? 'block-known' : 'block-forgotten'}"></span>`).join('');
-        
         let kE = document.getElementById('card-kanji');
-        if (word.kanji && word.kanji.trim() !== "") { kE.innerText = `【漢字】 ${word.kanji}`; kE.style.display = 'block'; } 
-        else { kE.style.display = 'none'; }
+        if (word.kanji && word.kanji.trim() !== "") { kE.innerText = `【漢字】 ${word.kanji}`; kE.style.display = 'block'; } else { kE.style.display = 'none'; }
         document.getElementById('card-kana').innerText = word.kana;
-
         document.getElementById('progress-text').innerText = `進捗: ${currentIndex + 1} / ${queue.length}`;
-        
-        document.getElementById('answer-section').classList.add('hidden'); 
-        document.getElementById('action-buttons').classList.add('hidden');
-        document.getElementById('btn-show-answer').classList.remove('hidden');
+        document.getElementById('answer-section').classList.add('hidden'); document.getElementById('action-buttons').classList.add('hidden'); document.getElementById('btn-show-answer').classList.remove('hidden');
     }
 
     function showAnswer() {
-        triggerVibration('heavy');
-        document.getElementById('answer-section').classList.remove('hidden'); 
-        document.getElementById('ex-secondary-container').classList.remove('hidden'); 
-        document.getElementById('action-buttons').classList.remove('hidden');
-        document.getElementById('btn-show-answer').classList.add('hidden');
+        triggerVibration('heavy'); document.getElementById('answer-section').classList.remove('hidden'); document.getElementById('ex-secondary-container').classList.remove('hidden'); document.getElementById('action-buttons').classList.remove('hidden'); document.getElementById('btn-show-answer').classList.add('hidden');
         if (currentStudyMode === 'cn2jp') { document.getElementById('answer-speak').classList.remove('hidden'); }
         speakCurrentWord();
     }
 
-    // 🌟🌟🌟 全新动态步长机制 🌟🌟🌟
     function markWord(status) {
         triggerVibration('light');
         let word = queue[currentIndex];
-        
         let isFirstAppearance = queue.findIndex(w => w.id === word.id) === currentIndex;
         if (isFirstAppearance) firstImpressions[word.id] = status;
-        
         let previousStep = relearnSteps[word.id];
         historyStack.push({ index: currentIndex, status: status, isFirst: isFirstAppearance, prevStep: previousStep });
-
-        if (status === 'forgotten') {
-            // 降级保底：最低 0 星
-            relearnSteps[word.id] = Math.max(0, (previousStep || 0) - 1);
-            // 忘记了，紧逼战术：步长固定 3
-            queue.splice(currentIndex + 3, 0, word);
-            
-        } else if (status === 'known') {
+        if (status === 'forgotten') { relearnSteps[word.id] = Math.max(0, (previousStep || 0) - 1); queue.splice(currentIndex + 3, 0, word); } 
+        else if (status === 'known') {
             if (!isFirstAppearance) { 
                 let currentStep = previousStep || 0;
-                if (currentStep < 2) {
-                    relearnSteps[word.id] = currentStep + 1;
-                    // 🌟 核心优化：动态拉伸步长。
-                    // 从 0 星到 1 星，往后推 6 格；从 1 星到 2 星，往后推 10 格。
-                    // 这样就能确保新词（D/E/F）得以无缝穿插，打破死亡循环！
-                    let dynamicStep = (currentStep === 0) ? 6 : 10; 
-                    queue.splice(currentIndex + dynamicStep, 0, word);
-                } else {
-                    relearnSteps[word.id] = 3; // 满 3 星，毕业，不再排队！
-                }
+                if (currentStep < 2) { relearnSteps[word.id] = currentStep + 1; let dynamicStep = (currentStep === 0) ? 6 : 10; queue.splice(currentIndex + dynamicStep, 0, word); } 
+                else { relearnSteps[word.id] = 3; }
             }
         }
-        
         currentIndex++; renderWord();
     }
 
     function goBack() {
         if (historyStack.length === 0) return; 
-        let lastAction = historyStack.pop(); 
-        let targetIndex = lastAction.index;
-        let targetWord = queue[targetIndex];
-
-        let wasInjected = false;
-        if (lastAction.status === 'forgotten') {
-            wasInjected = true; 
-        } else if (lastAction.status === 'known' && !lastAction.isFirst && (lastAction.prevStep || 0) < 2) {
-            wasInjected = true; 
-        }
-
-        if (wasInjected) { 
-            // 反向查找并精确拔除注入的单词（无论步长多大都能精准找对）
-            for (let i = queue.length - 1; i > targetIndex; i--) {
-                if (queue[i].id === targetWord.id) { queue.splice(i, 1); break; } 
-            }
-        }
-        
+        let lastAction = historyStack.pop(); let targetIndex = lastAction.index; let targetWord = queue[targetIndex];
+        let wasInjected = (lastAction.status === 'forgotten' || (lastAction.status === 'known' && !lastAction.isFirst && (lastAction.prevStep || 0) < 2));
+        if (wasInjected) { for (let i = queue.length - 1; i > targetIndex; i--) { if (queue[i].id === targetWord.id) { queue.splice(i, 1); break; } } }
         if (lastAction.isFirst) delete firstImpressions[targetWord.id];
-        
-        if (lastAction.prevStep === undefined) {
-            delete relearnSteps[targetWord.id];
-        } else {
-            relearnSteps[targetWord.id] = lastAction.prevStep;
-        }
-        
+        if (lastAction.prevStep === undefined) delete relearnSteps[targetWord.id]; else relearnSteps[targetWord.id] = lastAction.prevStep;
         currentIndex = targetIndex; renderWord(); 
     }
     
-    function exitStudyEarly() { if (confirm("終了しますか？判定済みの記録は計算され保存されます。")) finishSession(); }
-
+    function exitStudyEarly() { if (confirm("終了しますか？")) finishSession(); }
     function finishSession() {
         let knownCount = 0; let forgotCount = 0;
         for (let wordIdStr in firstImpressions) {
@@ -785,64 +651,57 @@
             if (status === 'known') knownCount++; else forgotCount++;
             saveLog(id, getMaxRound(id) + 1, status); updateSRS(id, status);
         }
-        
-        document.getElementById('stat-known-count').innerText = knownCount;
-        document.getElementById('stat-forgot-count').innerText = forgotCount;
-        updateHistoryCalendar(); updateDueCountDisplay(); 
-        hideAllViews(); document.getElementById('summary-view').classList.remove('hidden');
+        document.getElementById('stat-known-count').innerText = knownCount; document.getElementById('stat-forgot-count').innerText = forgotCount;
+        updateHistoryCalendar(); updateDueCountDisplay(); hideAllViews(); document.getElementById('summary-view').classList.remove('hidden');
     }
 
     document.addEventListener('keydown', function(event) {
-        if (document.getElementById('study-view').classList.contains('hidden') || !document.getElementById('sync-modal').classList.contains('hidden')) return;
+        if (document.getElementById('study-view').classList.contains('hidden')) return;
         let b = document.getElementById('btn-show-answer'), a = document.getElementById('action-buttons');
         if (!b.classList.contains('hidden')) { if (event.code === 'Space' || event.code === 'Enter') { event.preventDefault(); showAnswer(); } } 
-        else if (!a.classList.contains('hidden')) {
-            if (event.code === 'ArrowLeft' || event.key === '1') { event.preventDefault(); markWord('forgotten'); } 
-            else if (event.code === 'ArrowRight' || event.key === '2') { event.preventDefault(); markWord('known'); }
-        }
+        else if (!a.classList.contains('hidden')) { if (event.code === 'ArrowLeft' || event.key === '1') { event.preventDefault(); markWord('forgotten'); } else if (event.code === 'ArrowRight' || event.key === '2') { event.preventDefault(); markWord('known'); } }
         if (event.code === 'ArrowUp' || event.key === '3') { event.preventDefault(); speakCurrentWord(); }
     });
 
-    function openStatsCenter() {
-        hideAllViews(); document.getElementById('stats-view').classList.remove('hidden');
-        document.getElementById('select-all-cb').checked = false; renderStatsTable('idAsc'); 
-    }
-
+    function openStatsCenter() { hideAllViews(); document.getElementById('stats-view').classList.remove('hidden'); document.getElementById('select-all-cb').checked = false; renderStatsTable('idAsc'); }
     function selectIdRange() {
         let s = parseInt(document.getElementById('range-start').value), e = parseInt(document.getElementById('range-end').value);
-        if (isNaN(s) || isNaN(e) || s > e) return alert('無効な範囲です');
-        let count = 0;
-        document.querySelectorAll('.word-checkbox').forEach(cb => { if (parseInt(cb.value) >= s && parseInt(cb.value) <= e) { cb.checked = true; count++; } });
-        if (count > 0) { let btn = document.querySelector('.range-selector .btn-primary'); let old = btn.innerText; btn.innerText = `${count} 個選択済`; setTimeout(() => btn.innerText = old, 1500); } 
-        else alert('見つかりませんでした');
+        if (isNaN(s) || isNaN(e) || s > e) return alert('无効な范围');
+        document.querySelectorAll('.word-checkbox').forEach(cb => { if (parseInt(cb.value) >= s && parseInt(cb.value) <= e) cb.checked = true; });
     }
-
-    function clearSelection() { document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = false); document.getElementById('select-all-cb').checked = false; }
-
+    function clearSelection() { document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = false); }
     function renderStatsTable(sortType) {
         let bank = getCurrentBank(); let srsBank = getSRSBank(); let statsMap = {};
-        bank.forEach(w => {
-            let srsData = srsBank[w.id]; let dueDateText = srsData ? srsData.d : '<span style="color:#bdc3c7;">未学習</span>'; let easeText = srsData ? `${Math.round(srsData.e * 100)}%` : '-';
-            statsMap[w.id] = { id: w.id, word: w.word, totalReviews: 0, forgotCount: 0, due: dueDateText, ease: easeText };
-        });
+        bank.forEach(w => { let srsData = srsBank[w.id]; statsMap[w.id] = { id: w.id, word: w.word, totalReviews: 0, forgotCount: 0, due: srsData ? srsData.d : '-', ease: srsData ? `${Math.round(srsData.e * 100)}%` : '-' }; });
         getLogs().forEach(log => { if (statsMap[log.wordId]) { statsMap[log.wordId].totalReviews++; if (log.status === 'forgotten') statsMap[log.wordId].forgotCount++; } });
-        
         let stats = Object.values(statsMap);
-        if (sortType === 'idAsc') stats.sort((a, b) => a.id - b.id); else if (sortType === 'reviewsDesc') stats.sort((a, b) => b.totalReviews - a.totalReviews); else if (sortType === 'forgotDesc') stats.sort((a, b) => b.forgotCount - a.forgotCount);
-
+        if (sortType === 'idAsc') stats.sort((a, b) => a.id - b.id);
+        else if (sortType === 'reviewsDesc') stats.sort((a, b) => b.totalReviews - a.totalReviews); 
+        else if (sortType === 'forgotDesc') stats.sort((a, b) => b.forgotCount - a.forgotCount);
         let tbody = document.getElementById('stats-table-body'); tbody.innerHTML = '';
-        stats.forEach(s => {
-            let tr = document.createElement('tr');
-            tr.innerHTML = `<td style="text-align:center;"><input type="checkbox" class="word-checkbox" value="${s.id}"></td><td style="color:#bdc3c7;font-size:12px;">${s.id}</td><td style="font-weight:bold;color:#2980b9;">${s.word}</td><td style="font-weight:bold;color:#e67e22;">${s.due}</td><td style="color:#27ae60;">${s.ease}</td>`;
-            tbody.appendChild(tr);
-        });
-        document.getElementById('select-all-cb').checked = false;
+        stats.forEach(s => { let tr = document.createElement('tr'); tr.innerHTML = `<td style="text-align:center;"><input type="checkbox" class="word-checkbox" value="${s.id}"></td><td>${s.id}</td><td style="font-weight:bold;color:#2980b9;">${s.word}</td><td style="color:#e67e22;font-weight:bold;">${s.due}</td><td style="color:#27ae60;">${s.ease}</td>`; tbody.appendChild(tr); });
     }
-
     function toggleSelectAll() { let c = document.getElementById('select-all-cb').checked; document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = c); }
-    function safeBackFromStats() { if (document.querySelectorAll('.word-checkbox:checked').length > 0 && !confirm(`選択状態を解除して戻りますか？`)) return; backToMenu(); }
+    function safeBackFromStats() { backToMenu(); }
     function hideAllViews() { document.getElementById('menu-view').classList.add('hidden'); document.getElementById('study-view').classList.add('hidden'); document.getElementById('summary-view').classList.add('hidden'); document.getElementById('stats-view').classList.add('hidden'); document.getElementById('history-detail-view').classList.add('hidden'); }
     function backToMenu() { hideAllViews(); document.getElementById('menu-view').classList.remove('hidden'); }
+
+    // 🚑 异常数据自动修复机制（防止读取到公元33552年的旧数据）
+    (function autoFixCorruptedDates() {
+        ['srs_data', 'srs_data_kundoku', 'srs_data_personal'].forEach(key => {
+            let bank = JSON.parse(localStorage.getItem(key) || '{}');
+            let fixed = false;
+            for (let id in bank) {
+                if (bank[id].i > 180) {
+                    bank[id].i = 180;
+                    let nd = new Date(); nd.setDate(nd.getDate() + 180);
+                    bank[id].d = nd.toISOString().split('T')[0];
+                    fixed = true;
+                }
+            }
+            if (fixed) localStorage.setItem(key, JSON.stringify(bank));
+        });
+    })();
 
     updateHistoryCalendar(); updateDueCountDisplay(); 
 </script>
