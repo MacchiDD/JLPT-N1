@@ -347,14 +347,13 @@
     function saveSRSBank(data) { localStorage.setItem(getSRSKey(), JSON.stringify(data)); }
     function saveDailyGoal() { localStorage.setItem('daily_goal_config', parseInt(document.getElementById('daily-goal-count').value) || 100); }
 
-    // 🌟🌟🌟 更新后的忘却曲线核心：加入 180 天封顶机制 🌟🌟🌟
     function updateSRS(wordId, status) {
         let srsBank = getSRSBank();
         let today = new Date().toISOString().split('T')[0];
         let data = srsBank[wordId] || { i: 0, e: 2.5, d: today, l: null };
         if (data.l === today) return;
 
-        const MAX_INTERVAL = 180; // 最大 180 天的防爆机制
+        const MAX_INTERVAL = 180; 
 
         if (status === 'known') {
             if (data.i === 0) data.i = 3; 
@@ -364,7 +363,6 @@
             data.i = 1; data.e = Math.max(1.3, data.e - 0.2); 
         }
 
-        // 强行把复习天数压在 180 天以内，防止出现几万年后的日期
         data.i = Math.min(data.i, MAX_INTERVAL);
 
         let nextDate = new Date(); nextDate.setDate(nextDate.getDate() + data.i);
@@ -586,9 +584,14 @@
         let ps = document.getElementById('prompt-speak'), as = document.getElementById('answer-speak'), rsEl = document.getElementById('relearn-status'); 
         let exContainer = document.getElementById('card-example'), exPrimary = document.getElementById('ex-primary'), exSecondary = document.getElementById('ex-secondary'), exSecContainer = document.getElementById('ex-secondary-container'), labelPrimary = document.getElementById('label-primary'), labelSecondary = document.getElementById('label-secondary');
 
+        // 🌟 1. UI 提示逻辑修改：目标变为2次，显示 2 - currentStep
         let currentStep = relearnSteps[word.id];
-        if (currentStep !== undefined && currentStep < 3) { rsEl.innerText = `🔥 強化中: あと ${3 - currentStep} 回正解でクリア`; rsEl.classList.remove('hidden'); } 
-        else { rsEl.classList.add('hidden'); }
+        if (currentStep !== undefined && currentStep < 2) { 
+            rsEl.innerText = `🔥 強化中: あと ${2 - currentStep} 回正解でクリア`; 
+            rsEl.classList.remove('hidden'); 
+        } else { 
+            rsEl.classList.add('hidden'); 
+        }
 
         if (currentStudyMode === 'jp2cn') {
             pe.innerText = word.word; aT.style.display = 'none'; mE.innerText = word.meaning; mE.style.display = 'block'; ps.classList.remove('hidden'); as.classList.add('hidden'); 
@@ -615,6 +618,7 @@
         speakCurrentWord();
     }
 
+    // 🌟 2. 核心打怪逻辑修改：将目标从 3 缩减为 2
     function markWord(status) {
         triggerVibration('light');
         let word = queue[currentIndex];
@@ -622,21 +626,34 @@
         if (isFirstAppearance) firstImpressions[word.id] = status;
         let previousStep = relearnSteps[word.id];
         historyStack.push({ index: currentIndex, status: status, isFirst: isFirstAppearance, prevStep: previousStep });
-        if (status === 'forgotten') { relearnSteps[word.id] = Math.max(0, (previousStep || 0) - 1); queue.splice(currentIndex + 3, 0, word); } 
+        
+        if (status === 'forgotten') { 
+            relearnSteps[word.id] = Math.max(0, (previousStep || 0) - 1); 
+            queue.splice(currentIndex + 3, 0, word); 
+        } 
         else if (status === 'known') {
             if (!isFirstAppearance) { 
                 let currentStep = previousStep || 0;
-                if (currentStep < 2) { relearnSteps[word.id] = currentStep + 1; let dynamicStep = (currentStep === 0) ? 6 : 10; queue.splice(currentIndex + dynamicStep, 0, word); } 
-                else { relearnSteps[word.id] = 3; }
+                // 只需要判断 < 1 即可。因为0星答对升1星，再次答对就毕业了。
+                if (currentStep < 1) { 
+                    relearnSteps[word.id] = currentStep + 1; 
+                    let dynamicStep = 6; // 只有 0 -> 1 这个阶段需要插队
+                    queue.splice(currentIndex + dynamicStep, 0, word); 
+                } 
+                else { 
+                    relearnSteps[word.id] = 2; // 满 2 星毕业，不再插队
+                }
             }
         }
         currentIndex++; renderWord();
     }
 
+    // 🌟 3. 悔棋撤销逻辑同步修改
     function goBack() {
         if (historyStack.length === 0) return; 
         let lastAction = historyStack.pop(); let targetIndex = lastAction.index; let targetWord = queue[targetIndex];
-        let wasInjected = (lastAction.status === 'forgotten' || (lastAction.status === 'known' && !lastAction.isFirst && (lastAction.prevStep || 0) < 2));
+        // 撤销条件同步更改：只有操作前状态 < 1 的认识操作才发生了插队
+        let wasInjected = (lastAction.status === 'forgotten' || (lastAction.status === 'known' && !lastAction.isFirst && (lastAction.prevStep || 0) < 1));
         if (wasInjected) { for (let i = queue.length - 1; i > targetIndex; i--) { if (queue[i].id === targetWord.id) { queue.splice(i, 1); break; } } }
         if (lastAction.isFirst) delete firstImpressions[targetWord.id];
         if (lastAction.prevStep === undefined) delete relearnSteps[targetWord.id]; else relearnSteps[targetWord.id] = lastAction.prevStep;
