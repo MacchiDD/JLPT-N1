@@ -37,6 +37,8 @@
         .word-meaning { font-size: 20px; font-weight: bold; color: #2c3e50; text-align: center; }
         
         .word-example { margin-top: 15px; width: 100%; text-align: left; background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #3498db; box-sizing: border-box; }
+        
+        /* 🌟 微调了例句行的对齐方式，保证多行文本时喇叭按钮依然靠右上对齐 */
         .ex-row { display: flex; align-items: flex-start; margin-top: 6px; margin-bottom: 6px; }
         .ex-label { font-size: 11px; font-weight: bold; color: white; padding: 2px 5px; border-radius: 4px; margin-right: 8px; white-space: nowrap; line-height: 1.4; margin-top: 2px; }
         .jp-label { background-color: #3498db; }
@@ -219,27 +221,30 @@
             <div id="relearn-status" class="hidden" style="font-size: 13px; font-weight: bold; color: #e74c3c; margin-bottom: 12px; background: #fdf5f5; padding: 6px 12px; border-radius: 20px; border: 1px solid #fadbd8; box-shadow: 0 2px 4px rgba(231,76,60,0.1);"></div>
             <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
                 <div id="card-prompt" class="word-title" style="margin-bottom: 0;">提示エリア</div>
-                <span id="prompt-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="再生">🔊</span>
+                <span id="prompt-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="单词发音">🔊</span>
             </div>
             <div id="word-history-blocks"></div>
             <div id="answer-section" class="hidden" style="width: 100%;">
                 <hr style="border-top: 1px dashed #ecf0f1; margin: 15px 0;">
                 <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
                     <div id="card-answer-title" class="word-title" style="color: #e67e22; margin-bottom: 0; font-size: 26px;"></div>
-                    <span id="answer-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="再生">🔊</span>
+                    <span id="answer-speak" class="speak-btn hidden" onclick="speakCurrentWord()" title="单词发音">🔊</span>
                 </div>
                 <div id="card-kanji" class="word-kanji"></div>
                 <div id="card-kana" class="word-kana">假名</div>
                 <div id="card-meaning" class="word-meaning">意思</div>
             </div>
+            
             <div id="card-example" class="word-example hidden">
                 <div class="ex-row">
                     <span id="label-primary" class="ex-label jp-label">日</span>
                     <p id="ex-primary" class="ex-jp"></p>
+                    <span id="ex-primary-speak" class="speak-btn hidden" onclick="speakExample()" title="朗读日文例句" style="font-size: 18px; margin-left: 8px; margin-top: -2px;">🔊</span>
                 </div>
                 <div id="ex-secondary-container" class="ex-row hidden" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #bdc3c7;">
                     <span id="label-secondary" class="ex-label cn-label">中</span>
                     <p id="ex-secondary" class="ex-cn"></p>
+                    <span id="ex-secondary-speak" class="speak-btn hidden" onclick="speakExample()" title="朗读日文例句" style="font-size: 18px; margin-left: 8px; margin-top: -2px;">🔊</span>
                 </div>
             </div>
         </div>
@@ -301,7 +306,6 @@
 </div>
 
 <script>
-    // ----- 🌟 多题库动态管理模块 -----
     let activeBankName = 'hiragana';
 
     function switchDictionary() {
@@ -327,13 +331,23 @@
         return activeBankName === 'hiragana' ? 'srs_data' : 'srs_data_kundoku'; 
     }
 
-    // ----- 核心功能 -----
     function speakCurrentWord() {
         let currentWord = queue[currentIndex];
         if (!currentWord || !('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel(); 
         let utterance = new SpeechSynthesisUtterance(currentWord.word);
         utterance.lang = 'ja-JP'; utterance.rate = 0.85; window.speechSynthesis.speak(utterance);
+    }
+
+    // 🌟 新增功能：专属例句发音引擎
+    function speakExample() {
+        let currentWord = queue[currentIndex];
+        if (!currentWord || !currentWord.example_jp || !('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel(); // 切断当前可能正在播放的单词声音
+        let utterance = new SpeechSynthesisUtterance(currentWord.example_jp);
+        utterance.lang = 'ja-JP'; 
+        utterance.rate = 0.80; // 语速降至 0.8，极其适合听写和跟读
+        window.speechSynthesis.speak(utterance);
     }
 
     function triggerVibration(type) {
@@ -583,8 +597,11 @@
         let pe = document.getElementById('card-prompt'), aT = document.getElementById('card-answer-title'), mE = document.getElementById('card-meaning');
         let ps = document.getElementById('prompt-speak'), as = document.getElementById('answer-speak'), rsEl = document.getElementById('relearn-status'); 
         let exContainer = document.getElementById('card-example'), exPrimary = document.getElementById('ex-primary'), exSecondary = document.getElementById('ex-secondary'), exSecContainer = document.getElementById('ex-secondary-container'), labelPrimary = document.getElementById('label-primary'), labelSecondary = document.getElementById('label-secondary');
+        
+        // 🌟 动态获取例句行的发音喇叭
+        let exPSpeak = document.getElementById('ex-primary-speak');
+        let exSSpeak = document.getElementById('ex-secondary-speak');
 
-        // 🌟 1. UI 提示逻辑修改：目标变为2次，显示 2 - currentStep
         let currentStep = relearnSteps[word.id];
         if (currentStep !== undefined && currentStep < 2) { 
             rsEl.innerText = `🔥 強化中: あと ${2 - currentStep} 回正解でクリア`; 
@@ -595,12 +612,36 @@
 
         if (currentStudyMode === 'jp2cn') {
             pe.innerText = word.word; aT.style.display = 'none'; mE.innerText = word.meaning; mE.style.display = 'block'; ps.classList.remove('hidden'); as.classList.add('hidden'); 
-            if (word.example_jp && word.example_cn) { labelPrimary.innerText = '日'; labelPrimary.className = 'ex-label jp-label'; labelSecondary.innerText = '中'; labelSecondary.className = 'ex-label cn-label'; exPrimary.innerText = word.example_jp; exPrimary.className = 'ex-jp'; exSecondary.innerText = word.example_cn; exSecondary.className = 'ex-cn'; exContainer.classList.remove('hidden'); exSecContainer.classList.add('hidden'); } 
+            if (word.example_jp && word.example_cn) { 
+                labelPrimary.innerText = '日'; labelPrimary.className = 'ex-label jp-label'; 
+                labelSecondary.innerText = '中'; labelSecondary.className = 'ex-label cn-label'; 
+                exPrimary.innerText = word.example_jp; exPrimary.className = 'ex-jp'; 
+                exSecondary.innerText = word.example_cn; exSecondary.className = 'ex-cn'; 
+                
+                exContainer.classList.remove('hidden'); 
+                exSecContainer.classList.add('hidden'); 
+                
+                // 🌟 JP->CN 模式：日文在上面，所以把第一行的喇叭展示出来
+                exPSpeak.classList.remove('hidden');
+                exSSpeak.classList.add('hidden');
+            } 
             else { exContainer.classList.add('hidden'); }
             speakCurrentWord(); 
         } else {
             pe.innerText = word.meaning; aT.innerText = word.word; aT.style.display = 'block'; mE.style.display = 'none'; ps.classList.add('hidden'); as.classList.add('hidden'); 
-            if (word.example_jp && word.example_cn) { labelPrimary.innerText = '中'; labelPrimary.className = 'ex-label cn-label'; labelSecondary.innerText = '日'; labelSecondary.className = 'ex-label jp-label'; exPrimary.innerText = word.example_cn; exPrimary.className = 'ex-cn'; exSecondary.innerText = word.example_jp; exSecondary.className = 'ex-jp'; exContainer.classList.remove('hidden'); exSecContainer.classList.add('hidden'); } 
+            if (word.example_jp && word.example_cn) { 
+                labelPrimary.innerText = '中'; labelPrimary.className = 'ex-label cn-label'; 
+                labelSecondary.innerText = '日'; labelSecondary.className = 'ex-label jp-label'; 
+                exPrimary.innerText = word.example_cn; exPrimary.className = 'ex-cn'; 
+                exSecondary.innerText = word.example_jp; exSecondary.className = 'ex-jp'; 
+                
+                exContainer.classList.remove('hidden'); 
+                exSecContainer.classList.add('hidden'); 
+                
+                // 🌟 CN->JP 模式：日文在下面（藏在答案区），把第二行的喇叭展示出来
+                exPSpeak.classList.add('hidden');
+                exSSpeak.classList.remove('hidden');
+            } 
             else { exContainer.classList.add('hidden'); }
         }
         let wordLogs = getLogs().filter(log => log.wordId === word.id).sort((a, b) => a.round - b.round);
@@ -618,7 +659,6 @@
         speakCurrentWord();
     }
 
-    // 🌟 2. 核心打怪逻辑修改：将目标从 3 缩减为 2
     function markWord(status) {
         triggerVibration('light');
         let word = queue[currentIndex];
@@ -629,30 +669,27 @@
         
         if (status === 'forgotten') { 
             relearnSteps[word.id] = Math.max(0, (previousStep || 0) - 1); 
-            queue.splice(currentIndex + 3, 0, word); 
+            queue.splice(currentIndex + 4, 0, word); 
         } 
         else if (status === 'known') {
             if (!isFirstAppearance) { 
                 let currentStep = previousStep || 0;
-                // 只需要判断 < 1 即可。因为0星答对升1星，再次答对就毕业了。
                 if (currentStep < 1) { 
                     relearnSteps[word.id] = currentStep + 1; 
-                    let dynamicStep = 6; // 只有 0 -> 1 这个阶段需要插队
+                    let dynamicStep = 8; 
                     queue.splice(currentIndex + dynamicStep, 0, word); 
                 } 
                 else { 
-                    relearnSteps[word.id] = 2; // 满 2 星毕业，不再插队
+                    relearnSteps[word.id] = 2;
                 }
             }
         }
         currentIndex++; renderWord();
     }
 
-    // 🌟 3. 悔棋撤销逻辑同步修改
     function goBack() {
         if (historyStack.length === 0) return; 
         let lastAction = historyStack.pop(); let targetIndex = lastAction.index; let targetWord = queue[targetIndex];
-        // 撤销条件同步更改：只有操作前状态 < 1 的认识操作才发生了插队
         let wasInjected = (lastAction.status === 'forgotten' || (lastAction.status === 'known' && !lastAction.isFirst && (lastAction.prevStep || 0) < 1));
         if (wasInjected) { for (let i = queue.length - 1; i > targetIndex; i--) { if (queue[i].id === targetWord.id) { queue.splice(i, 1); break; } } }
         if (lastAction.isFirst) delete firstImpressions[targetWord.id];
@@ -703,7 +740,6 @@
     function hideAllViews() { document.getElementById('menu-view').classList.add('hidden'); document.getElementById('study-view').classList.add('hidden'); document.getElementById('summary-view').classList.add('hidden'); document.getElementById('stats-view').classList.add('hidden'); document.getElementById('history-detail-view').classList.add('hidden'); }
     function backToMenu() { hideAllViews(); document.getElementById('menu-view').classList.remove('hidden'); }
 
-    // 🚑 异常数据自动修复机制（防止读取到公元33552年的旧数据）
     (function autoFixCorruptedDates() {
         ['srs_data', 'srs_data_kundoku', 'srs_data_personal'].forEach(key => {
             let bank = JSON.parse(localStorage.getItem(key) || '{}');
