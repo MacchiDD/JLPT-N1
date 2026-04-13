@@ -159,7 +159,7 @@
         <div>
             <p style="color: #95a5a6; font-size: 12px; margin-bottom: 5px;">💾 数据同步・备份 (全题库通用)</p>
             <div class="data-management">
-                <button class="btn btn-primary" style="width: 100%; font-size: 14px; background-color: #8e44ad;" onclick="openSyncModal()">☁️ API クラウド同期 (压缩版)</button>
+                <button class="btn btn-primary" style="width: 100%; font-size: 14px; background-color: #8e44ad;" onclick="openSyncModal()">☁️ API クラウド同期 (极限压缩版)</button>
                 <div class="data-buttons-row">
                     <button class="btn btn-secondary" onclick="exportData()">⬇️ 导出</button>
                     <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">⬆️ 导入</button>
@@ -176,7 +176,7 @@
             <h3>☁️ クラウド同期設定</h3>
             <p style="font-size: 13px; color: #7f8c8d; line-height: 1.5; margin-bottom: 15px;">
                 <b>JSONBin.io</b> を利用して同期します。<br>
-                <span style="color:#e74c3c; font-weight:bold;">※ 已加入防爆机制：旧数据会被强制覆盖，不再占用堆叠空间！</span>
+                <span style="color:#e74c3c; font-weight:bold;">※ 已加入极限降维压缩机制：彻底解决超限报错！</span>
             </p>
             <div style="margin-bottom: 10px;">
                 <label style="font-size: 12px; font-weight: bold; color: #34495e;">Bin ID:</label>
@@ -470,6 +470,31 @@
         };
     }
 
+    // --- 🗜️ 数据极限降维引擎 (解决 JSONBin 100KB 上限) ---
+    function minifyLogs(logs) {
+        return logs.map(l => [l.wordId, l.date.substring(2), l.round, l.status === 'known' ? 1 : 0]);
+    }
+    function unminifyLogs(minLogs) {
+        if (!minLogs) return [];
+        if (minLogs.length > 0 && !Array.isArray(minLogs[0])) return minLogs; 
+        return minLogs.map(arr => ({ wordId: arr[0], date: "20" + arr[1], round: arr[2], status: arr[3] === 1 ? 'known' : 'forgotten' }));
+    }
+    function minifySRS(srs) {
+        let min = {};
+        for (let k in srs) { min[k] = [srs[k].i, srs[k].e, srs[k].d ? srs[k].d.substring(2) : "", srs[k].l ? srs[k].l.substring(2) : ""]; }
+        return min;
+    }
+    function unminifySRS(minSrs) {
+        if (!minSrs) return {};
+        let unmin = {};
+        for (let k in minSrs) {
+            if (Array.isArray(minSrs[k])) { unmin[k] = { i: minSrs[k][0], e: minSrs[k][1], d: minSrs[k][2] ? "20" + minSrs[k][2] : null, l: minSrs[k][3] ? "20" + minSrs[k][3] : null }; } 
+            else { unmin[k] = minSrs[k]; } 
+        }
+        return unmin;
+    }
+    // ----------------------------------------------------
+
     function restoreCombinedLogs(data) {
         if (data.hiragana) localStorage.setItem('vocab_logs', JSON.stringify(data.hiragana));
         if (data.kundoku) localStorage.setItem('vocab_logs_kundoku', JSON.stringify(data.kundoku));
@@ -480,21 +505,30 @@
         cleanUpDuplicateLogs(); updateHistoryCalendar(); updateDueCountDisplay();
     }
 
-    // 🌟🌟🌟 修复云端存储爆满的核心代码 🌟🌟🌟
     async function uploadToCloud() {
         let binId = document.getElementById('bin-id').value.trim(); let apiKey = document.getElementById('api-key').value.trim();
         if (!binId || !apiKey) return alert("⚠️ IDとKeyを入力してください！");
         localStorage.setItem('cloud_bin_id', binId); localStorage.setItem('cloud_api_key', apiKey);
-        let rawData = JSON.stringify(getCombinedLogs()); let compressedData = LZString.compressToBase64(rawData);
+        
+        let rawData = getCombinedLogs();
+        
+        // 🔥 执行极限压缩
+        let payloadData = {
+            h: minifyLogs(rawData.hiragana), k: minifyLogs(rawData.kundoku), p: minifyLogs(rawData.personal),
+            sh: minifySRS(rawData.srs_hiragana), sk: minifySRS(rawData.srs_kundoku), sp: minifySRS(rawData.srs_personal)
+        };
+        
+        let compressedData = LZString.compressToBase64(JSON.stringify(payloadData));
         let payload = { data: compressedData, compressed: true };
         let btn = document.getElementById('btn-upload'); btn.innerText = "上传中...";
+        
         try {
             let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, { 
                 method: 'PUT', 
                 headers: { 
                     'Content-Type': 'application/json', 
                     'X-Master-Key': apiKey,
-                    'X-Bin-Versioning': 'false' // 🔥 就是这一行！强制关闭历史版本保留，旧数据会被原地覆盖，空间永远不超标！
+                    'X-Bin-Versioning': 'false' // 强制禁止历史版本堆叠
                 }, 
                 body: JSON.stringify(payload) 
             });
@@ -514,7 +548,18 @@
             if (response.ok) {
                 let json = await response.json(); let record = json.record; let finalData;
                 if (record.compressed === true && record.data) { finalData = JSON.parse(LZString.decompressFromBase64(record.data)); } else { finalData = record; }
-                restoreCombinedLogs(finalData); alert("🎉 同期成功！"); closeSyncModal();
+                
+                // 🔥 还原极限压缩的数据 (且向下兼容老版本数据)
+                let restored = {
+                    hiragana: finalData.h ? unminifyLogs(finalData.h) : (finalData.hiragana || []),
+                    kundoku: finalData.k ? unminifyLogs(finalData.k) : (finalData.kundoku || []),
+                    personal: finalData.p ? unminifyLogs(finalData.p) : (finalData.personal || []),
+                    srs_hiragana: finalData.sh ? unminifySRS(finalData.sh) : (finalData.srs_hiragana || {}),
+                    srs_kundoku: finalData.sk ? unminifySRS(finalData.sk) : (finalData.srs_kundoku || {}),
+                    srs_personal: finalData.sp ? unminifySRS(finalData.sp) : (finalData.srs_personal || {})
+                };
+                
+                restoreCombinedLogs(restored); alert("🎉 同期成功！"); closeSyncModal();
             } else { let err = await response.json(); alert(`❌ Error: ${err.message}`); }
         } catch (e) { alert("Network Error"); } finally { btn.innerText = "⬇️ 下载到本地"; }
     }
@@ -799,12 +844,9 @@
         }
     });
 
-    // 🌟 注册 PWA 离线线程，欺骗 Android Chrome
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            navigator.serviceWorker.register('./sw.js').catch(function(err) {
-                // 静默失败，不影响主程序运行
-            });
+            navigator.serviceWorker.register('./sw.js').catch(function(err) {});
         });
     }
 
