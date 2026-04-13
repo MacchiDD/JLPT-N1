@@ -7,7 +7,7 @@
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>N1 語彙インターバル反復システム</title>
-
+    
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -44,8 +44,6 @@
         .word-meaning { font-size: 20px; font-weight: bold; color: #2c3e50; text-align: center; }
         
         .word-example { margin-top: 15px; width: 100%; text-align: left; background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #3498db; box-sizing: border-box; }
-        
-        /* 🌟 微调了例句行的对齐方式，保证多行文本时喇叭按钮依然靠右上对齐 */
         .ex-row { display: flex; align-items: flex-start; margin-top: 6px; margin-bottom: 6px; }
         .ex-label { font-size: 11px; font-weight: bold; color: white; padding: 2px 5px; border-radius: 4px; margin-right: 8px; white-space: nowrap; line-height: 1.4; margin-top: 2px; }
         .jp-label { background-color: #3498db; }
@@ -178,7 +176,7 @@
             <h3>☁️ クラウド同期設定</h3>
             <p style="font-size: 13px; color: #7f8c8d; line-height: 1.5; margin-bottom: 15px;">
                 <b>JSONBin.io</b> を利用して同期します。<br>
-                <span style="color:#27ae60; font-weight:bold;">※LZ-String高压缩算法已支持同步随手记题库！</span>
+                <span style="color:#e74c3c; font-weight:bold;">※ 已加入防爆机制：旧数据会被强制覆盖，不再占用堆叠空间！</span>
             </p>
             <div style="margin-bottom: 10px;">
                 <label style="font-size: 12px; font-weight: bold; color: #34495e;">Bin ID:</label>
@@ -346,15 +344,12 @@
         utterance.lang = 'ja-JP'; utterance.rate = 0.85; window.speechSynthesis.speak(utterance);
     }
 
-    // 🌟 新增功能：专属例句发音引擎
     function speakExample() {
         let currentWord = queue[currentIndex];
         if (!currentWord || !currentWord.example_jp || !('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel(); // 切断当前可能正在播放的单词声音
+        window.speechSynthesis.cancel(); 
         let utterance = new SpeechSynthesisUtterance(currentWord.example_jp);
-        utterance.lang = 'ja-JP'; 
-        utterance.rate = 0.80; // 语速降至 0.8，极其适合听写和跟读
-        window.speechSynthesis.speak(utterance);
+        utterance.lang = 'ja-JP'; utterance.rate = 0.80; window.speechSynthesis.speak(utterance);
     }
 
     function triggerVibration(type) {
@@ -485,6 +480,7 @@
         cleanUpDuplicateLogs(); updateHistoryCalendar(); updateDueCountDisplay();
     }
 
+    // 🌟🌟🌟 修复云端存储爆满的核心代码 🌟🌟🌟
     async function uploadToCloud() {
         let binId = document.getElementById('bin-id').value.trim(); let apiKey = document.getElementById('api-key').value.trim();
         if (!binId || !apiKey) return alert("⚠️ IDとKeyを入力してください！");
@@ -493,7 +489,15 @@
         let payload = { data: compressedData, compressed: true };
         let btn = document.getElementById('btn-upload'); btn.innerText = "上传中...";
         try {
-            let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey }, body: JSON.stringify(payload) });
+            let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, { 
+                method: 'PUT', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-Master-Key': apiKey,
+                    'X-Bin-Versioning': 'false' // 🔥 就是这一行！强制关闭历史版本保留，旧数据会被原地覆盖，空间永远不超标！
+                }, 
+                body: JSON.stringify(payload) 
+            });
             if (response.ok) { alert("☁️ 同期完了！"); closeSyncModal(); } 
             else { let err = await response.json(); alert(`❌ Error: ${err.message}`); }
         } catch (e) { alert("Network Error"); } finally { btn.innerText = "⬆️ 覆盖到云端"; }
@@ -574,6 +578,15 @@
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
     let relearnSteps = {}; let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
 
+    function saveSessionBackup() {
+        const state = { queue, historyStack, firstImpressions, currentIndex, relearnSteps, currentStudyMode, activeBankName };
+        localStorage.setItem('n1_active_session', JSON.stringify(state));
+    }
+
+    function clearSessionBackup() {
+        localStorage.removeItem('n1_active_session');
+    }
+
     function startHistoryReview(type) {
         let words = type === 'forgotten' ? currentHistoryWords.forgotten : currentHistoryWords.all;
         if (words.length === 0) return alert('該当する単语がありません');
@@ -595,7 +608,13 @@
         if (orderMode === 'shuffle') { for (let i = finalWords.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); [finalWords[i], finalWords[j]] = [finalWords[j], finalWords[i]]; } }
         queue = finalWords; historyStack = []; firstImpressions = {}; currentIndex = 0; relearnSteps = {};
         currentStudyMode = document.getElementById('study-mode-select').value || 'jp2cn';
-        hideAllViews(); document.getElementById('study-view').classList.remove('hidden'); renderWord();
+        
+        clearSessionBackup(); 
+        
+        hideAllViews(); document.getElementById('study-view').classList.remove('hidden');
+        history.pushState({ isStudying: true }, '', '#study');
+        
+        renderWord();
     }
 
     function renderWord() {
@@ -605,7 +624,6 @@
         let ps = document.getElementById('prompt-speak'), as = document.getElementById('answer-speak'), rsEl = document.getElementById('relearn-status'); 
         let exContainer = document.getElementById('card-example'), exPrimary = document.getElementById('ex-primary'), exSecondary = document.getElementById('ex-secondary'), exSecContainer = document.getElementById('ex-secondary-container'), labelPrimary = document.getElementById('label-primary'), labelSecondary = document.getElementById('label-secondary');
         
-        // 🌟 动态获取例句行的发音喇叭
         let exPSpeak = document.getElementById('ex-primary-speak');
         let exSSpeak = document.getElementById('ex-secondary-speak');
 
@@ -624,15 +642,9 @@
                 labelSecondary.innerText = '中'; labelSecondary.className = 'ex-label cn-label'; 
                 exPrimary.innerText = word.example_jp; exPrimary.className = 'ex-jp'; 
                 exSecondary.innerText = word.example_cn; exSecondary.className = 'ex-cn'; 
-                
-                exContainer.classList.remove('hidden'); 
-                exSecContainer.classList.add('hidden'); 
-                
-                // 🌟 JP->CN 模式：日文在上面，所以把第一行的喇叭展示出来
-                exPSpeak.classList.remove('hidden');
-                exSSpeak.classList.add('hidden');
-            } 
-            else { exContainer.classList.add('hidden'); }
+                exContainer.classList.remove('hidden'); exSecContainer.classList.add('hidden'); 
+                exPSpeak.classList.remove('hidden'); exSSpeak.classList.add('hidden');
+            } else { exContainer.classList.add('hidden'); }
             speakCurrentWord(); 
         } else {
             pe.innerText = word.meaning; aT.innerText = word.word; aT.style.display = 'block'; mE.style.display = 'none'; ps.classList.add('hidden'); as.classList.add('hidden'); 
@@ -641,15 +653,9 @@
                 labelSecondary.innerText = '日'; labelSecondary.className = 'ex-label jp-label'; 
                 exPrimary.innerText = word.example_cn; exPrimary.className = 'ex-cn'; 
                 exSecondary.innerText = word.example_jp; exSecondary.className = 'ex-jp'; 
-                
-                exContainer.classList.remove('hidden'); 
-                exSecContainer.classList.add('hidden'); 
-                
-                // 🌟 CN->JP 模式：日文在下面（藏在答案区），把第二行的喇叭展示出来
-                exPSpeak.classList.add('hidden');
-                exSSpeak.classList.remove('hidden');
-            } 
-            else { exContainer.classList.add('hidden'); }
+                exContainer.classList.remove('hidden'); exSecContainer.classList.add('hidden'); 
+                exPSpeak.classList.add('hidden'); exSSpeak.classList.remove('hidden');
+            } else { exContainer.classList.add('hidden'); }
         }
         let wordLogs = getLogs().filter(log => log.wordId === word.id).sort((a, b) => a.round - b.round);
         document.getElementById('word-history-blocks').innerHTML = wordLogs.map(log => `<span class="history-block ${log.status === 'known' ? 'block-known' : 'block-forgotten'}"></span>`).join('');
@@ -685,13 +691,14 @@
                     relearnSteps[word.id] = currentStep + 1; 
                     let dynamicStep = 8; 
                     queue.splice(currentIndex + dynamicStep, 0, word); 
-                } 
-                else { 
+                } else { 
                     relearnSteps[word.id] = 2;
                 }
             }
         }
-        currentIndex++; renderWord();
+        currentIndex++; 
+        saveSessionBackup(); 
+        renderWord();
     }
 
     function goBack() {
@@ -701,10 +708,13 @@
         if (wasInjected) { for (let i = queue.length - 1; i > targetIndex; i--) { if (queue[i].id === targetWord.id) { queue.splice(i, 1); break; } } }
         if (lastAction.isFirst) delete firstImpressions[targetWord.id];
         if (lastAction.prevStep === undefined) delete relearnSteps[targetWord.id]; else relearnSteps[targetWord.id] = lastAction.prevStep;
-        currentIndex = targetIndex; renderWord(); 
+        currentIndex = targetIndex; 
+        saveSessionBackup(); 
+        renderWord(); 
     }
     
     function exitStudyEarly() { if (confirm("終了しますか？")) finishSession(); }
+    
     function finishSession() {
         let knownCount = 0; let forgotCount = 0;
         for (let wordIdStr in firstImpressions) {
@@ -713,7 +723,9 @@
             saveLog(id, getMaxRound(id) + 1, status); updateSRS(id, status);
         }
         document.getElementById('stat-known-count').innerText = knownCount; document.getElementById('stat-forgot-count').innerText = forgotCount;
-        updateHistoryCalendar(); updateDueCountDisplay(); hideAllViews(); document.getElementById('summary-view').classList.remove('hidden');
+        updateHistoryCalendar(); updateDueCountDisplay(); 
+        clearSessionBackup(); 
+        hideAllViews(); document.getElementById('summary-view').classList.remove('hidden');
     }
 
     document.addEventListener('keydown', function(event) {
@@ -752,26 +764,51 @@
             let bank = JSON.parse(localStorage.getItem(key) || '{}');
             let fixed = false;
             for (let id in bank) {
-                if (bank[id].i > 180) {
-                    bank[id].i = 180;
-                    let nd = new Date(); nd.setDate(nd.getDate() + 180);
-                    bank[id].d = nd.toISOString().split('T')[0];
-                    fixed = true;
-                }
+                if (bank[id].i > 180) { bank[id].i = 180; let nd = new Date(); nd.setDate(nd.getDate() + 180); bank[id].d = nd.toISOString().split('T')[0]; fixed = true; }
             }
             if (fixed) localStorage.setItem(key, JSON.stringify(bank));
         });
     })();
 
-    updateHistoryCalendar(); updateDueCountDisplay(); 
-</script>
-    
-<script>
+    window.addEventListener('popstate', function(e) {
+        if (!document.getElementById('study-view').classList.contains('hidden')) {
+            if (confirm("⚠️ 学習を中断して終了しますか？\n（判定済みの記録は保存されます）")) {
+                finishSession();
+            } else {
+                history.pushState({ isStudying: true }, '', '#study');
+            }
+        } else {
+            backToMenu();
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        let backupStr = localStorage.getItem('n1_active_session');
+        if (backupStr) {
+            setTimeout(() => {
+                if (confirm("中断された学習セッションがあります。続きから再開しますか？\n（キャンセルすると破棄されます）")) {
+                    let backup = JSON.parse(backupStr);
+                    queue = backup.queue; historyStack = backup.historyStack; firstImpressions = backup.firstImpressions;
+                    currentIndex = backup.currentIndex; relearnSteps = backup.relearnSteps || {}; currentStudyMode = backup.currentStudyMode;
+                    if (backup.activeBankName) { activeBankName = backup.activeBankName; document.getElementById('dictionary-select').value = activeBankName; }
+                    hideAllViews(); document.getElementById('study-view').classList.remove('hidden');
+                    history.pushState({ isStudying: true }, '', '#study');
+                    renderWord();
+                } else { clearSessionBackup(); }
+            }, 300);
+        }
+    });
+
+    // 🌟 注册 PWA 离线线程，欺骗 Android Chrome
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            navigator.serviceWorker.register('./sw.js');
+            navigator.serviceWorker.register('./sw.js').catch(function(err) {
+                // 静默失败，不影响主程序运行
+            });
         });
     }
+
+    updateHistoryCalendar(); updateDueCountDisplay(); 
 </script>
 </body>
 </html>
