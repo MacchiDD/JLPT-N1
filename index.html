@@ -416,6 +416,8 @@
             wordsToStudy = wordsToStudy.concat(newWords);
         }
         if (wordsToStudy.length === 0) return alert('単語がありません。');
+        
+        sessionMode = 'normal'; // 🌟 确保日常学习为普通模式
         initSession(wordsToStudy);
     }
 
@@ -622,9 +624,10 @@
 
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
     let relearnSteps = {}; let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
+    let sessionMode = 'normal'; // 🌟 幽灵模式状态变量
 
     function saveSessionBackup() {
-        const state = { queue, historyStack, firstImpressions, currentIndex, relearnSteps, currentStudyMode, activeBankName };
+        const state = { queue, historyStack, firstImpressions, currentIndex, relearnSteps, currentStudyMode, activeBankName, sessionMode };
         localStorage.setItem('n1_active_session', JSON.stringify(state));
     }
 
@@ -635,6 +638,8 @@
     function startHistoryReview(type) {
         let words = type === 'forgotten' ? currentHistoryWords.forgotten : currentHistoryWords.all;
         if (words.length === 0) return alert('該当する単语がありません');
+        
+        sessionMode = 'history'; // 🌟 设为历史回顾模式
         initSession(words);
     }
 
@@ -643,6 +648,8 @@
         let selectedIds = Array.from(document.querySelectorAll('.word-checkbox:checked')).map(cb => parseInt(cb.value));
         if (selectedIds.length === 0) return alert('选择为空');
         document.getElementById('select-all-cb').checked = false;
+        
+        sessionMode = 'normal'; // 🌟 确保自定义复习为普通模式
         initSession(selectedIds.map(id => bank.find(w => w.id === id)).filter(w => w));
     }
 
@@ -765,12 +772,31 @@
         for (let wordIdStr in firstImpressions) {
             let id = parseInt(wordIdStr); let status = firstImpressions[wordIdStr];
             if (status === 'known') knownCount++; else forgotCount++;
-            saveLog(id, getMaxRound(id) + 1, status); updateSRS(id, status);
+            
+            // 🌟 核心拦截：非幽灵模式才保存日志和更新 SRS
+            if (sessionMode !== 'history') {
+                saveLog(id, getMaxRound(id) + 1, status); 
+                updateSRS(id, status);
+            }
         }
-        document.getElementById('stat-known-count').innerText = knownCount; document.getElementById('stat-forgot-count').innerText = forgotCount;
-        updateHistoryCalendar(); updateDueCountDisplay(); 
+        document.getElementById('stat-known-count').innerText = knownCount; 
+        document.getElementById('stat-forgot-count').innerText = forgotCount;
+        
+        // 🌟 动态更新结算界面的文案
+        let noticeEl = document.getElementById('save-notice');
+        if (sessionMode === 'history') {
+            noticeEl.innerHTML = "👻 历史回顾模式：本次复习<b>未计入</b>今日统计与忘却曲线。";
+            noticeEl.style.color = "#e67e22";
+        } else {
+            noticeEl.innerHTML = "💾 学习记录已自动保存。";
+            noticeEl.style.color = "#7f8c8d";
+            updateHistoryCalendar(); 
+            updateDueCountDisplay(); 
+        }
+
         clearSessionBackup(); 
-        hideAllViews(); document.getElementById('summary-view').classList.remove('hidden');
+        hideAllViews(); 
+        document.getElementById('summary-view').classList.remove('hidden');
     }
 
     document.addEventListener('keydown', function(event) {
@@ -835,6 +861,10 @@
                     let backup = JSON.parse(backupStr);
                     queue = backup.queue; historyStack = backup.historyStack; firstImpressions = backup.firstImpressions;
                     currentIndex = backup.currentIndex; relearnSteps = backup.relearnSteps || {}; currentStudyMode = backup.currentStudyMode;
+                    
+                    // 🌟 恢复异常中断时的模式状态，防止刷新后幽灵模式丢失
+                    sessionMode = backup.sessionMode || 'normal'; 
+                    
                     if (backup.activeBankName) { activeBankName = backup.activeBankName; document.getElementById('dictionary-select').value = activeBankName; }
                     hideAllViews(); document.getElementById('study-view').classList.remove('hidden');
                     history.pushState({ isStudying: true }, '', '#study');
