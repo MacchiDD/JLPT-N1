@@ -108,7 +108,8 @@
                 <option value="hiragana">仮名・擬音語ベース</option>
                 <option value="kundoku">訓読語彙ベース</option>
                 <option value="personal">🌟 随手记生词题库</option>
-                <option value="kanji">✍️ 汉字练习题库</option> </select>
+                <option value="kanji">✍️ 汉字练习题库</option>
+            </select>
         </div>
 
         <div class="settings-box" style="border-left-color: #2ecc71; background: #f0fdf4;">
@@ -137,9 +138,15 @@
             </select>
             <br>
             <strong style="color: #d35400;">🔄 出題順序：</strong>
-            <select id="study-order-select" style="margin-top: 5px;">
+            <select id="study-order-select" style="margin-top: 5px; margin-bottom: 10px;">
                 <option value="shuffle">🔀 ランダム (位置记忆防止)</option>
                 <option value="ordered">⬇️ ID顺</option>
+            </select>
+            <br>
+            <strong style="color: #d35400;">🔁 忘却時の復習回数：</strong>
+            <select id="relearn-steps-select" onchange="localStorage.setItem('n1_relearn_steps', this.value)" style="margin-top: 5px;">
+                <option value="2">2回 (標準 - 確実な定着)</option>
+                <option value="1">1回 (高速 - 音読語彙など向け)</option>
             </select>
         </div>
 
@@ -324,19 +331,19 @@
         if (activeBankName === 'hiragana') return typeof hiraganaBank !== 'undefined' ? hiraganaBank : [];
         if (activeBankName === 'kundoku') return typeof kundokuBank !== 'undefined' ? kundokuBank : [];
         if (activeBankName === 'personal') return typeof personalBank !== 'undefined' ? personalBank : [];
-        if (activeBankName === 'kanji') return typeof kanjiBank !== 'undefined' ? kanjiBank : []; // 🌟 新增汉字库引用
+        if (activeBankName === 'kanji') return typeof kanjiBank !== 'undefined' ? kanjiBank : [];
         return [];
     }
 
     function getLogKey() { 
         if (activeBankName === 'personal') return 'vocab_logs_personal';
-        if (activeBankName === 'kanji') return 'vocab_logs_kanji'; // 🌟 新增汉字库 Log
+        if (activeBankName === 'kanji') return 'vocab_logs_kanji';
         return activeBankName === 'hiragana' ? 'vocab_logs' : 'vocab_logs_kundoku'; 
     }
     
     function getSRSKey() { 
         if (activeBankName === 'personal') return 'srs_data_personal';
-        if (activeBankName === 'kanji') return 'srs_data_kanji'; // 🌟 新增汉字库 SRS
+        if (activeBankName === 'kanji') return 'srs_data_kanji';
         return activeBankName === 'hiragana' ? 'srs_data' : 'srs_data_kundoku'; 
     }
 
@@ -465,17 +472,16 @@
     function openSyncModal() { document.getElementById('bin-id').value = localStorage.getItem('cloud_bin_id') || ''; document.getElementById('api-key').value = localStorage.getItem('cloud_api_key') || ''; document.getElementById('sync-modal').classList.remove('hidden'); }
     function closeSyncModal() { document.getElementById('sync-modal').classList.add('hidden'); }
 
-    // 🌟 全量抓取数据（加入汉字题库）
     function getCombinedLogs() {
         return {
             hiragana: JSON.parse(localStorage.getItem('vocab_logs') || '[]'),
             kundoku: JSON.parse(localStorage.getItem('vocab_logs_kundoku') || '[]'),
             personal: JSON.parse(localStorage.getItem('vocab_logs_personal') || '[]'),
-            kanji: JSON.parse(localStorage.getItem('vocab_logs_kanji') || '[]'), // 🌟 NEW
+            kanji: JSON.parse(localStorage.getItem('vocab_logs_kanji') || '[]'),
             srs_hiragana: JSON.parse(localStorage.getItem('srs_data') || '{}'),
             srs_kundoku: JSON.parse(localStorage.getItem('srs_data_kundoku') || '{}'),
             srs_personal: JSON.parse(localStorage.getItem('srs_data_personal') || '{}'),
-            srs_kanji: JSON.parse(localStorage.getItem('srs_data_kanji') || '{}') // 🌟 NEW
+            srs_kanji: JSON.parse(localStorage.getItem('srs_data_kanji') || '{}')
         };
     }
 
@@ -500,16 +506,15 @@
         return unmin;
     }
 
-    // 🌟 还原数据（写入汉字题库）
     function restoreCombinedLogs(data) {
         if (data.hiragana) localStorage.setItem('vocab_logs', JSON.stringify(data.hiragana));
         if (data.kundoku) localStorage.setItem('vocab_logs_kundoku', JSON.stringify(data.kundoku));
         if (data.personal) localStorage.setItem('vocab_logs_personal', JSON.stringify(data.personal));
-        if (data.kanji) localStorage.setItem('vocab_logs_kanji', JSON.stringify(data.kanji)); // 🌟 NEW
+        if (data.kanji) localStorage.setItem('vocab_logs_kanji', JSON.stringify(data.kanji));
         if (data.srs_hiragana) localStorage.setItem('srs_data', JSON.stringify(data.srs_hiragana));
         if (data.srs_kundoku) localStorage.setItem('srs_data_kundoku', JSON.stringify(data.srs_kundoku));
         if (data.srs_personal) localStorage.setItem('srs_data_personal', JSON.stringify(data.srs_personal));
-        if (data.srs_kanji) localStorage.setItem('srs_data_kanji', JSON.stringify(data.srs_kanji)); // 🌟 NEW
+        if (data.srs_kanji) localStorage.setItem('srs_data_kanji', JSON.stringify(data.srs_kanji));
         cleanUpDuplicateLogs(); updateHistoryCalendar(); updateDueCountDisplay();
     }
 
@@ -519,11 +524,9 @@
         localStorage.setItem('cloud_bin_id', binId); localStorage.setItem('cloud_api_key', apiKey);
         
         let rawData = getCombinedLogs();
-        
-        // 🌟 压缩时加入汉字数据库
         let payloadData = {
-            h: minifyLogs(rawData.hiragana), k: minifyLogs(rawData.kundoku), p: minifyLogs(rawData.personal), kj: minifyLogs(rawData.kanji), // 🌟 kj
-            sh: minifySRS(rawData.srs_hiragana), sk: minifySRS(rawData.srs_kundoku), sp: minifySRS(rawData.srs_personal), skj: minifySRS(rawData.srs_kanji) // 🌟 skj
+            h: minifyLogs(rawData.hiragana), k: minifyLogs(rawData.kundoku), p: minifyLogs(rawData.personal), kj: minifyLogs(rawData.kanji),
+            sh: minifySRS(rawData.srs_hiragana), sk: minifySRS(rawData.srs_kundoku), sp: minifySRS(rawData.srs_personal), skj: minifySRS(rawData.srs_kanji)
         };
         
         let compressedData = LZString.compressToBase64(JSON.stringify(payloadData));
@@ -557,16 +560,15 @@
                 let json = await response.json(); let record = json.record; let finalData;
                 if (record.compressed === true && record.data) { finalData = JSON.parse(LZString.decompressFromBase64(record.data)); } else { finalData = record; }
                 
-                // 🌟 下载解压时加入汉字题库映射
                 let restored = {
                     hiragana: finalData.h ? unminifyLogs(finalData.h) : (finalData.hiragana || []),
                     kundoku: finalData.k ? unminifyLogs(finalData.k) : (finalData.kundoku || []),
                     personal: finalData.p ? unminifyLogs(finalData.p) : (finalData.personal || []),
-                    kanji: finalData.kj ? unminifyLogs(finalData.kj) : (finalData.kanji || []), // 🌟 NEW
+                    kanji: finalData.kj ? unminifyLogs(finalData.kj) : (finalData.kanji || []),
                     srs_hiragana: finalData.sh ? unminifySRS(finalData.sh) : (finalData.srs_hiragana || {}),
                     srs_kundoku: finalData.sk ? unminifySRS(finalData.sk) : (finalData.srs_kundoku || {}),
                     srs_personal: finalData.sp ? unminifySRS(finalData.sp) : (finalData.srs_personal || {}),
-                    srs_kanji: finalData.skj ? unminifySRS(finalData.skj) : (finalData.srs_kanji || {}) // 🌟 NEW
+                    srs_kanji: finalData.skj ? unminifySRS(finalData.skj) : (finalData.srs_kanji || {})
                 };
                 
                 restoreCombinedLogs(restored); alert("🎉 同期成功！"); closeSyncModal();
@@ -590,8 +592,8 @@
 
     function clearData() {
         if (confirm("⚠️ 警告：全ての記録を消去しますか？")) {
-            localStorage.removeItem('vocab_logs'); localStorage.removeItem('vocab_logs_kundoku'); localStorage.removeItem('vocab_logs_personal'); localStorage.removeItem('vocab_logs_kanji'); // 🌟 NEW
-            localStorage.removeItem('srs_data'); localStorage.removeItem('srs_data_kundoku'); localStorage.removeItem('srs_data_personal'); localStorage.removeItem('srs_data_kanji'); // 🌟 NEW
+            localStorage.removeItem('vocab_logs'); localStorage.removeItem('vocab_logs_kundoku'); localStorage.removeItem('vocab_logs_personal'); localStorage.removeItem('vocab_logs_kanji');
+            localStorage.removeItem('srs_data'); localStorage.removeItem('srs_data_kundoku'); localStorage.removeItem('srs_data_personal'); localStorage.removeItem('srs_data_kanji');
             updateHistoryCalendar(); updateDueCountDisplay(); alert("🗑️ 消去しました！");
         }
     }
@@ -630,12 +632,13 @@
         hideAllViews(); document.getElementById('history-detail-view').classList.remove('hidden');
     }
 
+    // 🌟 新增 currentRequiredSteps 状态变量
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
     let relearnSteps = {}; let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
-    let sessionMode = 'normal';
+    let sessionMode = 'normal'; let currentRequiredSteps = 2;
 
     function saveSessionBackup() {
-        const state = { queue, historyStack, firstImpressions, currentIndex, relearnSteps, currentStudyMode, activeBankName, sessionMode };
+        const state = { queue, historyStack, firstImpressions, currentIndex, relearnSteps, currentStudyMode, activeBankName, sessionMode, currentRequiredSteps };
         localStorage.setItem('n1_active_session', JSON.stringify(state));
     }
 
@@ -662,6 +665,10 @@
         if (orderMode === 'shuffle') { for (let i = finalWords.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); [finalWords[i], finalWords[j]] = [finalWords[j], finalWords[i]]; } }
         queue = finalWords; historyStack = []; firstImpressions = {}; currentIndex = 0; relearnSteps = {};
         currentStudyMode = document.getElementById('study-mode-select').value || 'jp2cn';
+        
+        // 🌟 初始化获取当前的复习次数设定
+        currentRequiredSteps = parseInt(document.getElementById('relearn-steps-select').value) || 2;
+        
         clearSessionBackup(); 
         hideAllViews(); document.getElementById('study-view').classList.remove('hidden');
         history.pushState({ isStudying: true }, '', '#study');
@@ -676,9 +683,10 @@
         let exContainer = document.getElementById('card-example'), exPrimary = document.getElementById('ex-primary'), exSecondary = document.getElementById('ex-secondary'), exSecContainer = document.getElementById('ex-secondary-container'), labelPrimary = document.getElementById('label-primary'), labelSecondary = document.getElementById('label-secondary');
         let exPSpeak = document.getElementById('ex-primary-speak'); let exSSpeak = document.getElementById('ex-secondary-speak');
 
+        // 🌟 动态显示需要复习的剩余次数
         let currentStep = relearnSteps[word.id];
-        if (currentStep !== undefined && currentStep < 2) { 
-            rsEl.innerText = `🔥 強化中: あと ${2 - currentStep} 回正解でクリア`; rsEl.classList.remove('hidden'); 
+        if (currentStep !== undefined && currentStep < currentRequiredSteps) { 
+            rsEl.innerText = `🔥 強化中: あと ${currentRequiredSteps - currentStep} 回正解でクリア`; rsEl.classList.remove('hidden'); 
         } else { rsEl.classList.add('hidden'); }
 
         if (currentStudyMode === 'jp2cn') {
@@ -721,12 +729,20 @@
         historyStack.push({ index: currentIndex, status: status, isFirst: isFirstAppearance, prevStep: previousStep });
         
         if (status === 'forgotten') { 
-            relearnSteps[word.id] = Math.max(0, (previousStep || 0) - 1); queue.splice(currentIndex + 4, 0, word); 
+            relearnSteps[word.id] = Math.max(0, (previousStep || 0) - 1); 
+            queue.splice(currentIndex + 4, 0, word); 
         } 
         else if (status === 'known') {
             if (!isFirstAppearance) { 
                 let currentStep = previousStep || 0;
-                if (currentStep < 1) { relearnSteps[word.id] = currentStep + 1; let dynamicStep = 8; queue.splice(currentIndex + dynamicStep, 0, word); } else { relearnSteps[word.id] = 2; }
+                // 🌟 根据设定的复习次数判断是否完成
+                if (currentStep < currentRequiredSteps - 1) { 
+                    relearnSteps[word.id] = currentStep + 1; 
+                    let dynamicStep = 8; 
+                    queue.splice(currentIndex + dynamicStep, 0, word); 
+                } else { 
+                    relearnSteps[word.id] = currentRequiredSteps; 
+                }
             }
         }
         currentIndex++; saveSessionBackup(); renderWord();
@@ -735,7 +751,8 @@
     function goBack() {
         if (historyStack.length === 0) return; 
         let lastAction = historyStack.pop(); let targetIndex = lastAction.index; let targetWord = queue[targetIndex];
-        let wasInjected = (lastAction.status === 'forgotten' || (lastAction.status === 'known' && !lastAction.isFirst && (lastAction.prevStep || 0) < 1));
+        // 🌟 退回逻辑适配动态复习次数
+        let wasInjected = (lastAction.status === 'forgotten' || (lastAction.status === 'known' && !lastAction.isFirst && (lastAction.prevStep || 0) < currentRequiredSteps - 1));
         if (wasInjected) { for (let i = queue.length - 1; i > targetIndex; i--) { if (queue[i].id === targetWord.id) { queue.splice(i, 1); break; } } }
         if (lastAction.isFirst) delete firstImpressions[targetWord.id];
         if (lastAction.prevStep === undefined) delete relearnSteps[targetWord.id]; else relearnSteps[targetWord.id] = lastAction.prevStep;
@@ -800,7 +817,6 @@
     function hideAllViews() { document.getElementById('menu-view').classList.add('hidden'); document.getElementById('study-view').classList.add('hidden'); document.getElementById('summary-view').classList.add('hidden'); document.getElementById('stats-view').classList.add('hidden'); document.getElementById('history-detail-view').classList.add('hidden'); }
     function backToMenu() { hideAllViews(); document.getElementById('menu-view').classList.remove('hidden'); }
 
-    // 🌟 将汉字库加入防报错和修复引擎
     (function autoFixCorruptedDates() {
         ['srs_data', 'srs_data_kundoku', 'srs_data_personal', 'srs_data_kanji'].forEach(key => {
             let bank = JSON.parse(localStorage.getItem(key) || '{}');
@@ -819,6 +835,10 @@
     });
 
     window.addEventListener('DOMContentLoaded', () => {
+        // 🌟 加载时读取本地保存的复习次数偏好
+        let savedSteps = localStorage.getItem('n1_relearn_steps');
+        if (savedSteps) document.getElementById('relearn-steps-select').value = savedSteps;
+
         let backupStr = localStorage.getItem('n1_active_session');
         if (backupStr) {
             setTimeout(() => {
@@ -827,6 +847,9 @@
                     queue = backup.queue; historyStack = backup.historyStack; firstImpressions = backup.firstImpressions;
                     currentIndex = backup.currentIndex; relearnSteps = backup.relearnSteps || {}; currentStudyMode = backup.currentStudyMode;
                     sessionMode = backup.sessionMode || 'normal'; 
+                    // 🌟 恢复异常中断时的剩余次数状态
+                    currentRequiredSteps = backup.currentRequiredSteps || parseInt(document.getElementById('relearn-steps-select').value) || 2;
+
                     if (backup.activeBankName) { activeBankName = backup.activeBankName; document.getElementById('dictionary-select').value = activeBankName; }
                     hideAllViews(); document.getElementById('study-view').classList.remove('hidden');
                     history.pushState({ isStudying: true }, '', '#study');
