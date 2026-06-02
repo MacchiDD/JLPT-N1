@@ -299,6 +299,15 @@
             <button class="btn btn-secondary" style="font-size: 12px;" onclick="renderStatsTable('reviewsDesc')">复习次数顺</button>
             <button class="btn btn-danger" style="font-size: 12px;" onclick="renderStatsTable('forgotDesc')">🔥 弱点排行</button>
         </div>
+        
+        <div style="margin: 10px 0; display: flex; justify-content: center; gap: 8px; align-items: center; flex-wrap: wrap; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ecf0f1;">
+            <span style="font-size: 13px; color: #34495e; font-weight: bold;">🎯 批量特训：</span>
+            <span style="font-size: 13px; color: #7f8c8d;">勾选前</span>
+            <input type="number" id="custom-top-n" value="50" min="1" max="1000" style="width: 60px; padding: 4px 8px; margin: 0; text-align: center; border: 1px solid #bdc3c7; border-radius: 4px; outline: none;">
+            <span style="font-size: 13px; color: #7f8c8d;">词</span>
+            <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; margin: 0; background-color: #3498db;" onclick="selectCustomTopN()">一键勾选</button>
+        </div>
+
         <div style="margin: 15px 0;">
             <button class="btn btn-success" style="width: 100%; font-weight: bold; padding: 10px;" onclick="startCustomStudy()">📚 对选中单词进行特训</button>
         </div>
@@ -314,6 +323,24 @@
             </table>
         </div>
         <button class="btn btn-secondary" style="margin-top: 20px;" onclick="safeBackFromStats()">ダッシュボードに戻る</button>
+    </div>
+
+    <div id="word-detail-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1001; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div class="sync-box" style="max-height: 85vh; overflow-y: auto;">
+            <button class="close-btn" onclick="closeWordDetail()">×</button>
+            <h3 id="detail-title" style="margin-top: 0; color: #2980b9; border-bottom: 2px solid #eee; padding-bottom: 10px; font-size: 26px; text-align: center;"></h3>
+            <div id="detail-kana" style="font-size: 16px; color: #7f8c8d; margin-bottom: 5px; text-align: center; letter-spacing: 1px;"></div>
+            <div id="detail-kanji" style="font-size: 14px; color: #8e44ad; margin-bottom: 15px; font-weight: bold; text-align: center;"></div>
+            <div id="detail-meaning" style="font-size: 18px; font-weight: bold; color: #2c3e50; text-align: center; margin-bottom: 20px;"></div>
+
+            <div id="detail-examples" style="margin-bottom: 20px; font-size: 14px;"></div>
+
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ecf0f1; font-size: 13px;">
+                <p style="margin: 5px 0; color: #34495e;">🔥 历史遗忘次数：<span id="detail-forgot" style="color: #e74c3c; font-weight: bold; font-size: 16px;">0</span> 次</p>
+                <p style="margin: 5px 0; color: #34495e;">📅 下次复习安排：<span id="detail-due" style="font-weight: bold;"></span></p>
+                <p style="margin: 5px 0; color: #34495e;">📈 记忆熟悉度 (Ease)：<span id="detail-ease" style="color: #27ae60; font-weight: bold;"></span></p>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -632,7 +659,6 @@
         hideAllViews(); document.getElementById('history-detail-view').classList.remove('hidden');
     }
 
-    // 🌟 新增 currentRequiredSteps 状态变量
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
     let relearnSteps = {}; let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
     let sessionMode = 'normal'; let currentRequiredSteps = 2;
@@ -666,7 +692,6 @@
         queue = finalWords; historyStack = []; firstImpressions = {}; currentIndex = 0; relearnSteps = {};
         currentStudyMode = document.getElementById('study-mode-select').value || 'jp2cn';
         
-        // 🌟 初始化获取当前的复习次数设定
         currentRequiredSteps = parseInt(document.getElementById('relearn-steps-select').value) || 2;
         
         clearSessionBackup(); 
@@ -683,7 +708,6 @@
         let exContainer = document.getElementById('card-example'), exPrimary = document.getElementById('ex-primary'), exSecondary = document.getElementById('ex-secondary'), exSecContainer = document.getElementById('ex-secondary-container'), labelPrimary = document.getElementById('label-primary'), labelSecondary = document.getElementById('label-secondary');
         let exPSpeak = document.getElementById('ex-primary-speak'); let exSSpeak = document.getElementById('ex-secondary-speak');
 
-        // 🌟 动态显示需要复习的剩余次数
         let currentStep = relearnSteps[word.id];
         if (currentStep !== undefined && currentStep < currentRequiredSteps) { 
             rsEl.innerText = `🔥 強化中: あと ${currentRequiredSteps - currentStep} 回正解でクリア`; rsEl.classList.remove('hidden'); 
@@ -735,7 +759,6 @@
         else if (status === 'known') {
             if (!isFirstAppearance) { 
                 let currentStep = previousStep || 0;
-                // 🌟 根据设定的复习次数判断是否完成
                 if (currentStep < currentRequiredSteps - 1) { 
                     relearnSteps[word.id] = currentStep + 1; 
                     let dynamicStep = 8; 
@@ -751,7 +774,6 @@
     function goBack() {
         if (historyStack.length === 0) return; 
         let lastAction = historyStack.pop(); let targetIndex = lastAction.index; let targetWord = queue[targetIndex];
-        // 🌟 退回逻辑适配动态复习次数
         let wasInjected = (lastAction.status === 'forgotten' || (lastAction.status === 'known' && !lastAction.isFirst && (lastAction.prevStep || 0) < currentRequiredSteps - 1));
         if (wasInjected) { for (let i = queue.length - 1; i > targetIndex; i--) { if (queue[i].id === targetWord.id) { queue.splice(i, 1); break; } } }
         if (lastAction.isFirst) delete firstImpressions[targetWord.id];
@@ -801,6 +823,7 @@
         document.querySelectorAll('.word-checkbox').forEach(cb => { if (parseInt(cb.value) >= s && parseInt(cb.value) <= e) cb.checked = true; });
     }
     function clearSelection() { document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = false); }
+    
     function renderStatsTable(sortType) {
         let bank = getCurrentBank(); let srsBank = getSRSBank(); let statsMap = {};
         bank.forEach(w => { let srsData = srsBank[w.id]; statsMap[w.id] = { id: w.id, word: w.word, totalReviews: 0, forgotCount: 0, due: srsData ? srsData.d : '-', ease: srsData ? `${Math.round(srsData.e * 100)}%` : '-' }; });
@@ -810,12 +833,80 @@
         else if (sortType === 'reviewsDesc') stats.sort((a, b) => b.totalReviews - a.totalReviews); 
         else if (sortType === 'forgotDesc') stats.sort((a, b) => b.forgotCount - a.forgotCount);
         let tbody = document.getElementById('stats-table-body'); tbody.innerHTML = '';
-        stats.forEach(s => { let tr = document.createElement('tr'); tr.innerHTML = `<td style="text-align:center;"><input type="checkbox" class="word-checkbox" value="${s.id}"></td><td>${s.id}</td><td style="font-weight:bold;color:#2980b9;">${s.word}</td><td style="color:#e67e22;font-weight:bold;">${s.due}</td><td style="color:#27ae60;">${s.ease}</td>`; tbody.appendChild(tr); });
+        
+        stats.forEach(s => { 
+            let tr = document.createElement('tr'); 
+            tr.innerHTML = `
+                <td style="text-align:center;"><input type="checkbox" class="word-checkbox" value="${s.id}"></td>
+                <td>${s.id}</td>
+                <td style="font-weight:bold; color:#2980b9; cursor:pointer;" onclick="showWordDetail(${s.id})">
+                    <span style="border-bottom: 1px dashed #3498db; transition: 0.2s;" onmouseover="this.style.color='#e67e22'" onmouseout="this.style.color='inherit'">${s.word}</span>
+                </td>
+                <td style="color:#e67e22; font-weight:bold;">${s.due}</td>
+                <td style="color:#27ae60;">${s.ease}</td>`; 
+            tbody.appendChild(tr); 
+        });
     }
+
     function toggleSelectAll() { let c = document.getElementById('select-all-cb').checked; document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = c); }
     function safeBackFromStats() { backToMenu(); }
     function hideAllViews() { document.getElementById('menu-view').classList.add('hidden'); document.getElementById('study-view').classList.add('hidden'); document.getElementById('summary-view').classList.add('hidden'); document.getElementById('stats-view').classList.add('hidden'); document.getElementById('history-detail-view').classList.add('hidden'); }
     function backToMenu() { hideAllViews(); document.getElementById('menu-view').classList.remove('hidden'); }
+
+    // 新增：动态截取自定义数量的前 N 项并勾选
+    function selectCustomTopN() {
+        let n = parseInt(document.getElementById('custom-top-n').value);
+        if (isNaN(n) || n <= 0) return alert('请输入有效的数量！');
+        
+        clearSelection();
+        let checkboxes = document.querySelectorAll('.word-checkbox');
+        let count = Math.min(n, checkboxes.length);
+        if (count === 0) return;
+        
+        for (let i = 0; i < count; i++) {
+            checkboxes[i].checked = true;
+        }
+        triggerVibration('light');
+    }
+
+    // 新增：展示单词详情面板
+    function showWordDetail(id) {
+        let bank = getCurrentBank();
+        let word = bank.find(w => w.id === id);
+        if (!word) return;
+
+        let srsBank = getSRSBank();
+        let srsData = srsBank[id];
+        
+        let logs = getLogs().filter(log => log.wordId === id);
+        let forgotCount = logs.filter(l => l.status === 'forgotten').length;
+
+        document.getElementById('detail-title').innerText = word.word;
+        document.getElementById('detail-kana').innerText = word.kana || '';
+        document.getElementById('detail-kanji').innerText = (word.kanji && word.kanji.trim() !== "") ? `【漢字】 ${word.kanji}` : '';
+        document.getElementById('detail-meaning').innerText = word.meaning;
+
+        let exHtml = '';
+        if (word.example_jp && word.example_cn) {
+            exHtml = `
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; border-left: 3px solid #3498db;">
+                    <div style="margin-bottom: 6px;"><span class="ex-label jp-label" style="font-size:10px;">日</span> <span style="color:#2c3e50;">${word.example_jp}</span></div>
+                    <div><span class="ex-label cn-label" style="font-size:10px;">中</span> <span style="color:#7f8c8d;">${word.example_cn}</span></div>
+                </div>`;
+        }
+        document.getElementById('detail-examples').innerHTML = exHtml;
+
+        document.getElementById('detail-forgot').innerText = forgotCount;
+        document.getElementById('detail-due').innerText = srsData ? srsData.d : '尚未学习';
+        document.getElementById('detail-ease').innerText = srsData ? `${Math.round(srsData.e * 100)}%` : '-';
+
+        document.getElementById('word-detail-modal').classList.remove('hidden');
+    }
+
+    // 新增：关闭详情面板
+    function closeWordDetail() {
+        document.getElementById('word-detail-modal').classList.add('hidden');
+    }
 
     (function autoFixCorruptedDates() {
         ['srs_data', 'srs_data_kundoku', 'srs_data_personal', 'srs_data_kanji'].forEach(key => {
@@ -835,7 +926,6 @@
     });
 
     window.addEventListener('DOMContentLoaded', () => {
-        // 🌟 加载时读取本地保存的复习次数偏好
         let savedSteps = localStorage.getItem('n1_relearn_steps');
         if (savedSteps) document.getElementById('relearn-steps-select').value = savedSteps;
 
@@ -847,7 +937,6 @@
                     queue = backup.queue; historyStack = backup.historyStack; firstImpressions = backup.firstImpressions;
                     currentIndex = backup.currentIndex; relearnSteps = backup.relearnSteps || {}; currentStudyMode = backup.currentStudyMode;
                     sessionMode = backup.sessionMode || 'normal'; 
-                    // 🌟 恢复异常中断时的剩余次数状态
                     currentRequiredSteps = backup.currentRequiredSteps || parseInt(document.getElementById('relearn-steps-select').value) || 2;
 
                     if (backup.activeBankName) { activeBankName = backup.activeBankName; document.getElementById('dictionary-select').value = activeBankName; }
