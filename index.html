@@ -671,8 +671,8 @@
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
     let relearnSteps = {}; let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
     let sessionMode = 'normal'; let currentRequiredSteps = 2; 
-    let currentPromptType = 'standard'; // 🌟 存储日转中提示模式
-    let sessionForgottenWords = []; // 🌟 存储本轮需要立即复习的错词
+    let currentPromptType = 'standard'; 
+    let sessionForgottenWords = []; 
 
     function saveSessionBackup() {
         const state = { queue, historyStack, firstImpressions, currentIndex, relearnSteps, currentStudyMode, activeBankName, sessionMode, currentRequiredSteps, currentPromptType };
@@ -695,10 +695,9 @@
         sessionMode = 'normal'; initSession(selectedIds.map(id => bank.find(w => w.id === id)).filter(w => w));
     }
 
-    // 🌟 新增：启动错词复习
     function startSessionForgottenReview() {
         if (sessionForgottenWords.length === 0) return;
-        sessionMode = 'history'; // 以历史模式启动，避免重复写入忘却曲线日志
+        sessionMode = 'history'; 
         initSession([...sessionForgottenWords]);
     }
 
@@ -711,7 +710,7 @@
         currentStudyMode = document.getElementById('study-mode-select').value || 'jp2cn';
         
         currentRequiredSteps = parseInt(document.getElementById('relearn-steps-select').value) || 2;
-        currentPromptType = document.getElementById('prompt-type-select').value || 'standard'; // 🌟 获取当前模式
+        currentPromptType = document.getElementById('prompt-type-select').value || 'standard'; 
         
         clearSessionBackup(); 
         hideAllViews(); document.getElementById('study-view').classList.remove('hidden');
@@ -732,14 +731,16 @@
             rsEl.innerText = `🔥 強化中: あと ${currentRequiredSteps - currentStep} 回正解でクリア`; rsEl.classList.remove('hidden'); 
         } else { rsEl.classList.add('hidden'); }
 
+        let displayKanji = (word.kanji && word.kanji.trim() !== "") ? word.kanji : word.word;
+        let displayKana = word.kana || word.word;
+
         if (currentStudyMode === 'jp2cn') {
-            // 🌟 适配假名模式
             if (currentPromptType === 'kana') {
-                pe.innerText = word.kana || word.word;
-                aT.innerText = word.word;
+                pe.innerText = displayKana;
+                aT.innerText = displayKanji;
                 aT.style.display = 'block';
             } else {
-                pe.innerText = word.word;
+                pe.innerText = displayKanji;
                 aT.style.display = 'none';
             }
             
@@ -747,28 +748,52 @@
             if (word.example_jp && word.example_cn) { 
                 labelPrimary.innerText = '日'; labelPrimary.className = 'ex-label jp-label'; labelSecondary.innerText = '中'; labelSecondary.className = 'ex-label cn-label'; 
                 exPrimary.innerText = word.example_jp; exPrimary.className = 'ex-jp'; exSecondary.innerText = word.example_cn; exSecondary.className = 'ex-cn'; 
-                exContainer.classList.remove('hidden'); exSecContainer.classList.add('hidden'); exPSpeak.classList.remove('hidden'); exSSpeak.classList.add('hidden');
+                
+                if (currentPromptType === 'kana') {
+                    exContainer.classList.add('hidden');
+                } else {
+                    exContainer.classList.remove('hidden');
+                }
+                
+                exSecContainer.classList.add('hidden'); exPSpeak.classList.remove('hidden'); exSSpeak.classList.add('hidden');
             } else { exContainer.classList.add('hidden'); }
             speakCurrentWord(); 
-        } else {
-            pe.innerText = word.meaning; aT.innerText = word.word; aT.style.display = 'block'; mE.style.display = 'none'; ps.classList.add('hidden'); as.classList.add('hidden'); 
+        } else { 
+            pe.innerText = word.meaning; 
+            aT.innerText = displayKanji; 
+            aT.style.display = 'block'; 
+            mE.style.display = 'none'; 
+            ps.classList.add('hidden'); as.classList.add('hidden'); 
             if (word.example_jp && word.example_cn) { 
                 labelPrimary.innerText = '中'; labelPrimary.className = 'ex-label cn-label'; labelSecondary.innerText = '日'; labelSecondary.className = 'ex-label jp-label'; 
                 exPrimary.innerText = word.example_cn; exPrimary.className = 'ex-cn'; exSecondary.innerText = word.example_jp; exSecondary.className = 'ex-jp'; 
                 exContainer.classList.remove('hidden'); exSecContainer.classList.add('hidden'); exPSpeak.classList.add('hidden'); exSSpeak.classList.remove('hidden');
             } else { exContainer.classList.add('hidden'); }
         }
+        
         let wordLogs = getLogs().filter(log => log.wordId === word.id).sort((a, b) => a.round - b.round);
         document.getElementById('word-history-blocks').innerHTML = wordLogs.map(log => `<span class="history-block ${log.status === 'known' ? 'block-known' : 'block-forgotten'}"></span>`).join('');
+        
         let kE = document.getElementById('card-kanji');
         if (word.kanji && word.kanji.trim() !== "") { kE.innerText = `【漢字】 ${word.kanji}`; kE.style.display = 'block'; } else { kE.style.display = 'none'; }
-        document.getElementById('card-kana').innerText = word.kana;
+        
+        document.getElementById('card-kana').innerText = displayKana;
         document.getElementById('progress-text').innerText = `進捗: ${currentIndex + 1} / ${queue.length}`;
         document.getElementById('answer-section').classList.add('hidden'); document.getElementById('action-buttons').classList.add('hidden'); document.getElementById('btn-show-answer').classList.remove('hidden');
     }
 
     function showAnswer() {
-        triggerVibration('heavy'); document.getElementById('answer-section').classList.remove('hidden'); document.getElementById('ex-secondary-container').classList.remove('hidden'); document.getElementById('action-buttons').classList.remove('hidden'); document.getElementById('btn-show-answer').classList.add('hidden');
+        triggerVibration('heavy'); 
+        document.getElementById('answer-section').classList.remove('hidden'); 
+        
+        let currentWord = queue[currentIndex];
+        if (currentWord && currentWord.example_jp && currentWord.example_cn) {
+            document.getElementById('card-example').classList.remove('hidden');
+        }
+        
+        document.getElementById('ex-secondary-container').classList.remove('hidden'); 
+        document.getElementById('action-buttons').classList.remove('hidden'); 
+        document.getElementById('btn-show-answer').classList.add('hidden');
         if (currentStudyMode === 'cn2jp') { document.getElementById('answer-speak').classList.remove('hidden'); }
         speakCurrentWord();
     }
@@ -814,7 +839,7 @@
     
     function finishSession() {
         let knownCount = 0; let forgotCount = 0;
-        sessionForgottenWords = []; // 🌟 初始化本轮错词数组
+        sessionForgottenWords = []; 
 
         for (let wordIdStr in firstImpressions) {
             let id = parseInt(wordIdStr); let status = firstImpressions[wordIdStr];
@@ -823,7 +848,6 @@
                 knownCount++;
             } else {
                 forgotCount++;
-                // 🌟 将错词收集起来
                 let wordObj = queue.find(w => w.id === id);
                 if (wordObj && !sessionForgottenWords.some(w => w.id === id)) {
                     sessionForgottenWords.push(wordObj);
@@ -838,7 +862,6 @@
         document.getElementById('stat-known-count').innerText = knownCount; 
         document.getElementById('stat-forgot-count').innerText = forgotCount;
         
-        // 🌟 根据是否有错词，决定是否显示立即复习按钮
         let reviewBtn = document.getElementById('btn-review-forgotten');
         if (forgotCount > 0) {
             reviewBtn.classList.remove('hidden');
