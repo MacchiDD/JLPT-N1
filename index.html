@@ -137,6 +137,12 @@
                 <option value="cn2jp">🇨🇳 中国語 ➔ 🇯🇵 日本語 (挑战)</option>
             </select>
             <br>
+            <strong style="color: #d35400;">🔤 日➔中 提示形式：</strong>
+            <select id="prompt-type-select" onchange="localStorage.setItem('n1_prompt_type', this.value)" style="margin-top: 5px; margin-bottom: 10px;">
+                <option value="standard">漢字・標準表記 (默认)</option>
+                <option value="kana">ひらがな・発音 (防盲猜)</option>
+            </select>
+            <br>
             <strong style="color: #d35400;">🔄 出題順序：</strong>
             <select id="study-order-select" style="margin-top: 5px; margin-bottom: 10px;">
                 <option value="shuffle">🔀 ランダム (位置记忆防止)</option>
@@ -282,7 +288,10 @@
             <p style="margin-top: 15px; font-size: 12px; color: #8e44ad; font-weight:bold;">* 仅该单词在本次会话的初次反应会计入忘却曲线。</p>
             <p id="save-notice" style="margin-top: 10px; font-size: 13px; color: #7f8c8d; border-top: 1px dashed #ccc; padding-top: 10px;">💾 学习记录已自动保存。</p>
         </div>
-        <button class="btn btn-primary" style="margin-top: 20px; width: 60%;" onclick="backToMenu()">ダッシュボードに戻る</button>
+        <div style="margin-top: 25px; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+            <button id="btn-review-forgotten" class="btn btn-danger hidden" style="width: 80%; font-size: 16px; padding: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);" onclick="startSessionForgottenReview()">🔄 復習 0 个「もう一度」的单词</button>
+            <button class="btn btn-primary" style="width: 80%; padding: 12px;" onclick="backToMenu()">🏠 结束并返回主菜单</button>
+        </div>
     </div>
 
     <div id="stats-view" class="hidden">
@@ -661,10 +670,12 @@
 
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
     let relearnSteps = {}; let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
-    let sessionMode = 'normal'; let currentRequiredSteps = 2;
+    let sessionMode = 'normal'; let currentRequiredSteps = 2; 
+    let currentPromptType = 'standard'; // 🌟 存储日转中提示模式
+    let sessionForgottenWords = []; // 🌟 存储本轮需要立即复习的错词
 
     function saveSessionBackup() {
-        const state = { queue, historyStack, firstImpressions, currentIndex, relearnSteps, currentStudyMode, activeBankName, sessionMode, currentRequiredSteps };
+        const state = { queue, historyStack, firstImpressions, currentIndex, relearnSteps, currentStudyMode, activeBankName, sessionMode, currentRequiredSteps, currentPromptType };
         localStorage.setItem('n1_active_session', JSON.stringify(state));
     }
 
@@ -684,6 +695,13 @@
         sessionMode = 'normal'; initSession(selectedIds.map(id => bank.find(w => w.id === id)).filter(w => w));
     }
 
+    // 🌟 新增：启动错词复习
+    function startSessionForgottenReview() {
+        if (sessionForgottenWords.length === 0) return;
+        sessionMode = 'history'; // 以历史模式启动，避免重复写入忘却曲线日志
+        initSession([...sessionForgottenWords]);
+    }
+
     function initSession(words) {
         if (words.length === 0) return;
         let orderMode = document.getElementById('study-order-select').value || 'shuffle';
@@ -693,6 +711,7 @@
         currentStudyMode = document.getElementById('study-mode-select').value || 'jp2cn';
         
         currentRequiredSteps = parseInt(document.getElementById('relearn-steps-select').value) || 2;
+        currentPromptType = document.getElementById('prompt-type-select').value || 'standard'; // 🌟 获取当前模式
         
         clearSessionBackup(); 
         hideAllViews(); document.getElementById('study-view').classList.remove('hidden');
@@ -714,7 +733,17 @@
         } else { rsEl.classList.add('hidden'); }
 
         if (currentStudyMode === 'jp2cn') {
-            pe.innerText = word.word; aT.style.display = 'none'; mE.innerText = word.meaning; mE.style.display = 'block'; ps.classList.remove('hidden'); as.classList.add('hidden'); 
+            // 🌟 适配假名模式
+            if (currentPromptType === 'kana') {
+                pe.innerText = word.kana || word.word;
+                aT.innerText = word.word;
+                aT.style.display = 'block';
+            } else {
+                pe.innerText = word.word;
+                aT.style.display = 'none';
+            }
+            
+            mE.innerText = word.meaning; mE.style.display = 'block'; ps.classList.remove('hidden'); as.classList.add('hidden'); 
             if (word.example_jp && word.example_cn) { 
                 labelPrimary.innerText = '日'; labelPrimary.className = 'ex-label jp-label'; labelSecondary.innerText = '中'; labelSecondary.className = 'ex-label cn-label'; 
                 exPrimary.innerText = word.example_jp; exPrimary.className = 'ex-jp'; exSecondary.innerText = word.example_cn; exSecondary.className = 'ex-cn'; 
@@ -785,9 +814,21 @@
     
     function finishSession() {
         let knownCount = 0; let forgotCount = 0;
+        sessionForgottenWords = []; // 🌟 初始化本轮错词数组
+
         for (let wordIdStr in firstImpressions) {
             let id = parseInt(wordIdStr); let status = firstImpressions[wordIdStr];
-            if (status === 'known') knownCount++; else forgotCount++;
+            
+            if (status === 'known') {
+                knownCount++;
+            } else {
+                forgotCount++;
+                // 🌟 将错词收集起来
+                let wordObj = queue.find(w => w.id === id);
+                if (wordObj && !sessionForgottenWords.some(w => w.id === id)) {
+                    sessionForgottenWords.push(wordObj);
+                }
+            }
             
             if (sessionMode !== 'history') {
                 saveLog(id, getMaxRound(id) + 1, status); 
@@ -796,6 +837,15 @@
         }
         document.getElementById('stat-known-count').innerText = knownCount; 
         document.getElementById('stat-forgot-count').innerText = forgotCount;
+        
+        // 🌟 根据是否有错词，决定是否显示立即复习按钮
+        let reviewBtn = document.getElementById('btn-review-forgotten');
+        if (forgotCount > 0) {
+            reviewBtn.classList.remove('hidden');
+            reviewBtn.innerText = `🔄 復習 ${forgotCount} 个「もう一度」的单词`;
+        } else {
+            reviewBtn.classList.add('hidden');
+        }
         
         let noticeEl = document.getElementById('save-notice');
         if (sessionMode === 'history') {
@@ -853,7 +903,6 @@
     function hideAllViews() { document.getElementById('menu-view').classList.add('hidden'); document.getElementById('study-view').classList.add('hidden'); document.getElementById('summary-view').classList.add('hidden'); document.getElementById('stats-view').classList.add('hidden'); document.getElementById('history-detail-view').classList.add('hidden'); }
     function backToMenu() { hideAllViews(); document.getElementById('menu-view').classList.remove('hidden'); }
 
-    // 新增：动态截取自定义数量的前 N 项并勾选
     function selectCustomTopN() {
         let n = parseInt(document.getElementById('custom-top-n').value);
         if (isNaN(n) || n <= 0) return alert('请输入有效的数量！');
@@ -869,7 +918,6 @@
         triggerVibration('light');
     }
 
-    // 新增：展示单词详情面板
     function showWordDetail(id) {
         let bank = getCurrentBank();
         let word = bank.find(w => w.id === id);
@@ -903,7 +951,6 @@
         document.getElementById('word-detail-modal').classList.remove('hidden');
     }
 
-    // 新增：关闭详情面板
     function closeWordDetail() {
         document.getElementById('word-detail-modal').classList.add('hidden');
     }
@@ -928,6 +975,9 @@
     window.addEventListener('DOMContentLoaded', () => {
         let savedSteps = localStorage.getItem('n1_relearn_steps');
         if (savedSteps) document.getElementById('relearn-steps-select').value = savedSteps;
+        
+        let savedPrompt = localStorage.getItem('n1_prompt_type');
+        if (savedPrompt) document.getElementById('prompt-type-select').value = savedPrompt;
 
         let backupStr = localStorage.getItem('n1_active_session');
         if (backupStr) {
@@ -938,6 +988,7 @@
                     currentIndex = backup.currentIndex; relearnSteps = backup.relearnSteps || {}; currentStudyMode = backup.currentStudyMode;
                     sessionMode = backup.sessionMode || 'normal'; 
                     currentRequiredSteps = backup.currentRequiredSteps || parseInt(document.getElementById('relearn-steps-select').value) || 2;
+                    currentPromptType = backup.currentPromptType || 'standard';
 
                     if (backup.activeBankName) { activeBankName = backup.activeBankName; document.getElementById('dictionary-select').value = activeBankName; }
                     hideAllViews(); document.getElementById('study-view').classList.remove('hidden');
