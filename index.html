@@ -109,6 +109,7 @@
                 <option value="kundoku">訓読語彙ベース</option>
                 <option value="personal">🌟 随手记生词题库</option>
                 <option value="kanji">✍️ 汉字练习题库</option>
+                <option value="falseFriends">⚠️ 汉字陷阱 (同形异义)</option>
             </select>
         </div>
 
@@ -341,9 +342,7 @@
             <div id="detail-kana" style="font-size: 16px; color: #7f8c8d; margin-bottom: 5px; text-align: center; letter-spacing: 1px;"></div>
             <div id="detail-kanji" style="font-size: 14px; color: #8e44ad; margin-bottom: 15px; font-weight: bold; text-align: center;"></div>
             <div id="detail-meaning" style="font-size: 18px; font-weight: bold; color: #2c3e50; text-align: center; margin-bottom: 20px;"></div>
-
             <div id="detail-examples" style="margin-bottom: 20px; font-size: 14px;"></div>
-
             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ecf0f1; font-size: 13px;">
                 <p style="margin: 5px 0; color: #34495e;">🔥 历史遗忘次数：<span id="detail-forgot" style="color: #e74c3c; font-weight: bold; font-size: 16px;">0</span> 次</p>
                 <p style="margin: 5px 0; color: #34495e;">📅 下次复习安排：<span id="detail-due" style="font-weight: bold;"></span></p>
@@ -368,18 +367,21 @@
         if (activeBankName === 'kundoku') return typeof kundokuBank !== 'undefined' ? kundokuBank : [];
         if (activeBankName === 'personal') return typeof personalBank !== 'undefined' ? personalBank : [];
         if (activeBankName === 'kanji') return typeof kanjiBank !== 'undefined' ? kanjiBank : [];
+        if (activeBankName === 'falseFriends') return typeof falseFriendsBank !== 'undefined' ? falseFriendsBank : [];
         return [];
     }
 
     function getLogKey() { 
         if (activeBankName === 'personal') return 'vocab_logs_personal';
         if (activeBankName === 'kanji') return 'vocab_logs_kanji';
+        if (activeBankName === 'falseFriends') return 'vocab_logs_falsefriends';
         return activeBankName === 'hiragana' ? 'vocab_logs' : 'vocab_logs_kundoku'; 
     }
     
     function getSRSKey() { 
         if (activeBankName === 'personal') return 'srs_data_personal';
         if (activeBankName === 'kanji') return 'srs_data_kanji';
+        if (activeBankName === 'falseFriends') return 'srs_data_falsefriends';
         return activeBankName === 'hiragana' ? 'srs_data' : 'srs_data_kundoku'; 
     }
 
@@ -427,7 +429,6 @@
         }
 
         data.i = Math.min(data.i, MAX_INTERVAL);
-
         let nextDate = new Date(); nextDate.setDate(nextDate.getDate() + data.i);
         data.d = nextDate.toISOString().split('T')[0]; data.l = today; 
         srsBank[wordId] = data; saveSRSBank(srsBank);
@@ -464,8 +465,7 @@
         }
         if (wordsToStudy.length === 0) return alert('単語がありません。');
         
-        sessionMode = 'normal';
-        initSession(wordsToStudy);
+        sessionMode = 'normal'; initSession(wordsToStudy);
     }
 
     function getLogs() { return JSON.parse(localStorage.getItem(getLogKey()) || '[]'); }
@@ -514,32 +514,28 @@
             kundoku: JSON.parse(localStorage.getItem('vocab_logs_kundoku') || '[]'),
             personal: JSON.parse(localStorage.getItem('vocab_logs_personal') || '[]'),
             kanji: JSON.parse(localStorage.getItem('vocab_logs_kanji') || '[]'),
+            falseFriends: JSON.parse(localStorage.getItem('vocab_logs_falsefriends') || '[]'),
             srs_hiragana: JSON.parse(localStorage.getItem('srs_data') || '{}'),
             srs_kundoku: JSON.parse(localStorage.getItem('srs_data_kundoku') || '{}'),
             srs_personal: JSON.parse(localStorage.getItem('srs_data_personal') || '{}'),
-            srs_kanji: JSON.parse(localStorage.getItem('srs_data_kanji') || '{}')
+            srs_kanji: JSON.parse(localStorage.getItem('srs_data_kanji') || '{}'),
+            srs_falseFriends: JSON.parse(localStorage.getItem('srs_data_falsefriends') || '{}')
         };
     }
 
     function minifyLogs(logs) { return logs.map(l => [l.wordId, l.date.substring(2), l.round, l.status === 'known' ? 1 : 0]); }
     function unminifyLogs(minLogs) {
-        if (!minLogs) return [];
-        if (minLogs.length > 0 && !Array.isArray(minLogs[0])) return minLogs; 
+        if (!minLogs) return []; if (minLogs.length > 0 && !Array.isArray(minLogs[0])) return minLogs; 
         return minLogs.map(arr => ({ wordId: arr[0], date: "20" + arr[1], round: arr[2], status: arr[3] === 1 ? 'known' : 'forgotten' }));
     }
     function minifySRS(srs) {
-        let min = {};
-        for (let k in srs) { min[k] = [srs[k].i, srs[k].e, srs[k].d ? srs[k].d.substring(2) : "", srs[k].l ? srs[k].l.substring(2) : ""]; }
-        return min;
+        let min = {}; for (let k in srs) { min[k] = [srs[k].i, srs[k].e, srs[k].d ? srs[k].d.substring(2) : "", srs[k].l ? srs[k].l.substring(2) : ""]; } return min;
     }
     function unminifySRS(minSrs) {
-        if (!minSrs) return {};
-        let unmin = {};
+        if (!minSrs) return {}; let unmin = {};
         for (let k in minSrs) {
-            if (Array.isArray(minSrs[k])) { unmin[k] = { i: minSrs[k][0], e: minSrs[k][1], d: minSrs[k][2] ? "20" + minSrs[k][2] : null, l: minSrs[k][3] ? "20" + minSrs[k][3] : null }; } 
-            else { unmin[k] = minSrs[k]; } 
-        }
-        return unmin;
+            if (Array.isArray(minSrs[k])) { unmin[k] = { i: minSrs[k][0], e: minSrs[k][1], d: minSrs[k][2] ? "20" + minSrs[k][2] : null, l: minSrs[k][3] ? "20" + minSrs[k][3] : null }; } else { unmin[k] = minSrs[k]; } 
+        } return unmin;
     }
 
     function restoreCombinedLogs(data) {
@@ -547,10 +543,12 @@
         if (data.kundoku) localStorage.setItem('vocab_logs_kundoku', JSON.stringify(data.kundoku));
         if (data.personal) localStorage.setItem('vocab_logs_personal', JSON.stringify(data.personal));
         if (data.kanji) localStorage.setItem('vocab_logs_kanji', JSON.stringify(data.kanji));
+        if (data.falseFriends) localStorage.setItem('vocab_logs_falsefriends', JSON.stringify(data.falseFriends));
         if (data.srs_hiragana) localStorage.setItem('srs_data', JSON.stringify(data.srs_hiragana));
         if (data.srs_kundoku) localStorage.setItem('srs_data_kundoku', JSON.stringify(data.srs_kundoku));
         if (data.srs_personal) localStorage.setItem('srs_data_personal', JSON.stringify(data.srs_personal));
         if (data.srs_kanji) localStorage.setItem('srs_data_kanji', JSON.stringify(data.srs_kanji));
+        if (data.srs_falseFriends) localStorage.setItem('srs_data_falsefriends', JSON.stringify(data.srs_falseFriends));
         cleanUpDuplicateLogs(); updateHistoryCalendar(); updateDueCountDisplay();
     }
 
@@ -558,29 +556,16 @@
         let binId = document.getElementById('bin-id').value.trim(); let apiKey = document.getElementById('api-key').value.trim();
         if (!binId || !apiKey) return alert("⚠️ IDとKeyを入力してください！");
         localStorage.setItem('cloud_bin_id', binId); localStorage.setItem('cloud_api_key', apiKey);
-        
         let rawData = getCombinedLogs();
         let payloadData = {
-            h: minifyLogs(rawData.hiragana), k: minifyLogs(rawData.kundoku), p: minifyLogs(rawData.personal), kj: minifyLogs(rawData.kanji),
-            sh: minifySRS(rawData.srs_hiragana), sk: minifySRS(rawData.srs_kundoku), sp: minifySRS(rawData.srs_personal), skj: minifySRS(rawData.srs_kanji)
+            h: minifyLogs(rawData.hiragana), k: minifyLogs(rawData.kundoku), p: minifyLogs(rawData.personal), kj: minifyLogs(rawData.kanji), ff: minifyLogs(rawData.falseFriends),
+            sh: minifySRS(rawData.srs_hiragana), sk: minifySRS(rawData.srs_kundoku), sp: minifySRS(rawData.srs_personal), skj: minifySRS(rawData.srs_kanji), sff: minifySRS(rawData.srs_falseFriends)
         };
-        
-        let compressedData = LZString.compressToBase64(JSON.stringify(payloadData));
-        let payload = { data: compressedData, compressed: true };
+        let compressedData = LZString.compressToBase64(JSON.stringify(payloadData)); let payload = { data: compressedData, compressed: true };
         let btn = document.getElementById('btn-upload'); btn.innerText = "上传中...";
-        
         try {
-            let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, { 
-                method: 'PUT', 
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'X-Master-Key': apiKey,
-                    'X-Bin-Versioning': 'false' 
-                }, 
-                body: JSON.stringify(payload) 
-            });
-            if (response.ok) { alert("☁️ 同期完了！"); closeSyncModal(); } 
-            else { let err = await response.json(); alert(`❌ Error: ${err.message}`); }
+            let response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey, 'X-Bin-Versioning': 'false' }, body: JSON.stringify(payload) });
+            if (response.ok) { alert("☁️ 同期完了！"); closeSyncModal(); } else { let err = await response.json(); alert(`❌ Error: ${err.message}`); }
         } catch (e) { alert("Network Error"); } finally { btn.innerText = "⬆️ 覆盖到云端"; }
     }
 
@@ -595,18 +580,18 @@
             if (response.ok) {
                 let json = await response.json(); let record = json.record; let finalData;
                 if (record.compressed === true && record.data) { finalData = JSON.parse(LZString.decompressFromBase64(record.data)); } else { finalData = record; }
-                
                 let restored = {
                     hiragana: finalData.h ? unminifyLogs(finalData.h) : (finalData.hiragana || []),
                     kundoku: finalData.k ? unminifyLogs(finalData.k) : (finalData.kundoku || []),
                     personal: finalData.p ? unminifyLogs(finalData.p) : (finalData.personal || []),
                     kanji: finalData.kj ? unminifyLogs(finalData.kj) : (finalData.kanji || []),
+                    falseFriends: finalData.ff ? unminifyLogs(finalData.ff) : (finalData.falseFriends || []),
                     srs_hiragana: finalData.sh ? unminifySRS(finalData.sh) : (finalData.srs_hiragana || {}),
                     srs_kundoku: finalData.sk ? unminifySRS(finalData.sk) : (finalData.srs_kundoku || {}),
                     srs_personal: finalData.sp ? unminifySRS(finalData.sp) : (finalData.srs_personal || {}),
-                    srs_kanji: finalData.skj ? unminifySRS(finalData.skj) : (finalData.srs_kanji || {})
+                    srs_kanji: finalData.skj ? unminifySRS(finalData.skj) : (finalData.srs_kanji || {}),
+                    srs_falseFriends: finalData.sff ? unminifySRS(finalData.sff) : (finalData.srs_falseFriends || {})
                 };
-                
                 restoreCombinedLogs(restored); alert("🎉 同期成功！"); closeSyncModal();
             } else { let err = await response.json(); alert(`❌ Error: ${err.message}`); }
         } catch (e) { alert("Network Error"); } finally { btn.innerText = "⬇️ 下载到本地"; }
@@ -620,16 +605,14 @@
     }
 
     function importData(event) {
-        let file = event.target.files[0]; if (!file) return;
-        let reader = new FileReader();
-        reader.onload = function(e) { try { restoreCombinedLogs(JSON.parse(e.target.result)); alert("✅ インポート成功！"); } catch (err) { alert("❌ 文件解析失败"); } };
-        reader.readAsText(file);
+        let file = event.target.files[0]; if (!file) return; let reader = new FileReader();
+        reader.onload = function(e) { try { restoreCombinedLogs(JSON.parse(e.target.result)); alert("✅ インポート成功！"); } catch (err) { alert("❌ 文件解析失败"); } }; reader.readAsText(file);
     }
 
     function clearData() {
         if (confirm("⚠️ 警告：全ての記録を消去しますか？")) {
-            localStorage.removeItem('vocab_logs'); localStorage.removeItem('vocab_logs_kundoku'); localStorage.removeItem('vocab_logs_personal'); localStorage.removeItem('vocab_logs_kanji');
-            localStorage.removeItem('srs_data'); localStorage.removeItem('srs_data_kundoku'); localStorage.removeItem('srs_data_personal'); localStorage.removeItem('srs_data_kanji');
+            localStorage.removeItem('vocab_logs'); localStorage.removeItem('vocab_logs_kundoku'); localStorage.removeItem('vocab_logs_personal'); localStorage.removeItem('vocab_logs_kanji'); localStorage.removeItem('vocab_logs_falsefriends');
+            localStorage.removeItem('srs_data'); localStorage.removeItem('srs_data_kundoku'); localStorage.removeItem('srs_data_personal'); localStorage.removeItem('srs_data_kanji'); localStorage.removeItem('srs_data_falsefriends');
             updateHistoryCalendar(); updateDueCountDisplay(); alert("🗑️ 消去しました！");
         }
     }
@@ -638,10 +621,7 @@
     function updateHistoryCalendar() {
         let logs = getLogs(); let activeDates = [...new Set(logs.map(log => log.date))];
         if (historyCalendarInstance) historyCalendarInstance.destroy();
-        historyCalendarInstance = flatpickr(document.getElementById('history-date'), {
-            locale: "ja", dateFormat: "Y-m-d", enable: activeDates.length > 0 ? activeDates : ["1970-01-01"], 
-            onChange: function(d, dateStr) { document.getElementById('history-date').value = dateStr; viewHistoryDate(); }
-        });
+        historyCalendarInstance = flatpickr(document.getElementById('history-date'), { locale: "ja", dateFormat: "Y-m-d", enable: activeDates.length > 0 ? activeDates : ["1970-01-01"], onChange: function(d, dateStr) { document.getElementById('history-date').value = dateStr; viewHistoryDate(); } });
         if (activeDates.length > 0) { activeDates.sort(); historyCalendarInstance.setDate(activeDates[activeDates.length - 1]); } 
     }
 
@@ -652,54 +632,23 @@
         let bank = getCurrentBank(); let allIds = Object.keys(dailyMap).map(Number);
         currentHistoryWords.all = allIds.map(id => bank.find(w => w.id === id)).filter(w => w);
         currentHistoryWords.forgotten = allIds.filter(id => dailyMap[id] === 'forgotten').map(id => bank.find(w => w.id === id)).filter(w => w);
-        document.getElementById('history-date-title').innerText = `${dateStr} の記録`;
-        document.getElementById('hist-total').innerText = allIds.length;
-        document.getElementById('hist-known').innerText = currentHistoryWords.all.length - currentHistoryWords.forgotten.length;
-        document.getElementById('hist-forgot').innerText = currentHistoryWords.forgotten.length;
+        document.getElementById('history-date-title').innerText = `${dateStr} の記録`; document.getElementById('hist-total').innerText = allIds.length;
+        document.getElementById('hist-known').innerText = currentHistoryWords.all.length - currentHistoryWords.forgotten.length; document.getElementById('hist-forgot').innerText = currentHistoryWords.forgotten.length;
         let tbody = document.getElementById('history-detail-table-body'); tbody.innerHTML = '';
-        allIds.forEach(id => {
-            let wordObj = bank.find(w => w.id === id);
-            if (wordObj) {
-                let isKnown = dailyMap[id] === 'known'; let tr = document.createElement('tr');
-                tr.innerHTML = `<td>${id}</td><td style="font-weight:bold; color:#2980b9;">${wordObj.word}</td><td>${wordObj.meaning}</td><td style="color:${isKnown ? '#2ecc71' : '#e74c3c'};">${isKnown ? '✅' : '❌'}</td>`;
-                tbody.appendChild(tr);
-            }
-        });
+        allIds.forEach(id => { let wordObj = bank.find(w => w.id === id); if (wordObj) { let isKnown = dailyMap[id] === 'known'; let tr = document.createElement('tr'); tr.innerHTML = `<td>${id}</td><td style="font-weight:bold; color:#2980b9;">${wordObj.word}</td><td>${wordObj.meaning}</td><td style="color:${isKnown ? '#2ecc71' : '#e74c3c'};">${isKnown ? '✅' : '❌'}</td>`; tbody.appendChild(tr); } });
         hideAllViews(); document.getElementById('history-detail-view').classList.remove('hidden');
     }
 
     let queue = []; let historyStack = []; let firstImpressions = {}; let currentIndex = 0;
     let relearnSteps = {}; let currentStudyMode = 'jp2cn'; let currentHistoryWords = { all: [], forgotten: [] };
-    let sessionMode = 'normal'; let currentRequiredSteps = 2; 
-    let currentPromptType = 'standard'; 
-    let sessionForgottenWords = []; 
+    let sessionMode = 'normal'; let currentRequiredSteps = 2; let currentPromptType = 'standard'; let sessionForgottenWords = []; 
 
-    function saveSessionBackup() {
-        const state = { queue, historyStack, firstImpressions, currentIndex, relearnSteps, currentStudyMode, activeBankName, sessionMode, currentRequiredSteps, currentPromptType };
-        localStorage.setItem('n1_active_session', JSON.stringify(state));
-    }
-
+    function saveSessionBackup() { localStorage.setItem('n1_active_session', JSON.stringify({ queue, historyStack, firstImpressions, currentIndex, relearnSteps, currentStudyMode, activeBankName, sessionMode, currentRequiredSteps, currentPromptType })); }
     function clearSessionBackup() { localStorage.removeItem('n1_active_session'); }
 
-    function startHistoryReview(type) {
-        let words = type === 'forgotten' ? currentHistoryWords.forgotten : currentHistoryWords.all;
-        if (words.length === 0) return alert('該当する単语がありません');
-        sessionMode = 'history'; initSession(words);
-    }
-
-    function startCustomStudy() {
-        let bank = getCurrentBank();
-        let selectedIds = Array.from(document.querySelectorAll('.word-checkbox:checked')).map(cb => parseInt(cb.value));
-        if (selectedIds.length === 0) return alert('选择为空');
-        document.getElementById('select-all-cb').checked = false;
-        sessionMode = 'normal'; initSession(selectedIds.map(id => bank.find(w => w.id === id)).filter(w => w));
-    }
-
-    function startSessionForgottenReview() {
-        if (sessionForgottenWords.length === 0) return;
-        sessionMode = 'history'; 
-        initSession([...sessionForgottenWords]);
-    }
+    function startHistoryReview(type) { let words = type === 'forgotten' ? currentHistoryWords.forgotten : currentHistoryWords.all; if (words.length === 0) return alert('該当する単语がありません'); sessionMode = 'history'; initSession(words); }
+    function startCustomStudy() { let bank = getCurrentBank(); let selectedIds = Array.from(document.querySelectorAll('.word-checkbox:checked')).map(cb => parseInt(cb.value)); if (selectedIds.length === 0) return alert('选择为空'); document.getElementById('select-all-cb').checked = false; sessionMode = 'normal'; initSession(selectedIds.map(id => bank.find(w => w.id === id)).filter(w => w)); }
+    function startSessionForgottenReview() { if (sessionForgottenWords.length === 0) return; sessionMode = 'history'; initSession([...sessionForgottenWords]); }
 
     function initSession(words) {
         if (words.length === 0) return;
@@ -708,14 +657,10 @@
         if (orderMode === 'shuffle') { for (let i = finalWords.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); [finalWords[i], finalWords[j]] = [finalWords[j], finalWords[i]]; } }
         queue = finalWords; historyStack = []; firstImpressions = {}; currentIndex = 0; relearnSteps = {};
         currentStudyMode = document.getElementById('study-mode-select').value || 'jp2cn';
-        
         currentRequiredSteps = parseInt(document.getElementById('relearn-steps-select').value) || 2;
         currentPromptType = document.getElementById('prompt-type-select').value || 'standard'; 
-        
-        clearSessionBackup(); 
-        hideAllViews(); document.getElementById('study-view').classList.remove('hidden');
-        history.pushState({ isStudying: true }, '', '#study');
-        renderWord();
+        clearSessionBackup(); hideAllViews(); document.getElementById('study-view').classList.remove('hidden');
+        history.pushState({ isStudying: true }, '', '#study'); renderWord();
     }
 
     function renderWord() {
@@ -727,99 +672,82 @@
         let exPSpeak = document.getElementById('ex-primary-speak'); let exSSpeak = document.getElementById('ex-secondary-speak');
 
         let currentStep = relearnSteps[word.id];
-        if (currentStep !== undefined && currentStep < currentRequiredSteps) { 
-            rsEl.innerText = `🔥 強化中: あと ${currentRequiredSteps - currentStep} 回正解でクリア`; rsEl.classList.remove('hidden'); 
-        } else { rsEl.classList.add('hidden'); }
+        if (currentStep !== undefined && currentStep < currentRequiredSteps) { rsEl.innerText = `🔥 強化中: あと ${currentRequiredSteps - currentStep} 回正解でクリア`; rsEl.classList.remove('hidden'); } else { rsEl.classList.add('hidden'); }
 
         let displayKanji = (word.kanji && word.kanji.trim() !== "") ? word.kanji : word.word;
         let displayKana = word.kana || word.word;
 
         if (currentStudyMode === 'jp2cn') {
-            if (currentPromptType === 'kana') {
-                pe.innerText = displayKana;
-                aT.innerText = displayKanji;
-                aT.style.display = 'block';
-            } else {
-                pe.innerText = displayKanji;
-                aT.style.display = 'none';
-            }
+            if (currentPromptType === 'kana') { pe.innerText = displayKana; aT.innerText = displayKanji; aT.style.display = 'block'; } 
+            else { pe.innerText = displayKanji; aT.style.display = 'none'; }
             
             mE.innerText = word.meaning; mE.style.display = 'block'; ps.classList.remove('hidden'); as.classList.add('hidden'); 
+            
             if (word.example_jp && word.example_cn) { 
                 labelPrimary.innerText = '日'; labelPrimary.className = 'ex-label jp-label'; labelSecondary.innerText = '中'; labelSecondary.className = 'ex-label cn-label'; 
-                exPrimary.innerText = word.example_jp; exPrimary.className = 'ex-jp'; exSecondary.innerText = word.example_cn; exSecondary.className = 'ex-cn'; 
                 
+                let maskedExJp = word.example_jp;
+                // 🌟 核心修改点：即使是纯假名模式，也会将例句框显示出来，但是把汉字变成"○"
                 if (currentPromptType === 'kana') {
-                    exContainer.classList.add('hidden');
-                } else {
-                    exContainer.classList.remove('hidden');
+                    let targetKanjiChars = (word.kanji || word.word || '').match(/[\u4e00-\u9faf]/g);
+                    if (targetKanjiChars) {
+                        targetKanjiChars.forEach(char => { let reg = new RegExp(char, 'g'); maskedExJp = maskedExJp.replace(reg, '○'); });
+                    }
                 }
                 
+                exPrimary.innerText = maskedExJp; exPrimary.setAttribute('data-original-jp', word.example_jp);
+                exSecondary.innerText = word.example_cn; exSecondary.className = 'ex-cn'; 
+                
+                // 【核心修复】：永远移除 hidden，保证例句框和喇叭可见！
+                exContainer.classList.remove('hidden'); 
                 exSecContainer.classList.add('hidden'); exPSpeak.classList.remove('hidden'); exSSpeak.classList.add('hidden');
             } else { exContainer.classList.add('hidden'); }
             speakCurrentWord(); 
+            
         } else { 
-            pe.innerText = word.meaning; 
-            aT.innerText = displayKanji; 
-            aT.style.display = 'block'; 
-            mE.style.display = 'none'; 
-            ps.classList.add('hidden'); as.classList.add('hidden'); 
+            pe.innerText = word.meaning; aT.innerText = displayKanji; aT.style.display = 'block'; mE.style.display = 'none'; ps.classList.add('hidden'); as.classList.add('hidden'); 
             if (word.example_jp && word.example_cn) { 
                 labelPrimary.innerText = '中'; labelPrimary.className = 'ex-label cn-label'; labelSecondary.innerText = '日'; labelSecondary.className = 'ex-label jp-label'; 
-                exPrimary.innerText = word.example_cn; exPrimary.className = 'ex-cn'; exSecondary.innerText = word.example_jp; exSecondary.className = 'ex-jp'; 
+                exPrimary.innerText = word.example_cn; exPrimary.className = 'ex-cn'; exPrimary.removeAttribute('data-original-jp');
+                exSecondary.innerText = word.example_jp; exSecondary.className = 'ex-jp'; 
                 exContainer.classList.remove('hidden'); exSecContainer.classList.add('hidden'); exPSpeak.classList.add('hidden'); exSSpeak.classList.remove('hidden');
             } else { exContainer.classList.add('hidden'); }
         }
         
         let wordLogs = getLogs().filter(log => log.wordId === word.id).sort((a, b) => a.round - b.round);
         document.getElementById('word-history-blocks').innerHTML = wordLogs.map(log => `<span class="history-block ${log.status === 'known' ? 'block-known' : 'block-forgotten'}"></span>`).join('');
-        
         let kE = document.getElementById('card-kanji');
         if (word.kanji && word.kanji.trim() !== "") { kE.innerText = `【漢字】 ${word.kanji}`; kE.style.display = 'block'; } else { kE.style.display = 'none'; }
-        
-        document.getElementById('card-kana').innerText = displayKana;
-        document.getElementById('progress-text').innerText = `進捗: ${currentIndex + 1} / ${queue.length}`;
+        document.getElementById('card-kana').innerText = displayKana; document.getElementById('progress-text').innerText = `進捗: ${currentIndex + 1} / ${queue.length}`;
         document.getElementById('answer-section').classList.add('hidden'); document.getElementById('action-buttons').classList.add('hidden'); document.getElementById('btn-show-answer').classList.remove('hidden');
     }
 
     function showAnswer() {
-        triggerVibration('heavy'); 
-        document.getElementById('answer-section').classList.remove('hidden'); 
+        triggerVibration('heavy'); document.getElementById('answer-section').classList.remove('hidden'); 
+        
+        // 🌟 点击解答后：恢复原始未打码的例句
+        let exPrimary = document.getElementById('ex-primary');
+        if (exPrimary.hasAttribute('data-original-jp')) { exPrimary.innerText = exPrimary.getAttribute('data-original-jp'); }
         
         let currentWord = queue[currentIndex];
-        if (currentWord && currentWord.example_jp && currentWord.example_cn) {
-            document.getElementById('card-example').classList.remove('hidden');
-        }
+        if (currentWord && currentWord.example_jp && currentWord.example_cn) { document.getElementById('card-example').classList.remove('hidden'); }
         
-        document.getElementById('ex-secondary-container').classList.remove('hidden'); 
-        document.getElementById('action-buttons').classList.remove('hidden'); 
-        document.getElementById('btn-show-answer').classList.add('hidden');
+        document.getElementById('ex-secondary-container').classList.remove('hidden'); document.getElementById('action-buttons').classList.remove('hidden'); document.getElementById('btn-show-answer').classList.add('hidden');
         if (currentStudyMode === 'cn2jp') { document.getElementById('answer-speak').classList.remove('hidden'); }
         speakCurrentWord();
     }
 
     function markWord(status) {
-        triggerVibration('light');
-        let word = queue[currentIndex];
-        let isFirstAppearance = queue.findIndex(w => w.id === word.id) === currentIndex;
+        triggerVibration('light'); let word = queue[currentIndex]; let isFirstAppearance = queue.findIndex(w => w.id === word.id) === currentIndex;
         if (isFirstAppearance) firstImpressions[word.id] = status;
-        let previousStep = relearnSteps[word.id];
-        historyStack.push({ index: currentIndex, status: status, isFirst: isFirstAppearance, prevStep: previousStep });
+        let previousStep = relearnSteps[word.id]; historyStack.push({ index: currentIndex, status: status, isFirst: isFirstAppearance, prevStep: previousStep });
         
-        if (status === 'forgotten') { 
-            relearnSteps[word.id] = Math.max(0, (previousStep || 0) - 1); 
-            queue.splice(currentIndex + 4, 0, word); 
-        } 
+        if (status === 'forgotten') { relearnSteps[word.id] = Math.max(0, (previousStep || 0) - 1); queue.splice(currentIndex + 4, 0, word); } 
         else if (status === 'known') {
             if (!isFirstAppearance) { 
                 let currentStep = previousStep || 0;
-                if (currentStep < currentRequiredSteps - 1) { 
-                    relearnSteps[word.id] = currentStep + 1; 
-                    let dynamicStep = 8; 
-                    queue.splice(currentIndex + dynamicStep, 0, word); 
-                } else { 
-                    relearnSteps[word.id] = currentRequiredSteps; 
-                }
+                if (currentStep < currentRequiredSteps - 1) { relearnSteps[word.id] = currentStep + 1; let dynamicStep = 8; queue.splice(currentIndex + dynamicStep, 0, word); } 
+                else { relearnSteps[word.id] = currentRequiredSteps; }
             }
         }
         currentIndex++; saveSessionBackup(); renderWord();
@@ -838,46 +766,20 @@
     function exitStudyEarly() { if (confirm("終了しますか？")) finishSession(); }
     
     function finishSession() {
-        let knownCount = 0; let forgotCount = 0;
-        sessionForgottenWords = []; 
-
+        let knownCount = 0; let forgotCount = 0; sessionForgottenWords = []; 
         for (let wordIdStr in firstImpressions) {
             let id = parseInt(wordIdStr); let status = firstImpressions[wordIdStr];
-            
-            if (status === 'known') {
-                knownCount++;
-            } else {
-                forgotCount++;
-                let wordObj = queue.find(w => w.id === id);
-                if (wordObj && !sessionForgottenWords.some(w => w.id === id)) {
-                    sessionForgottenWords.push(wordObj);
-                }
-            }
-            
-            if (sessionMode !== 'history') {
-                saveLog(id, getMaxRound(id) + 1, status); 
-                updateSRS(id, status);
-            }
+            if (status === 'known') { knownCount++; } else { forgotCount++; let wordObj = queue.find(w => w.id === id); if (wordObj && !sessionForgottenWords.some(w => w.id === id)) { sessionForgottenWords.push(wordObj); } }
+            if (sessionMode !== 'history') { saveLog(id, getMaxRound(id) + 1, status); updateSRS(id, status); }
         }
-        document.getElementById('stat-known-count').innerText = knownCount; 
-        document.getElementById('stat-forgot-count').innerText = forgotCount;
+        document.getElementById('stat-known-count').innerText = knownCount; document.getElementById('stat-forgot-count').innerText = forgotCount;
         
         let reviewBtn = document.getElementById('btn-review-forgotten');
-        if (forgotCount > 0) {
-            reviewBtn.classList.remove('hidden');
-            reviewBtn.innerText = `🔄 復習 ${forgotCount} 个「もう一度」的单词`;
-        } else {
-            reviewBtn.classList.add('hidden');
-        }
+        if (forgotCount > 0) { reviewBtn.classList.remove('hidden'); reviewBtn.innerText = `🔄 復習 ${forgotCount} 个「もう一度」的单词`; } else { reviewBtn.classList.add('hidden'); }
         
         let noticeEl = document.getElementById('save-notice');
-        if (sessionMode === 'history') {
-            noticeEl.innerHTML = "👻 历史回顾模式：本次复习<b>未计入</b>今日统计与忘却曲线。"; noticeEl.style.color = "#e67e22";
-        } else {
-            noticeEl.innerHTML = "💾 学习记录已自动保存。"; noticeEl.style.color = "#7f8c8d";
-            updateHistoryCalendar(); updateDueCountDisplay(); 
-        }
-
+        if (sessionMode === 'history') { noticeEl.innerHTML = "👻 历史回顾模式：本次复习<b>未计入</b>今日统计与忘却曲线。"; noticeEl.style.color = "#e67e22"; } 
+        else { noticeEl.innerHTML = "💾 学习记录已自动保存。"; noticeEl.style.color = "#7f8c8d"; updateHistoryCalendar(); updateDueCountDisplay(); }
         clearSessionBackup(); hideAllViews(); document.getElementById('summary-view').classList.remove('hidden');
     }
 
@@ -890,11 +792,7 @@
     });
 
     function openStatsCenter() { hideAllViews(); document.getElementById('stats-view').classList.remove('hidden'); document.getElementById('select-all-cb').checked = false; renderStatsTable('idAsc'); }
-    function selectIdRange() {
-        let s = parseInt(document.getElementById('range-start').value), e = parseInt(document.getElementById('range-end').value);
-        if (isNaN(s) || isNaN(e) || s > e) return alert('无効な范围');
-        document.querySelectorAll('.word-checkbox').forEach(cb => { if (parseInt(cb.value) >= s && parseInt(cb.value) <= e) cb.checked = true; });
-    }
+    function selectIdRange() { let s = parseInt(document.getElementById('range-start').value), e = parseInt(document.getElementById('range-end').value); if (isNaN(s) || isNaN(e) || s > e) return alert('无効な范围'); document.querySelectorAll('.word-checkbox').forEach(cb => { if (parseInt(cb.value) >= s && parseInt(cb.value) <= e) cb.checked = true; }); }
     function clearSelection() { document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = false); }
     
     function renderStatsTable(sortType) {
@@ -902,23 +800,9 @@
         bank.forEach(w => { let srsData = srsBank[w.id]; statsMap[w.id] = { id: w.id, word: w.word, totalReviews: 0, forgotCount: 0, due: srsData ? srsData.d : '-', ease: srsData ? `${Math.round(srsData.e * 100)}%` : '-' }; });
         getLogs().forEach(log => { if (statsMap[log.wordId]) { statsMap[log.wordId].totalReviews++; if (log.status === 'forgotten') statsMap[log.wordId].forgotCount++; } });
         let stats = Object.values(statsMap);
-        if (sortType === 'idAsc') stats.sort((a, b) => a.id - b.id);
-        else if (sortType === 'reviewsDesc') stats.sort((a, b) => b.totalReviews - a.totalReviews); 
-        else if (sortType === 'forgotDesc') stats.sort((a, b) => b.forgotCount - a.forgotCount);
+        if (sortType === 'idAsc') stats.sort((a, b) => a.id - b.id); else if (sortType === 'reviewsDesc') stats.sort((a, b) => b.totalReviews - a.totalReviews); else if (sortType === 'forgotDesc') stats.sort((a, b) => b.forgotCount - a.forgotCount);
         let tbody = document.getElementById('stats-table-body'); tbody.innerHTML = '';
-        
-        stats.forEach(s => { 
-            let tr = document.createElement('tr'); 
-            tr.innerHTML = `
-                <td style="text-align:center;"><input type="checkbox" class="word-checkbox" value="${s.id}"></td>
-                <td>${s.id}</td>
-                <td style="font-weight:bold; color:#2980b9; cursor:pointer;" onclick="showWordDetail(${s.id})">
-                    <span style="border-bottom: 1px dashed #3498db; transition: 0.2s;" onmouseover="this.style.color='#e67e22'" onmouseout="this.style.color='inherit'">${s.word}</span>
-                </td>
-                <td style="color:#e67e22; font-weight:bold;">${s.due}</td>
-                <td style="color:#27ae60;">${s.ease}</td>`; 
-            tbody.appendChild(tr); 
-        });
+        stats.forEach(s => { let tr = document.createElement('tr'); tr.innerHTML = `<td style="text-align:center;"><input type="checkbox" class="word-checkbox" value="${s.id}"></td><td>${s.id}</td><td style="font-weight:bold; color:#2980b9; cursor:pointer;" onclick="showWordDetail(${s.id})"><span style="border-bottom: 1px dashed #3498db; transition: 0.2s;" onmouseover="this.style.color='#e67e22'" onmouseout="this.style.color='inherit'">${s.word}</span></td><td style="color:#e67e22; font-weight:bold;">${s.due}</td><td style="color:#27ae60;">${s.ease}</td>`; tbody.appendChild(tr); });
     }
 
     function toggleSelectAll() { let c = document.getElementById('select-all-cb').checked; document.querySelectorAll('.word-checkbox').forEach(cb => cb.checked = c); }
@@ -926,108 +810,48 @@
     function hideAllViews() { document.getElementById('menu-view').classList.add('hidden'); document.getElementById('study-view').classList.add('hidden'); document.getElementById('summary-view').classList.add('hidden'); document.getElementById('stats-view').classList.add('hidden'); document.getElementById('history-detail-view').classList.add('hidden'); }
     function backToMenu() { hideAllViews(); document.getElementById('menu-view').classList.remove('hidden'); }
 
-    function selectCustomTopN() {
-        let n = parseInt(document.getElementById('custom-top-n').value);
-        if (isNaN(n) || n <= 0) return alert('请输入有效的数量！');
-        
-        clearSelection();
-        let checkboxes = document.querySelectorAll('.word-checkbox');
-        let count = Math.min(n, checkboxes.length);
-        if (count === 0) return;
-        
-        for (let i = 0; i < count; i++) {
-            checkboxes[i].checked = true;
-        }
-        triggerVibration('light');
-    }
+    function selectCustomTopN() { let n = parseInt(document.getElementById('custom-top-n').value); if (isNaN(n) || n <= 0) return alert('请输入有效的数量！'); clearSelection(); let checkboxes = document.querySelectorAll('.word-checkbox'); let count = Math.min(n, checkboxes.length); if (count === 0) return; for (let i = 0; i < count; i++) { checkboxes[i].checked = true; } triggerVibration('light'); }
 
     function showWordDetail(id) {
-        let bank = getCurrentBank();
-        let word = bank.find(w => w.id === id);
-        if (!word) return;
-
-        let srsBank = getSRSBank();
-        let srsData = srsBank[id];
-        
-        let logs = getLogs().filter(log => log.wordId === id);
-        let forgotCount = logs.filter(l => l.status === 'forgotten').length;
-
-        document.getElementById('detail-title').innerText = word.word;
-        document.getElementById('detail-kana').innerText = word.kana || '';
-        document.getElementById('detail-kanji').innerText = (word.kanji && word.kanji.trim() !== "") ? `【漢字】 ${word.kanji}` : '';
-        document.getElementById('detail-meaning').innerText = word.meaning;
-
+        let bank = getCurrentBank(); let word = bank.find(w => w.id === id); if (!word) return;
+        let srsBank = getSRSBank(); let srsData = srsBank[id]; let logs = getLogs().filter(log => log.wordId === id); let forgotCount = logs.filter(l => l.status === 'forgotten').length;
+        document.getElementById('detail-title').innerText = word.word; document.getElementById('detail-kana').innerText = word.kana || ''; document.getElementById('detail-kanji').innerText = (word.kanji && word.kanji.trim() !== "") ? `【漢字】 ${word.kanji}` : ''; document.getElementById('detail-meaning').innerText = word.meaning;
         let exHtml = '';
-        if (word.example_jp && word.example_cn) {
-            exHtml = `
-                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; border-left: 3px solid #3498db;">
-                    <div style="margin-bottom: 6px;"><span class="ex-label jp-label" style="font-size:10px;">日</span> <span style="color:#2c3e50;">${word.example_jp}</span></div>
-                    <div><span class="ex-label cn-label" style="font-size:10px;">中</span> <span style="color:#7f8c8d;">${word.example_cn}</span></div>
-                </div>`;
-        }
-        document.getElementById('detail-examples').innerHTML = exHtml;
-
-        document.getElementById('detail-forgot').innerText = forgotCount;
-        document.getElementById('detail-due').innerText = srsData ? srsData.d : '尚未学习';
-        document.getElementById('detail-ease').innerText = srsData ? `${Math.round(srsData.e * 100)}%` : '-';
-
+        if (word.example_jp && word.example_cn) { exHtml = `<div style="background: #f8f9fa; padding: 10px; border-radius: 6px; border-left: 3px solid #3498db;"><div style="margin-bottom: 6px;"><span class="ex-label jp-label" style="font-size:10px;">日</span> <span style="color:#2c3e50;">${word.example_jp}</span></div><div><span class="ex-label cn-label" style="font-size:10px;">中</span> <span style="color:#7f8c8d;">${word.example_cn}</span></div></div>`; }
+        document.getElementById('detail-examples').innerHTML = exHtml; document.getElementById('detail-forgot').innerText = forgotCount; document.getElementById('detail-due').innerText = srsData ? srsData.d : '尚未学习'; document.getElementById('detail-ease').innerText = srsData ? `${Math.round(srsData.e * 100)}%` : '-';
         document.getElementById('word-detail-modal').classList.remove('hidden');
     }
 
-    function closeWordDetail() {
-        document.getElementById('word-detail-modal').classList.add('hidden');
-    }
+    function closeWordDetail() { document.getElementById('word-detail-modal').classList.add('hidden'); }
 
     (function autoFixCorruptedDates() {
-        ['srs_data', 'srs_data_kundoku', 'srs_data_personal', 'srs_data_kanji'].forEach(key => {
-            let bank = JSON.parse(localStorage.getItem(key) || '{}');
-            let fixed = false;
-            for (let id in bank) {
-                if (bank[id].i > 180) { bank[id].i = 180; let nd = new Date(); nd.setDate(nd.getDate() + 180); bank[id].d = nd.toISOString().split('T')[0]; fixed = true; }
-            }
+        ['srs_data', 'srs_data_kundoku', 'srs_data_personal', 'srs_data_kanji', 'srs_data_falsefriends'].forEach(key => {
+            let bank = JSON.parse(localStorage.getItem(key) || '{}'); let fixed = false;
+            for (let id in bank) { if (bank[id].i > 180) { bank[id].i = 180; let nd = new Date(); nd.setDate(nd.getDate() + 180); bank[id].d = nd.toISOString().split('T')[0]; fixed = true; } }
             if (fixed) localStorage.setItem(key, JSON.stringify(bank));
         });
     })();
 
     window.addEventListener('popstate', function(e) {
-        if (!document.getElementById('study-view').classList.contains('hidden')) {
-            if (confirm("⚠️ 学習を中断して終了しますか？\n（判定済みの記録は保存されます）")) { finishSession(); } else { history.pushState({ isStudying: true }, '', '#study'); }
-        } else { backToMenu(); }
+        if (!document.getElementById('study-view').classList.contains('hidden')) { if (confirm("⚠️ 学習を中断して終了しますか？\n（判定済みの記録は保存されます）")) { finishSession(); } else { history.pushState({ isStudying: true }, '', '#study'); } } else { backToMenu(); }
     });
 
     window.addEventListener('DOMContentLoaded', () => {
-        let savedSteps = localStorage.getItem('n1_relearn_steps');
-        if (savedSteps) document.getElementById('relearn-steps-select').value = savedSteps;
-        
-        let savedPrompt = localStorage.getItem('n1_prompt_type');
-        if (savedPrompt) document.getElementById('prompt-type-select').value = savedPrompt;
-
+        let savedSteps = localStorage.getItem('n1_relearn_steps'); if (savedSteps) document.getElementById('relearn-steps-select').value = savedSteps;
+        let savedPrompt = localStorage.getItem('n1_prompt_type'); if (savedPrompt) document.getElementById('prompt-type-select').value = savedPrompt;
         let backupStr = localStorage.getItem('n1_active_session');
         if (backupStr) {
             setTimeout(() => {
                 if (confirm("中断された学習セッションがあります。続きから再開しますか？\n（キャンセルすると破棄されます）")) {
-                    let backup = JSON.parse(backupStr);
-                    queue = backup.queue; historyStack = backup.historyStack; firstImpressions = backup.firstImpressions;
-                    currentIndex = backup.currentIndex; relearnSteps = backup.relearnSteps || {}; currentStudyMode = backup.currentStudyMode;
-                    sessionMode = backup.sessionMode || 'normal'; 
-                    currentRequiredSteps = backup.currentRequiredSteps || parseInt(document.getElementById('relearn-steps-select').value) || 2;
-                    currentPromptType = backup.currentPromptType || 'standard';
-
+                    let backup = JSON.parse(backupStr); queue = backup.queue; historyStack = backup.historyStack; firstImpressions = backup.firstImpressions; currentIndex = backup.currentIndex; relearnSteps = backup.relearnSteps || {}; currentStudyMode = backup.currentStudyMode; sessionMode = backup.sessionMode || 'normal'; currentRequiredSteps = backup.currentRequiredSteps || parseInt(document.getElementById('relearn-steps-select').value) || 2; currentPromptType = backup.currentPromptType || 'standard';
                     if (backup.activeBankName) { activeBankName = backup.activeBankName; document.getElementById('dictionary-select').value = activeBankName; }
-                    hideAllViews(); document.getElementById('study-view').classList.remove('hidden');
-                    history.pushState({ isStudying: true }, '', '#study');
-                    renderWord();
+                    hideAllViews(); document.getElementById('study-view').classList.remove('hidden'); history.pushState({ isStudying: true }, '', '#study'); renderWord();
                 } else { clearSessionBackup(); }
             }, 300);
         }
     });
 
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('./sw.js').catch(function(err) {});
-        });
-    }
-
+    if ('serviceWorker' in navigator) { window.addEventListener('load', function() { navigator.serviceWorker.register('./sw.js').catch(function(err) {}); }); }
     updateHistoryCalendar(); updateDueCountDisplay(); 
 </script>
 </body>
